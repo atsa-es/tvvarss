@@ -1,0 +1,2 @@
+.rdb filter=lfs -crlf
+*.rdb filter=lfs -crlf
