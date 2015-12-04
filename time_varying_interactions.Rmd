@@ -429,3 +429,24 @@ for(i in 1:mm^2) {
 
 ```
 
+Next, we can look at the estimated covariate effects (otters, ENSO, urchin harvest). 
+
+```{r, echo=FALSE, fig.cap="Estimated effects of otters on species guilds.",fig.pos="placeHere"}
+attach.jags(jags.model)
+par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
+for(i in 1:14) {
+  hist(DD[,i,1], 20, col="grey", main = spec.names[i], cex.main=0.9, cex.axis=0.9)
+}
+```
+
+
+```{r, echo=FALSE, fig.cap="Estimated effects of ENSO on species guilds.",fig.pos="placeHere"}
+attach.jags(jags.model)
+par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
+for(i in 1:14) {
+  hist(CC[,i,1], 20, col="grey", main = spec.names[i], cex.main=0.9, cex.axis=0.9)
+}
+```
+
+
+
