@@ -189,7 +189,7 @@ EE[1:m,1]*harvest.wns[time-1,];#site 6
 	
 }
 
-", file = "TVARSS.txt")
+", file = "TVVARSS.txt")
 ```
 
 ## Running the model
@@ -225,7 +225,7 @@ mean.X1 = apply(X.1,c(2,3),mean)
 par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.38,0.38,0.28,0.01))
 for(i in 1:14) {
   estMed = apply(X.1[,i,],2,quantile, 0.5)
-  plot(estMed, Y2[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed")
+  plot(estMed, Y2[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
   points(estMed, Y3[i,], col = "blue", pch=16, cex=0.8)
   abline(0,1)
 }
@@ -241,7 +241,7 @@ mean.X2 = apply(X.2,c(2,3),mean)
 par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.38,0.38,0.28,0.01))
 for(i in 1:14) {
   estMed = apply(X.2[,i,],2,quantile, 0.5)
-  plot(estMed, Y1[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed")
+  plot(estMed, Y1[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
   abline(0,1)
 }
 ```
@@ -256,7 +256,7 @@ mean.X3 = apply(X.3,c(2,3),mean)
 par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.38,0.38,0.28,0.01))
 for(i in 1:14) {
   estMed = apply(X.3[,i,],2,quantile, 0.5)
-  plot(estMed, Y4[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed")
+  plot(estMed, Y4[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
   points(estMed, Y5[i,], col = "blue", pch=16, cex=0.8)
   abline(0,1)
 }
@@ -272,7 +272,7 @@ mean.X4 = apply(X.4,c(2,3),mean)
 par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.38,0.38,0.28,0.01))
 for(i in 1:14) {
   estMed = apply(X.4[,i,],2,quantile, 0.5)
-  plot(estMed, Y6[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed")
+  plot(estMed, Y6[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
   abline(0,1)
 }
 ```
@@ -287,13 +287,13 @@ attach.jags(jags.model)
 # take mean for each state
 mean.X1 = apply(X.1,c(2,3),mean)
 
-par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.2,0.1,0.28,0.01))
+par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
 for(i in 1:14) {
   lowerCI = apply(X.1[,i,],2,quantile, 0.025)
   upperCI = apply(X.1[,i,],2,quantile, 0.975)  
   ymin = min(c(lowerCI, Y2[i,], Y3[i,]), na.rm=T)
   ymax = max(c(upperCI, Y2[i,], Y3[i,]), na.rm=T)
-  plot(mean.X1[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white")
+  plot(mean.X1[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white", cex.main=0.9, cex.axis=0.9)
   # make polygon of 95% CIs of states
   Xs = seq(1,dim(X.1)[3])
   polygon(c(Xs, rev(Xs)), c(lowerCI, rev(upperCI)), border=NA, col="grey")
@@ -310,13 +310,13 @@ attach.jags(jags.model)
 # take mean for each state
 mean.X2 = apply(X.2,c(2,3),mean)
 
-par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.2,0.1,0.28,0.01))
+par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
 for(i in 1:14) {
   lowerCI = apply(X.2[,i,],2,quantile, 0.025)
   upperCI = apply(X.2[,i,],2,quantile, 0.975)  
   ymin = min(c(lowerCI, Y1[i,]), na.rm=T)
   ymax = max(c(upperCI, Y1[i,]), na.rm=T)
-  plot(mean.X2[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white")
+  plot(mean.X2[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white", cex.main=0.9, cex.axis=0.9)
   # make polygon of 95% CIs of states
   Xs = seq(1,dim(X.1)[3])
   polygon(c(Xs, rev(Xs)), c(lowerCI, rev(upperCI)), border=NA, col="grey")
@@ -331,13 +331,13 @@ attach.jags(jags.model)
 # take mean for each state
 mean.X3 = apply(X.3,c(2,3),mean)
 
-par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.2,0.1,0.28,0.01))
+par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
 for(i in 1:14) {
   lowerCI = apply(X.3[,i,],2,quantile, 0.025)
   upperCI = apply(X.3[,i,],2,quantile, 0.975)  
   ymin = min(c(lowerCI, Y4[i,], Y5[i,]), na.rm=T)
   ymax = max(c(upperCI, Y4[i,], Y5[i,]), na.rm=T)
-  plot(mean.X3[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white")
+  plot(mean.X3[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white", cex.main=0.9, cex.axis=0.9)
   # make polygon of 95% CIs of states
   Xs = seq(1,dim(X.3)[3])
   polygon(c(Xs, rev(Xs)), c(lowerCI, rev(upperCI)), border=NA, col="grey")
@@ -353,13 +353,13 @@ attach.jags(jags.model)
 # take mean for each state
 mean.X4 = apply(X.4,c(2,3),mean)
 
-par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.2,0.1,0.28,0.01))
+par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
 for(i in 1:14) {
   lowerCI = apply(X.4[,i,],2,quantile, 0.025)
   upperCI = apply(X.4[,i,],2,quantile, 0.975)  
   ymin = min(c(lowerCI, Y6[i,]), na.rm=T)
   ymax = max(c(upperCI, Y6[i,]), na.rm=T)
-  plot(mean.X4[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white")
+  plot(mean.X4[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white", cex.main=0.9, cex.axis=0.9)
   # make polygon of 95% CIs of states
   Xs = seq(1,dim(X.4)[3])
   polygon(c(Xs, rev(Xs)), c(lowerCI, rev(upperCI)), border=NA, col="grey")
