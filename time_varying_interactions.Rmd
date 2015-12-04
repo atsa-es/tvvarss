@@ -429,7 +429,7 @@ for(i in 1:mm^2) {
 
 ```
 
-Next, we can look at the estimated covariate effects (otters, ENSO, urchin harvest). 
+Next, we can look at the estimated covariate effects. First, the effect of otters: 
 
 ```{r, echo=FALSE, fig.cap="Estimated effects of otters on species guilds.",fig.pos="placeHere"}
 attach.jags(jags.model)
@@ -439,6 +439,7 @@ for(i in 1:14) {
 }
 ```
 
+We can also look at the effects of ENSO on each guild, 
 
 ```{r, echo=FALSE, fig.cap="Estimated effects of ENSO on species guilds.",fig.pos="placeHere"}
 attach.jags(jags.model)
@@ -448,5 +449,10 @@ for(i in 1:14) {
 }
 ```
 
+And finally, the effect of urchin harvest on urchins, 
 
+```{r, echo=FALSE, fig.cap="Estimated effects of urchin harvest on urchins.",fig.pos="placeHere"}
+attach.jags(jags.model)
+  hist(EE[,14,1], 20, col="grey", xlab="", main = "Effect of harvest on urchins", cex.main=0.9, cex.axis=0.9)
 
+```
