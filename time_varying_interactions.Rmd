@@ -367,3 +367,65 @@ for(i in 1:14) {
 }
 ```
 
+## Results
+
+We can also include some estimated parameters, similar to the plots made in Scheuerell et al. 
+
+First, we'll look at the giant matrix of time varying coefficients (B matrix). Elements on off-diagonals (green) represent interspecific interactions. Elements in blue (on the diaganol) represent intraspecific density dependence. 
+
+```{r, echo=FALSE, fig.cap="Time series of estimated species interactions (80% CIs in shaded region). The interactions are interpreted as the effect of the species in each column on the species in each row. ",fig.pos="placeHere"}
+attach.jags(jags.model)
+
+mm <- sqrt(dim(B1.1)[2])# num of states
+TT <- dim(B1.1)[3]# times steps
+alpha <- 0.10# desired alpha for CIs
+
+# guilds 1-mm
+legend.key <- data.frame(index=seq(mm), 
+ guild=sub("_+[0-9]","",rownames(Y1)))
+
+spec2 <- c("Sm piscivores","Sheephead","Pred inverts",
+				   "Planktivores","Sm invert-eaters","Cleaner fish",
+				   "Omni inverts","Abalone","Herb fishes",
+				   "Snails","Urchins","Limpets",
+				   "Giant kelp","Under kelp")
+
+#dev.new(height=12, width=12)
+
+layout(matrix(seq(mm^2),mm,mm, byrow=FALSE),
+		widths=c(rep(1,mm),6))
+
+par(mai=rep(0.025,4), omi=c(0,0.3,0.3,0))
+
+spec = c("ABO", "CLF", "GKP", "HBF", "SHP", "LIM", 
+"OIN", "PLF", "PIN", "SIF", "SPF", "SNL", "UKP", "URC")
+reorder <- c(11, 5, 9, 8, 10, 2, 7, 1, 4, 12, 14, 6, 3, 13) 
+Bindices = matrix(seq(1,mm^2), mm,mm) # This is for re-ordering 
+toprow = Bindices[1,]
+Bindices = c(Bindices[reorder,reorder])
+    
+for(i in 1:mm^2) {
+	# plot mean
+	pdat <- cbind(apply(B1.1[,Bindices[i],],2,quantile,alpha/2),
+				  apply(B1.1[,Bindices[i],],2,mean),
+				  apply(B1.1[,Bindices[i],],2,quantile,1-alpha/2))
+		
+	matplot(seq(TT), pdat, type="n", xaxt="n",xlab="",yaxt="n",ylab="",ylim=c(-0.9,0.9))
+	abline(h=0, col="gray")
+	clr="green4" 
+	fill.clr = rgb(0, 139, 0, alpha = 50, maxColorValue = 255)# based on green4
+	if(i %in% seq(1,mm^2,mm+1)) { 
+		clr="blue"
+		fill.clr = rgb(0, 0, 255, alpha = 50, maxColorValue = 255)
+	} 	
+	polygon(c(seq(TT),rev(seq(TT))), c(pdat[,1], rev(pdat[,3])), col = fill.clr, border = NA)
+	lines(seq(TT), pdat[,2],lwd = 2.5, col = clr)
+	
+	if(i <= mm) { mtext(spec2[i], side=2, line=0.3,cex=0.3) }
+	if(i %in% toprow) { mtext(spec2[which(toprow==i)], side=3, line=0.3,cex=0.3) }
+	
+	#if(i==1) { mtext("A", at=-60, line=1.2, font=2) }
+	}
+
+```
+
