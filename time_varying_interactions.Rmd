@@ -1,16 +1,22 @@
 ---
-title: "Time varying autoregressive state space modeling of multi-site community dynamics"
+title: Time varying vector autoregressive state space modeling of multi-site community
+  dynamics
 author: "Eric Ward, Mark Scheuerell, Steve Katz"
 date: "December 3, 2015"
 output:
+  html_document: default
   pdf_document:
     fig_caption: yes
 ---
 
 ## Overview
-This markdown file is intended to accompany the Scheuerell et al. paper, describing new methods for allowing time varying interactions. The general framework of these methods follows from the MAR(1) framework, as well as the state space versions (MARSS, VAR).  
+This file accompanies the Scheuerell et al. paper describing a new method for estimating time varying community interactions (e.g., predation, competition) from multivariate time series data. The general model framework follows from the original MAR(1) of Ives et al. (2003), and subsequent state-space versions of Ives and Dakos (2012).
 
 ## Loading in the data
+We begin with the original data of Kenner et al. (2013), which are available from the ESA Archives at
+
+http://www.esapubs.org/archive/ecol/E094/244/
+
 Read in the raw data on the guild abundances. These are in log-space, and the few 0s in the dataset have been replaced with NAs, because species are likely present in low density (just not detected).
 
 ```{r, warning=FALSE, message=FALSE}
