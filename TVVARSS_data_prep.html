@@ -73,14 +73,107 @@ img {
 </div>
 
 
-<div id="overview" class="section level3">
-<h3>Overview</h3>
-<p>This file accompanies the Scheuerell et al. paper describing a new method for estimating time varying community interactions (e.g., predation, competition) from multivariate time series data. The general model framework follows from the original MAR(1) of Ives et al. (2003), and subsequent state-space versions of Ives and Dakos (2012).</p>
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p>This file accompanies the Scheuerell et al. paper describing a new method for estimating time varying community interactions (e.g., predation, competition) from multivariate time series data. The general model framework follows from the original MAR(1) model of Ives et al. (2003), and subsequent state-space versions of Ives and Dakos (2012).</p>
 </div>
-<div id="loading-in-the-raw-data" class="section level3">
-<h3>Loading in the raw data</h3>
-<p>We begin with the original data from Kenner et al. (2013), which are available from the ESA Archives at</p>
+<div id="loading-the-raw-data" class="section level2">
+<h2>Loading the raw data</h2>
+<p>We begin with the original data from Kenner et al. (2013), which are available from the Ecological Society of America Archives at</p>
 <p><a href="http://www.esapubs.org/archive/ecol/E094/244/" class="uri">http://www.esapubs.org/archive/ecol/E094/244/</a></p>
+<pre class="r"><code># set URL
+URL &lt;- &quot;http://www.esapubs.org/archive/ecol/E094/244/&quot;
+# get benthic algae/invert data
+dat.bi &lt;- read.csv(paste0(URL,&quot;Benthic%20density%20raw%20data.csv&quot;))
+colnames(dat.bi) &lt;- tolower(colnames(dat.bi))
+# get benthic fish data
+dat.bf &lt;- read.csv(paste0(URL,&quot;Benthic%20fish%20density%20raw%20data.csv&quot;))
+colnames(dat.bf) &lt;- tolower(colnames(dat.bf))
+# get midwater fish data
+dat.mf &lt;- read.csv(paste0(URL,&quot;Midwater%20fish%20density%20raw%20data.csv&quot;))
+colnames(dat.mf) &lt;- tolower(colnames(dat.mf))</code></pre>
+<p>For our purposes we want the mean density of each species by sampling occasion and location.</p>
+<pre class="r"><code># benthic algae/invert data
+benthos &lt;- aggregate(density ~ speciescode + station + period, data=dat.bi, &quot;mean&quot;)
+# combine bottom &amp; midwater fish data
+fish &lt;- rbind(dat.bf,dat.mf)
+# include juveniles and adults together
+fish[,&quot;density&quot;] &lt;- fish[,&quot;adultdensity&quot;] + fish[,&quot;juvdensity&quot;]
+# fish data
+fish2 &lt;- aggregate(density ~ speciescode + station + period, data=fish, &quot;mean&quot;)
+# all data together
+dat &lt;- rbind(benthos,fish2)</code></pre>
+</div>
+<div id="setting-up-the-guilds" class="section level2">
+<h2>Setting up the guilds</h2>
+<p>We have assigned all of the species in the Kenner dataset to 1 of 16 guilds (see Table S? of the manuscript for a print version). We have saved the lookup table as a .csv file, which is available on the Github project site.</p>
+<pre class="r"><code># set URL
+URL &lt;- &quot;https://raw.githubusercontent.com/eric-ward/TVVARSS/master/&quot;
+fileName &lt;- &quot;species_sampled_lookup.csv?token=AE0I0DvPOlzn38ULW4v9IDcQRnvg7WlOks5Woq-VwA%3D%3D&quot;
+# get LUT of guild names
+guilds &lt;- read.csv(paste0(URL,fileName))
+colnames(guilds) &lt;- tolower(colnames(guilds))
+# assign guilds names
+for(i in 1:dim(guilds)[1]) {
+  dat[dat[,&quot;speciescode&quot;] %in% guilds[i,&quot;speciescode&quot;],&quot;guild&quot;] &lt;- guilds[i,&quot;guild&quot;]
+    }</code></pre>
+<p>There are two guilds that we do not want to include in our analysis because they are too rare in the dataset: 1) “large piscivores” (e.g., leopard shark, <em>Triakis semifasciata</em>), and 2) “pelagic piscivores” (i.e., jack mackerel, <em>Trachurus symmetricus</em>).</p>
+<pre class="r"><code># spp to drop/eliminate
+spp.out &lt;- c(&quot;Piscivorous fishes - pelagic&quot;,&quot;Large piscivorous fishes&quot;)
+# drop spp/guilds of no interest
+dat &lt;- dat[!(dat$guild %in% spp.out),]</code></pre>
+</div>
+<div id="setting-up-sites" class="section level2">
+<h2>Setting up sites</h2>
+<p>The original data are from 7 sites, but we’re only going to model the dynamics of 6 of those sites because the 7th (at the navy pier) has lots of missing data. For the remaining 6 sites, we’re going to assume that there are 4 underlying “states”“, or realizations of the San Nicolas community (see table below). In the North region, we’re going to assume site 1 is a single observation of one state. In the West region, we’re going to assume sites 2 and 3 are samples from the same state. In the South region, we’re going to model 2 states, grouping sites 4 and 5, and keeping site 6 separate because of spatial location and differences in habitat.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="center">Site</th>
+<th align="center">Name</th>
+<th align="center">Region</th>
+<th align="center">State</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">1</td>
+<td align="center">Nav Fac</td>
+<td align="center">North</td>
+<td align="center">1</td>
+</tr>
+<tr class="even">
+<td align="center">2</td>
+<td align="center">Sandy Cove</td>
+<td align="center">West</td>
+<td align="center">2</td>
+</tr>
+<tr class="odd">
+<td align="center">3</td>
+<td align="center">West End</td>
+<td align="center">West</td>
+<td align="center">2</td>
+</tr>
+<tr class="even">
+<td align="center">4</td>
+<td align="center">East Dutch Harbor</td>
+<td align="center">South</td>
+<td align="center">3</td>
+</tr>
+<tr class="odd">
+<td align="center">5</td>
+<td align="center">West Dutch Harbor</td>
+<td align="center">South</td>
+<td align="center">3</td>
+</tr>
+<tr class="even">
+<td align="center">6</td>
+<td align="center">Daytona</td>
+<td align="center">South</td>
+<td align="center">4</td>
+</tr>
+</tbody>
+</table>
 <p>Read in the raw data on the guild abundances. These are in log-space, and the few 0s in the dataset have been replaced with NAs, because species are likely present in low density (just not detected).</p>
 <pre class="r"><code>library(R2jags)
 dat &lt;- read.csv(&quot;biannual_var_flat_by_obs_zero.csv&quot;, header=TRUE, sep=&quot;,&quot;)
@@ -100,7 +193,6 @@ spec.names = c(&quot;Abalone&quot;,&quot;Cleaner.fish&quot;,&quot;Giant.kelp&quo
 <pre class="r"><code>nSites = 7
 n &lt;- dim(dat)[1] # number of time points
 m &lt;- dim(dat)[2]/nSites # number of guilds/ groups</code></pre>
-<p>We have data from 7 sites, but we’re only going to model the dynamics of 6 of those sites (the 7th, at the navy pier has lots of missing data). For the remaining 6 sites, we’re going to assume that there are 4 underlying ‘states’, or realizations of the San Nicolas community. In the West region, we’re going to assume sites 2 and 3 are samples from the same state. In the North region, we’re going to assume site 1 represents a single realization of that state. In the South region, we’re going to model 2 states, grouping sites 4 and 5, and modeling site 6 separately (because of spatial location and differences in habitat).</p>
 <pre class="r"><code>Y1 = t(dat[,matrix(seq(1,m*m),m,m)[,4]]) # site 1, state 2
 Y2 = t(dat[,matrix(seq(1,m*m),m,m)[,1]]) # site 2, state 1
 Y3 = t(dat[,matrix(seq(1,m*m),m,m)[,2]]) # site 3, state 1
