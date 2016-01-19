@@ -1,0 +1,20 @@
+# set URL#
+URL <- "https://raw.githubusercontent.com/eric-ward/TVVARSS/master/"#
+fileName <- "species_sampled_lookup.csv?token=AE0I0DvPOlzn38ULW4v9IDcQRnvg7WlOks5Woq-VwA%3D%3D"#
+# get LUT of guild names#
+guilds <- read.csv(paste0(URL,fileName))
+?read.csv
+? textConnection
+read.csv(textConnection(paste0(URL,fileName)))
+library(RCurl)
+URL <- "https://raw.githubusercontent.com/eric-ward/TVVARSS/master/"#
+fileName <- "species_sampled_lookup.csv?token=AE0I0DvPOlzn38ULW4v9IDcQRnvg7WlOks5Woq-VwA%3D%3D"#
+# get LUT of guild names#
+guilds <- read.csv(paste0(URL,fileName))
+read.csv(textConnection(getURL(paste0(URL,fileName))))
+URL <- "https://raw.githubusercontent.com/eric-ward/TVVARSS/master/"#
+token <- "?token=AE0I0KvRgq2xRDsnNauXCnTjTqw73Cphks5Wp3pDwA%3D%3D"#
+fileName <- "species_sampled_lookup.csv"#
+# get LUT of guild names#
+guilds <- read.csv(textConnection(getURL(paste0(URL,fileName,token))))
+?scale
