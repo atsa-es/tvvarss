@@ -91,3 +91,44 @@ TT <- dim(dat.m2)[1]
 
 dat.m2 <- dat.m2[order(dat.m2$period),]
 
+
+
+
+
+
+
+
+
+
+
+
+NreactPost <- IreactPost <- matrix(NA, dim(B1.1)[1], dim(B1.1)[3])
+
+for(t in 1:dim(B1.1)[3]) {
+	for(mcmc in 1:dim(B1.1)[1]) {
+		# reactivity (Neubert et al 2009)
+		SVD <- svd(matrix(B1.1[mcmc,,t],m,m))
+		NreactPost[mcmc,t] <- log(SVD$d[1])
+		IreactPost[mcmc,t] <- eigen(t(matrix(B1.1[mcmc,,t],m,m))%*%matrix(B1.1[mcmc,,t],m,m))$values[1] - 1
+	}
+	print(t)
+}
+
+
+ylm <- c(min(apply(NreactPost,2,quantile,0.05)),max(apply(NreactPost,2,quantile,0.95)))
+plot(apply(NreactPost,2,median), type="l",lwd=3, xlab="",ylab = "Reactivity",axes=F,col="blue",ylim=ylm)
+lines(apply(NreactPost,2,quantile,0.05),col="blue")
+lines(apply(NreactPost,2,quantile,0.95),col="blue")
+axis(1)
+axis(2)
+box()
+
+# variance method 1 (Ives et al. 2003)
+ylm <- c(min(apply(IreactPost,2,quantile,0.05)),max(apply(IreactPost,2,quantile,0.95)))
+plot(apply(IreactPost,2,median), type="l",lwd=3, xlab="",ylab = "Reactivity",axes=F,col="blue",ylim=ylm)
+lines(apply(IreactPost,2,quantile,0.05),col="blue")
+lines(apply(IreactPost,2,quantile,0.95),col="blue")
+axis(1)
+axis(2)
+box()
+

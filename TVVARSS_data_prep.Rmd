@@ -111,22 +111,7 @@ dat <- dat[!(dat$guild %in% spp.out),]
 
 ## Setting up sites
 
-**At present**
-
-The original data are from 7 sites, but we're only going to model the dynamics of 6 of those sites because the 7th (at the navy pier) has lots of missing data. For the remaining 6 sites, we're going to assume that there are 4 underlying "states"", or realizations of the San Nicolas community (see table below). In the North region, we're going to assume site 1 is a single observation of one state. In the West region, we're going to assume sites 2 and 3 are samples from the same state. In the South region, we're going to model 2 states, grouping sites 4 and 5, and keeping site 6 separate because of spatial location and differences in habitat.  
-
-| Site | Name              | Region | State |
-|:----:|:-----------------:|:------:|:-----:|
-|   1	 | Nav Fac           | North  |   1   |
-|   2  | Sandy Cove        | West   |   2   |
-|   3  | West End          | West   |   2   |
-|   4  | East Dutch Harbor | South  |   3   |
-|   5  | West Dutch Harbor | South  |   3   |
-|   6  | Daytona           | South  |   4   |
-
-**OR**
-
-The original data were collected at 7 sites around San Nicolas. However, we assume that there are only 4 underlying "states"", or realizations of the San Nicolas community (see table below). In the North region, we treat site 1 as a single observation of one state. In the West region, we treat sites 2, 3 & 7 as samples from the same state. In the South region, we model 2 different states, grouping sites 4 and 5, and keeping site 6 separate because of spatial location and differences in habitat.
+The original data were collected at 7 sites around San Nicolas, but we only model the dynamics of 6 of them. The seventh site, Sandy Cover, was added relatively late in the study, is relatively dep compared to the other sites, and was surveyed with much less frequency. We assume that there are 4 underlying "states", or realizations of the San Nicolas community (see table below). In the North region, we treat site 1 as a single observation of one state. In the West region, we treat sites 2 and 3 as samples from the same state. In the South region, we model 2 different states. Sites 4 and 5 are observations of a third state, and site 6 is from a fourth state.
 
 | Site | Name              | Region | State |
 |:----:|:-----------------:|:------:|:-----:|
@@ -136,12 +121,11 @@ The original data were collected at 7 sites around San Nicolas. However, we assu
 |   4  | East Dutch Harbor | South  |   3   |
 |   5  | West Dutch Harbor | South  |   3   |
 |   6  | Daytona           | South  |   4   |
-|   7  | Sandy Cove        | West   |   2   |
 
 ```{r}
 dat$state <- NA
 dat$state[dat$station==1] <- 1
-dat$state[dat$station==2 | dat$station==3 | dat$station==7] <- 2
+dat$state[dat$station==2 | dat$station==3] <- 2
 dat$state[dat$station==4 | dat$station==5] <- 3
 dat$state[dat$station==6] <- 4
 ```
@@ -163,7 +147,7 @@ We will treat 0's in the aggregated data as NA's for two reasons:
 dat.m[dat.m$density==0,"density"] <- NA
 ```
 
-We need to use log-density to meet model assumptions, and we want to de-mean the data so that we do not need to estimate them within the model.
+We need to use log-density to meet model assumptions, and we want to de-mean the data so that we do not need to estimate the means within the model.
 
 ```{r}
 # log of density
