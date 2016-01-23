@@ -83,7 +83,7 @@ if(!require("RCurl")) {
 ```
 ***
 
-We have assigned all of the species in the Kenner dataset to 1 of 16 guilds (see Table S? of the manuscript for a print version). We have saved the lookup table as a .csv file, which is available on the Github project site.
+We assign all of the species in the Kenner dataset to 1 of 16 guilds (see Table S? of the manuscript for a print version). We have saved the lookup table as a .csv file, which is available on the Github project site.
 
 ```{r}
 # set URL
@@ -109,20 +109,30 @@ dat <- dat[!(dat$guild %in% spp.out),]
 ```
 
 
-## Setting up sites
+## Identifying the sampling stations
 
-The original data were collected at 7 sites around San Nicolas, but we only model the dynamics of 6 of them. The seventh site, Sandy Cover, was added relatively late in the study, is relatively dep compared to the other sites, and was surveyed with much less frequency. We assume that there are 4 underlying "states", or realizations of the San Nicolas community (see table below). In the North region, we treat site 1 as a single observation of one state. In the West region, we treat sites 2 and 3 as samples from the same state. In the South region, we model 2 different states. Sites 4 and 5 are observations of a third state, and site 6 is from a fourth state.
+The original data were collected at 7 stations around San Nicolas, but we only model the dynamics of 6 of them. The seventh station, Sandy Cove, was added later in the study, is relatively deep compared to the other stations, and was surveyed with much less frequency. We assume that the data from the 6 stations are observations of 4 underlying "states", or realizations of the San Nicolas community (see table below). In the North region, we treat station 1 as a single observation of one state. In the West region, we treat stations 2 and 3 as samples from the same state. In the South region, we model 2 different states. Stations 4 and 5 are observations of a third state, and station 6 is from a fourth state.
 
-| Site | Name              | Region | State |
-|:----:|:-----------------:|:------:|:-----:|
-|   1  | Nav Fac           | North  |   1   |
-|   2  | West End 1        | West   |   2   |
-|   3  | West End 2        | West   |   2   |
-|   4  | East Dutch Harbor | South  |   3   |
-|   5  | West Dutch Harbor | South  |   3   |
-|   6  | Daytona           | South  |   4   |
+```{r, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
+tabl_1 <- "
+| Station | Name              | Region | State |
+|:-------:|:-----------------:|:------:|:-----:|
+|    1    | Nav Fac           | North  |   1   |
+|    2    | West End 1        | West   |   2   |
+|    3    | West End 2        | West   |   2   |
+|    4    | East Dutch Harbor | South  |   3   |
+|    5    | West Dutch Harbor | South  |   3   |
+|    6    | Daytona           | South  |   4   |
+"
+cat(tabl_1) # output the table in a format good for HTML/PDF/docx conversion
+```
+
+Now we drop station 7 and assign the remaining observations to their respective states.
 
 ```{r}
+# drop station 7
+dat <- dat[dat$station != 7,]
+# assign obs to states
 dat$state <- NA
 dat$state[dat$station==1] <- 1
 dat$state[dat$station==2 | dat$station==3] <- 2
@@ -130,7 +140,7 @@ dat$state[dat$station==4 | dat$station==5] <- 3
 dat$state[dat$station==6] <- 4
 ```
 
-##Data preparation
+## Data aggregation & transformation
 
 Now we need to aggregate the data by guild and sampling station.
 
@@ -155,7 +165,7 @@ dat.m$ldens <- log(dat.m$density)
 # transform data to wide form (rows: time; cols: guilds x stations)
 dat.m2 <- dcast(dat.m, period ~ guild + station, value.var="ldens")
 # de-mean the data
-dat.m2 <- scale(dat.m2,center=TRUE,scale=FALSE)
+dat.m2[,-1] <- scale(dat.m2[,-1],center=TRUE,scale=FALSE)
 ```
 
 There are a few time periods with missing samples that we need to set to NA.
@@ -173,26 +183,99 @@ dat.m2 <- dat.m2[order(dat.m2[,"period"]),]
 ```
 
 
+## External drivers (covariates)
+
+There are several external drivers known to affect food web dynamics in kelp forest ecosystems. In particular, we are interested in the potential roles of
+
+1. predatory sea otters;
+2. the El Niño - Southern Oscillation (ENSO) climate phenomenon;
+3. commercial urchin harvest.
+
+### 1. Otters
+The sea otter data come from multiple sources. __NEED INFO HERE RE: EARLY SOURCE(S)__ ...and years from 1995-2011 come from Kenner et al. (2013).
+
+```{r}
+# get some otter data
+```
+
+### 2. ENSO
+The ENSO data come from NOAA's National Centers for Environmental Information. Specifically, we used the sea-surface temperatures from the ENSO 3.4 zone. More information is available at
+
+https://www.ncdc.noaa.gov/teleconnections/enso/
+
+The ENSO data are recorded monthly, but the food web data were sampled twice per year (i.e., spring and autumn). Thus, we want to use ENSO signals indicative of the period preceding each of the spring and fall dates. Although those dates vary somewhat from year to year, we selected these months for each time period:
+
+```{r, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
+tabl_2 <- "
+| Season | ENSO months                |
+|:-------|:---------------------------|
+| Spring | March, April, May          |
+| Autumn | August, September, October |
+"
+cat(tabl_2) # output the table in a format good for HTML/PDF/docx conversion
+```
+
+### the old option
+(Only goes back to 1982, however. Waiting to hear from Mantua on better choice; see below)
+```{r}
+# first year of data
+yr.first <- 1980
+# last year of data
+yr.last <- 2011
+# first set of months
+mon1 <- c(3,4,5)
+# second set of months
+mon2 <- c(8,9,10)
+# get all ENSO data
+enso <- read.table("http://www.cpc.ncep.noaa.gov/data/indices/sstoi.indices", header=TRUE)
+# trim data to correct years & index
+nino34 <- enso[enso$YR>=yr.first & enso$YR<=yr.last,  c("YR","MON","NINO3.4")]
+# assign months to periods (1=Spring; 2=Autumn)
+nino34[nino34$MON %in% mon1,"period"] <- 1
+nino34[nino34$MON %in% mon2,"period"] <- 2
+# ts of period means
+anom34 <- aggregate(NINO3.4 ~ period + YR, nino34, mean)[,c("YR","period","NINO3.4")]
+# convert to z-score (i.e., a temperature anomoly)
+anom34$NINO3.4 <- scale(anom34$NINO3.4)
+colnames(anom34)[c(1,3)] <- c("year","anom34")
+```
+
+### the new option
+```{r}
+# first year of data
+yr.first <- 1980
+# last year of data
+yr.last <- 2011
+# first set of months
+mon1 <- c(3,4,5)
+# second set of months
+mon2 <- c(8,9,10)
+# get all ENSO data
+filename <- "http://www.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/detrend.nino34.ascii.txt"
+enso <- read.table(filename, header=TRUE)
+# trim data to correct years & index
+nino34 <- enso[enso$YR>=yr.first & enso$YR<=yr.last,  c("YR","MON","TOTAL")]
+# assign months to periods
+nino34[nino34$MON %in% mon1,"period"] <- 1
+nino34[nino34$MON %in% mon2,"period"] <- 2
+# ts of period means
+anom34 <- aggregate(TOTAL ~ period + YR, nino34, mean)[,c("YR","period","TOTAL")]
+# convert to z-score (i.e., a temperature anomoly)
+anom34$TOTAL <- scale(anom34$TOTAL)
+colnames(anom34)[c(1,3)] <- c("year","anom34")
+```
+
+### 3. Harvest
+
 
 
 ***
-***
+## Old stuff below here
 ***
 
 Read in the raw data on the guild abundances. These are in log-space, and the few 0s in the dataset have been replaced with NAs, because species are likely present in low density (just not detected).
 
-```{r, warning=FALSE, message=FALSE}
-library(R2jags)
-dat <- read.csv("biannual_var_flat_by_obs_zero.csv", header=TRUE, sep=",")
-# Get rid of infinite values
-for(i in 1:dim(dat)[2]) {
-	dat[which(is.finite(dat[,i])==FALSE),i] = NA
-}
-# De-mean each of the individual time series
-for(i in 1:dim(dat)[2]) {
-	dat[,i] = dat[,i] - mean(dat[,i],na.rm=T)
-}
-
+```{r}
 spec.names = c("Abalone","Cleaner.fish","Giant.kelp","Herb.fish","Large.invert.eating.fish",
   "Limpets", "Omni.inverts", "Plankt.fish", "Pred.inverts", "Small.invert.eating.fish",   
   "Small.pisc.fish", "Snails", "Understory.kelp", "Urchins")
@@ -201,41 +284,41 @@ spec.names = c("Abalone","Cleaner.fish","Giant.kelp","Herb.fish","Large.invert.e
 Number of sites, time steps, and species/guilds/groups:  
 ```{r}
 nSites = 7
-n <- dim(dat)[1] # number of time points
-m <- dim(dat)[2]/nSites # number of guilds/ groups
+n <- dim(dat.m2)[1] # number of time points
+m <- (dim(dat.m2)[2]-1)/nSites # number of guilds/ groups
 ```
 
 
 
 ```{r}
-Y1 = t(dat[,matrix(seq(1,m*m),m,m)[,4]]) # site 1, state 2
-Y2 = t(dat[,matrix(seq(1,m*m),m,m)[,1]]) # site 2, state 1
-Y3 = t(dat[,matrix(seq(1,m*m),m,m)[,2]]) # site 3, state 1
-Y4 = t(dat[,matrix(seq(1,m*m),m,m)[,5]]) # site 4, state 3
-Y5 = t(dat[,matrix(seq(1,m*m),m,m)[,6]]) # site 5, state 3
-Y6 = t(dat[,matrix(seq(1,m*m),m,m)[,7]]) # site 6, state 4
+#Y1 = t(dat[,matrix(seq(1,m*m),m,m)[,4]]) # site 1, state 2
+#Y2 = t(dat[,matrix(seq(1,m*m),m,m)[,1]]) # site 2, state 1
+#Y3 = t(dat[,matrix(seq(1,m*m),m,m)[,2]]) # site 3, state 1
+#Y4 = t(dat[,matrix(seq(1,m*m),m,m)[,5]]) # site 4, state 3
+#Y5 = t(dat[,matrix(seq(1,m*m),m,m)[,6]]) # site 5, state 3
+#Y6 = t(dat[,matrix(seq(1,m*m),m,m)[,7]]) # site 6, state 4
 ```
 
 Now we'll read in the covariates. For this application, there are 3 covariates (ENSO, urchin harvest, otter counts), and 2 of the 3 have the same values for all regions becasue they are recorded at a coarser spatial scale than the sampling sites (ENSO, urchin harvest).  
 
 ```{r}
-covars = read.csv("covariates_by_region.csv")
+# covars = read.csv("covariates_by_region.csv")
 
-enso.wns = matrix(0,dim(covars)[1],m)
-otters.w = matrix(0,dim(covars)[1],m) # dd.1
-otters.n = matrix(0,dim(covars)[1],m) 
-otters.s = matrix(0,dim(covars)[1],m)
-for(i in 1:m) {
-	enso.wns[,i] = covars[,"enso_W"]
-	otters.w[,i] = covars[,"otter_W"]
-	otters.n[,i] = covars[,"otter_N"]
-	otters.s[,i] = covars[,"otter_S"]
-}
+# enso.wns = matrix(0,dim(covars)[1],m)
+# otters.w = matrix(0,dim(covars)[1],m) # dd.1
+# otters.n = matrix(0,dim(covars)[1],m) 
+# otters.s = matrix(0,dim(covars)[1],m)
+# for(i in 1:m) {
+# 	enso.wns[,i] = covars[,"enso_W"]
+# 	otters.w[,i] = covars[,"otter_W"]
+# 	otters.n[,i] = covars[,"otter_N"]
+# 	otters.s[,i] = covars[,"otter_S"]
+# }
 
 # For harvest, we're only including removals of urchins, hence
 # 0s for other species
-harvest.wns = matrix(0,dim(covars)[1],m)
-harvest.wns[,14] = covars[,"harvest_W"]
+# harvest.wns = matrix(0,dim(covars)[1],m)
+# harvest.wns[,14] = covars[,"harvest_W"]
 ```
 
 ## Data preparation
@@ -252,72 +335,76 @@ Bdiag = seq(1,m*m,by=(m+1)) # these are the indices of vecB for diagonal
 Boffdiag = seq(1,m*m)[-Bdiag]
 ```
 
-## Writing the JAGS model
+## The TVVARSS model in JAGS
 ```{r}
 model = cat("
 
 model {
 
-	# B1 is interaction matrix
-	B1.tau ~ dwish(Bprior, m2); # B1.tau is precision matrix of interactions
-	B1.1[1:m2,1] ~ dmnorm(Bz,B1.tau);	# interactions at time 1
-		
-	# convert the B1 vec to a matrix for initial time step	
+  # B1 is interaction matrix
+  B1.tau ~ dwish(Bprior, m2); # B1.tau is precision matrix of interactions
+  B1.1[1:m2,1] ~ dmnorm(Bz,B1.tau);	# interactions at time 1
+
+  # convert the B1 vec to a matrix for initial time step	
   for(cols in 1:m) {
-   # go from vec space -> matrix, but i think it's only way in jags
-   Bmat.1[1:m,cols,1] <- B1.1[Bindices[1,cols]:Bindices[m,cols],1]; # this is by column            
+    # go from vec space -> matrix
+    Bmat.1[1:m,cols,1] <- B1.1[Bindices[1,cols]:Bindices[m,cols],1]; # this is by column            
   }
 
   # initial X0, or state of nature, varies by state, but shared prior
   X0.tau ~ dwish(Bprior[1:m,1:m], m); # prior precision matrix
-	X.1[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 1
-	X.2[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 2
-	X.3[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 3
-	X.4[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 4
-					
-	# process variance is independent/unequal by region
+  X.1[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 1
+  X.2[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 2
+  X.3[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 3
+  X.4[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 4
+				
+  # process variance is independent/unequal by region
   # and independent/unequal across spp
-	for(i in 1:m) {
-		for(j in 1:3) {
-		   tauQ[i,j] ~ dgamma(0.01,0.01);
-		}		
-	}
-	
+  for(i in 1:m) {
+    for(j in 1:3) {
+      tauQ[i,j] ~ dgamma(0.01,0.01);
+    }		
+  }
+
   B1.offDiagTau ~ dgamma(0.001,0.001);
   B1.diagTau ~ dgamma(0.001,0.001);    
-  
+
   # Priors for coefficients  
-	for(i in 1:m) {
-		CC[i,1] ~ dnorm(0,1); # effect of enso, varies by spp
-		DD[i,1] ~ dnorm(0,1); # effect of otters, varies by spp
-	}
-	for(i in 1:13) {
-		EE[i,1] <- 0; # effect of urchin harvest on non-urchin
-	}
-	EE[14,1] ~ dnorm(0,1); # effect of urchin harvest on urchins
-	    
+  for(i in 1:m) {
+    CC[i,1] ~ dnorm(0,1); # effect of enso, varies by spp
+    DD[i,1] ~ dnorm(0,1); # effect of otters, varies by spp
+  }
+  for(i in 1:13) {
+    EE[i,1] <- 0; # effect of urchin harvest on non-urchin
+  }
+  EE[14,1] ~ dnorm(0,1); # effect of urchin harvest on urchins
+
   for(time in 2:n) {
-  	for(cols in 1:m) {
-  	   # go from vec space -> matrix, but i think it's only way in jags
-  	   Bmat.1[1:m,cols,time] <- B1.1[Bindices[1,cols]:Bindices[m,cols],time-1];    	   
-  	}
+    for(cols in 1:m) {
+      # go from vec space -> matrix, but i think it's only way in jags
+      Bmat.1[1:m,cols,time] <- B1.1[Bindices[1,cols]:Bindices[m,cols],time-1];    	   
+    }
     	
     # calculate predicted state vector for states 1-4
     predX.1[1:m,time] <- Bmat.1[1:m,1:m,time-1] %*% (X.1[1:m,time-1]) + 
-CC[1:m,1] * enso.wns[time-1,] + DD[1:m,1] * otters.w[time-1,] + 
-EE[1:m,1]*harvest.wns[time-1,];#site 2/3
+                         CC[1:m,1] * enso.wns[time-1,] +
+                         DD[1:m,1] * otters.w[time-1,] +
+                         EE[1:m,1] * harvest.wns[time-1,];#site 2/3
 
-    predX.2[1:m,time] <- Bmat.1[1:m,1:m,time-1] %*% (X.2[1:m,time-1]) + 
-CC[1:m,1] * enso.wns[time-1,] + DD[1:m,1] * otters.n[time-1,] + 
-EE[1:m,1]*harvest.wns[time-1,];#site 1
+    predX.2[1:m,time] <- Bmat.1[1:m,1:m,time-1] %*% (X.2[1:m,time-1]) +
+                         CC[1:m,1] * enso.wns[time-1,] +
+                         DD[1:m,1] * otters.n[time-1,] +
+                         EE[1:m,1] * harvest.wns[time-1,];#site 1
     	
-    predX.3[1:m,time] <- Bmat.1[1:m,1:m,time-1] %*% (X.3[1:m,time-1]) + 
-CC[1:m,1] * enso.wns[time-1,] + DD[1:m,1] * otters.s[time-1,] + 
-EE[1:m,1]*harvest.wns[time-1,];#site 4/5
+    predX.3[1:m,time] <- Bmat.1[1:m,1:m,time-1] %*% (X.3[1:m,time-1]) +
+                         CC[1:m,1] * enso.wns[time-1,] +
+                         DD[1:m,1] * otters.s[time-1,] +
+                         EE[1:m,1] * harvest.wns[time-1,];#site 4/5
 
-    predX.4[1:m,time] <- Bmat.1[1:m,1:m,time-1] %*% (X.4[1:m,time-1]) + 
-CC[1:m,1] * enso.wns[time-1,] + DD[1:m,1] * otters.s[time-1,] + 
-EE[1:m,1]*harvest.wns[time-1,];#site 6
+    predX.4[1:m,time] <- Bmat.1[1:m,1:m,time-1] %*% (X.4[1:m,time-1]) +
+                         CC[1:m,1] * enso.wns[time-1,] +
+                         DD[1:m,1] * otters.s[time-1,] +
+                         EE[1:m,1] * harvest.wns[time-1,];#site 6
 
     # include process variation - normally distributed errors
     # independent across spp and site
@@ -327,35 +414,35 @@ EE[1:m,1]*harvest.wns[time-1,];#site 6
       X.3[spp,time] ~ dnorm(predX.3[spp,time], tauQ[spp,3]);
       X.4[spp,time] ~ dnorm(predX.4[spp,time], tauQ[spp,3]);		    		
     }
-        
-    # update B0 and B1
-	  for(i in 1:(m*m-m)) {
-	    # off diagonal elements of B1 -- interactions
-	    B1.1[Boffdiag[i],time] ~ dnorm(B1.1[Boffdiag[i],time-1], B1.offDiagTau);	    		    	
-	  }
-	  for(i in 1:m) {
-	    # Diagonal elements of B1 -- density dep
-	    B1.1[Bdiag[i],time] ~ dnorm(B1.1[Bdiag[i],time-1], B1.diagTau);	    		    	
-	  }
+
+  # update B0 and B1
+    for(i in 1:(m*m-m)) {
+      # off diagonal elements of B1 -- interactions
+      B1.1[Boffdiag[i],time] ~ dnorm(B1.1[Boffdiag[i],time-1], B1.offDiagTau);	    		    	
+    }
+    for(i in 1:m) {
+      # Diagonal elements of B1 -- density dep
+      B1.1[Bdiag[i],time] ~ dnorm(B1.1[Bdiag[i],time-1], B1.diagTau);	    		    	
+    }
   } # end time loop
 
-	# observation / data model, assume R = diag and equal
-	for(i in 1:m) {
-	tauR[i] ~ dgamma(0.001,0.001);
-	}	
+  # observation / data model, assume R = diag and equal
+  for(i in 1:m) {
+    tauR[i] ~ dgamma(0.001,0.001);
+  }	
 
-	for(time in 1:n) {
-		for(spp in 1:m) {
-			Y2[spp,time] ~ dnorm(X.1[spp,time],tauR[spp]);
-			Y3[spp,time] ~ dnorm(X.1[spp,time],tauR[spp]);
-			Y1[spp,time] ~ dnorm(X.2[spp,time],tauR[spp]);
-			Y4[spp,time] ~ dnorm(X.3[spp,time],tauR[spp]);
-			Y5[spp,time] ~ dnorm(X.3[spp,time],tauR[spp]);
-			Y6[spp,time] ~ dnorm(X.4[spp,time],tauR[spp]);																		
-		}
-	}
+  for(time in 1:n) {
+    for(spp in 1:m) {
+      Y2[spp,time] ~ dnorm(X.1[spp,time],tauR[spp]);
+      Y3[spp,time] ~ dnorm(X.1[spp,time],tauR[spp]);
+      Y1[spp,time] ~ dnorm(X.2[spp,time],tauR[spp]);
+      Y4[spp,time] ~ dnorm(X.3[spp,time],tauR[spp]);
+      Y5[spp,time] ~ dnorm(X.3[spp,time],tauR[spp]);
+      Y6[spp,time] ~ dnorm(X.4[spp,time],tauR[spp]);																		
+    }
+  }
 	
-}
+} # end JAGS model description
 
 ", file = "TVVARSS.txt")
 ```
