@@ -10,6 +10,7 @@
 
 <meta name="author" content="Eric Ward, Mark Scheuerell, Steve Katz" />
 
+<meta name="date" content="2016-01-25" />
 
 <title>Time-varying vector autoregressive state space (TVVARSS) modeling of multi-site community dynamics</title>
 
@@ -69,17 +70,27 @@ img {
 <div id="header">
 <h1 class="title">Time-varying vector autoregressive state space (TVVARSS) modeling of multi-site community dynamics</h1>
 <h4 class="author"><em>Eric Ward, Mark Scheuerell, Steve Katz</em></h4>
-<h4 class="date"><em>December 3, 2015</em></h4>
+<h4 class="date"><em>2016-01-25</em></h4>
 </div>
 
 
 <div id="overview" class="section level2">
 <h2>Overview</h2>
-<p>This file accompanies the Scheuerell et al. paper describing a new method for estimating time varying community interactions (e.g., predation, competition) from multivariate time series data. The general model framework follows from the original MAR(1) model of Ives et al. (2003), and subsequent state-space versions of Ives and Dakos (2012).</p>
+<p>This file accompanies the Scheuerell et al. paper describing a new method for estimating time varying community interactions (e.g., predation, competition) from multivariate time series data. The general model framework follows from the original MAR(1) model of Ives et al. (2003), and subsequent state-space versions of Ives and Dakos (2012). Specifically, the TVVARSS model is</p>
+<p><span class="math display">\[\mathbf{y}_{i,t} = \mathbf{x}_{j,t} + \mathbf{v}_{i,t}\]</span></p>
+<p><span class="math display">\[\mathbf{x}_{j,t} = \mathbf{B}_t \mathbf{x}_{j,t-1} + \mathbf{C} \mathbf{c}_{j,t} + \mathbf{w}_{j,t}\]</span></p>
+<p><span class="math display">\[\mathbf{B}_t = \mathbf{B}_{t-1} + \mathbf{e}_{t}\]</span></p>
+<p>The measured variates at station <span class="math inline">\(i\)</span> and time <span class="math inline">\(t\)</span> (log-density, <span class="math inline">\(\mathbf{y}_{i,t}\)</span>) are observations of some true, but unknown state <span class="math inline">\(j\)</span> at time <span class="math inline">\(t\)</span> (<span class="math inline">\(\mathbf{x}_t\)</span>). The states at time <span class="math inline">\(t\)</span> are a function of intra- and inter-guild interactions <span class="math inline">\(\left(\mathbf{B}_t \mathbf{x}_{j,t-1} \right)\)</span>, and environmental covariates <span class="math inline">\(\mathbf{C} \mathbf{c}_{j,t}\)</span>. The interaction matrix <span class="math inline">\(\mathbf{B}_t\)</span> follows a random walk.</p>
+<p>When setting up the data below, it will be important to keep in mind the dimensions of the vectors and matrices for the equations above. Specifically, for <span class="math inline">\(m\)</span> species/guilds at <span class="math inline">\(n\)</span> sites/stations, <span class="math inline">\(q\)</span> covariates, and <span class="math inline">\(T\)</span> time points, we have:</p>
+<p><span class="math inline">\(\mathbf{y}_{i,t}\)</span> is <span class="math inline">\(\left[m \times 1 \right]\)</span> and hence <span class="math inline">\(\mathbf{y}_{i}\)</span> is <span class="math inline">\(\left[m \times T \right]\)</span>;</p>
+<p><span class="math inline">\(\mathbf{x}_{j,t}\)</span> is <span class="math inline">\(\left[m \times 1 \right]\)</span> and hence <span class="math inline">\(\mathbf{x}_{j}\)</span> is <span class="math inline">\(\left[m \times T \right]\)</span>;</p>
+<p><span class="math inline">\(\mathbf{B}_{t}\)</span> is <span class="math inline">\(\left[m \times m \right]\)</span>;</p>
+<p><span class="math inline">\(\mathbf{C}\)</span> is <span class="math inline">\(\left[m \times q \right]\)</span>;</p>
+<p><span class="math inline">\(\mathbf{c}_{j,t}\)</span> is <span class="math inline">\(\left[q \times 1 \right]\)</span> and hence <span class="math inline">\(\mathbf{c}_{j}\)</span> is <span class="math inline">\(\left[q \times T \right]\)</span>.</p>
 </div>
 <div id="requirements" class="section level2">
 <h2>Requirements</h2>
-<p>Our analyses require several packages not installed with base <code>R</code>, so we install them (if necessary) and then load them.</p>
+<p>Our analyses require several packages not installed with base <code>R</code>, so we being by installing them (if necessary) and then loading them.</p>
 <pre class="r"><code>if(!require(&quot;reshape2&quot;)) {
     install.packages(&quot;reshape2&quot;)
     library(&quot;reshape2&quot;)
@@ -129,10 +140,6 @@ dat &lt;- rbind(benthos,fish2)</code></pre>
 <li>We also need the token below to access the secure Gitub site; the token probably changes by IP address.</li>
 <li>Once Github site is public, we won’t need the token anymore.</li>
 </ol>
-<pre class="r"><code>if(!require(&quot;RCurl&quot;)) {
-    install.packages(&quot;RCurl&quot;)
-    library(&quot;RCurl&quot;)
-}</code></pre>
 <hr />
 <p>We assign all of the species in the Kenner dataset to 1 of 16 guilds (see Table S? of the manuscript for a print version). We have saved the lookup table as a .csv file, which is available on the Github project site.</p>
 <pre class="r"><code># set URL
@@ -145,7 +152,7 @@ colnames(guilds) &lt;- tolower(colnames(guilds))
 # assign guilds names
 for(i in 1:dim(guilds)[1]) {
   dat[dat[,&quot;speciescode&quot;] %in% guilds[i,&quot;speciescode&quot;],&quot;guild&quot;] &lt;- guilds[i,&quot;guild&quot;]
-    }</code></pre>
+  }</code></pre>
 <p>There are two guilds that we do not want to include in our analysis because they are too rare in the dataset: 1) “large piscivores” (e.g., leopard shark, <em>Triakis semifasciata</em>), and 2) “pelagic piscivores” (i.e., jack mackerel, <em>Trachurus symmetricus</em>).</p>
 <pre class="r"><code># spp to drop/eliminate
 spp.out &lt;- c(&quot;Piscivorous fishes - pelagic&quot;,&quot;Large piscivorous fishes&quot;)
@@ -231,7 +238,7 @@ dat.m2 &lt;- dcast(dat.m, period ~ guild + station, value.var=&quot;ldens&quot;)
 # de-mean the data
 dat.m2[,-1] &lt;- scale(dat.m2[,-1],center=TRUE,scale=FALSE)</code></pre>
 <p>There are a few time periods with missing samples that we need to set to NA.</p>
-<pre class="r"><code># getting time periods with no samples (ie, NAs)
+<pre class="r"><code># get time periods with no samples (ie, NAs)
 per.miss &lt;- seq(max(dat.m2[,&quot;period&quot;]))[!(seq(max(dat.m2[,&quot;period&quot;])) %in% dat.m2[,&quot;period&quot;])]
 # insert NAs for missing dates
 dat.miss &lt;- cbind(per.miss,matrix(NA,length(per.miss),ncol(dat.m2)-1))
@@ -239,25 +246,30 @@ colnames(dat.miss) &lt;- colnames(dat.m2)
 # concatenate the 2 data frames
 dat.m2 &lt;- rbind(dat.m2,dat.miss)
 # re-order the data by time
-dat.m2 &lt;- dat.m2[order(dat.m2[,&quot;period&quot;]),]</code></pre>
+dat.m2 &lt;- dat.m2[order(dat.m2[,&quot;period&quot;]),]
+rownames(dat.m2) &lt;- NULL</code></pre>
+<p>The data are now organized within one data frame, which is <span class="math inline">\(\left[T \times (m \times n) \right]\)</span>, but we want our data to be <span class="math inline">\(n\)</span> different matrices that are each <span class="math inline">\(\left[m \times T \right]\)</span>.</p>
+<pre class="r"><code># number of time points
+TT &lt;- dim(dat.m2)[1]
+# number of stations
+NN &lt;- length(unique(dat$station))
+# number of guilds
+MM &lt;- (dim(dat.m2)[2]-1)/NN
+for(i in 1:NN) {
+  assign(paste0(&quot;YY_&quot;,i),t(dat.m2[,seq(2,by=NN,length.out=MM)+(i-1)]))
+}</code></pre>
 </div>
 <div id="external-drivers-covariates" class="section level2">
 <h2>External drivers (covariates)</h2>
-<p>There are several external drivers known to affect food web dynamics in kelp forest ecosystems. In particular, we are interested in the potential roles of</p>
-<ol style="list-style-type: decimal">
-<li>predatory sea otters;</li>
-<li>the El Niño - Southern Oscillation (ENSO) climate phenomenon;</li>
-<li>commercial urchin harvest.</li>
-</ol>
-<div id="otters" class="section level3">
-<h3>1. Otters</h3>
+<p>There are several external drivers known to affect food web dynamics in kelp forest ecosystems. In particular, we are interested in the potential roles of 1) predatory sea otters; 2) the El Niño - Southern Oscillation (ENSO) climate phenomenon; and 3) commercial urchin harvest.</p>
+<div id="otters" class="section level4">
+<h4>1. Otters</h4>
 <p>The sea otter data come from multiple sources. <strong>NEED INFO HERE RE: EARLY SOURCE(S)</strong> …and years from 1995-2011 come from Kenner et al. (2013).</p>
 <pre class="r"><code># get some otter data</code></pre>
 </div>
-<div id="enso" class="section level3">
-<h3>2. ENSO</h3>
-<p>The ENSO data come from NOAA’s National Centers for Environmental Information. Specifically, we used the sea-surface temperatures from the ENSO 3.4 zone. More information is available at</p>
-<p><a href="https://www.ncdc.noaa.gov/teleconnections/enso/" class="uri">https://www.ncdc.noaa.gov/teleconnections/enso/</a></p>
+<div id="el-nino-southern-oscillation" class="section level4">
+<h4>2. El Niño / Southern Oscillation</h4>
+<p>We used the El Niño / Southern Oscillation (ENSO) index to capture large-scale environmental conditions around San Nicolas. Strong ENSO events are characterized by relatively warm water and intense winter storms that physically disturb benthic habitats. Specifically, we used the sea-surface temperatures (SST) from the ENSO 3.4 region of the tropical Pacific Ocean (for more information on ENSO, click <a href="https://www.ncdc.noaa.gov/teleconnections/enso/enso-tech.php">here</a>).</p>
 <p>The ENSO data are recorded monthly, but the food web data were sampled twice per year (i.e., spring and autumn). Thus, we want to use ENSO signals indicative of the period preceding each of the spring and fall dates. Although those dates vary somewhat from year to year, we selected these months for each time period:</p>
 <table>
 <thead>
@@ -277,10 +289,8 @@ dat.m2 &lt;- dat.m2[order(dat.m2[,&quot;period&quot;]),]</code></pre>
 </tr>
 </tbody>
 </table>
-</div>
-<div id="the-old-option" class="section level3">
-<h3>the old option</h3>
-<p>(Only goes back to 1982, however. Waiting to hear from Mantua on better choice; see below)</p>
+<p>The SST data (and several other atmosphereic indices) are available from NOAA’s <a href="http://www.cpc.ncep.noaa.gov/data/indices/">Climate Prediction Center</a>.</p>
+<p>Let’s download the file and trim away the information we don’t need.</p>
 <pre class="r"><code># first year of data
 yr.first &lt;- 1980
 # last year of data
@@ -290,7 +300,7 @@ mon1 &lt;- c(3,4,5)
 # second set of months
 mon2 &lt;- c(8,9,10)
 # get all ENSO data
-enso &lt;- read.table(&quot;http://www.cpc.ncep.noaa.gov/data/indices/sstoi.indices&quot;, header=TRUE)
+enso &lt;- read.table(&quot;http://www.cpc.ncep.noaa.gov/data/indices/ersst4.nino.mth.81-10.ascii&quot;, header=TRUE)
 # trim data to correct years &amp; index
 nino34 &lt;- enso[enso$YR&gt;=yr.first &amp; enso$YR&lt;=yr.last,  c(&quot;YR&quot;,&quot;MON&quot;,&quot;NINO3.4&quot;)]
 # assign months to periods (1=Spring; 2=Autumn)
@@ -302,32 +312,8 @@ anom34 &lt;- aggregate(NINO3.4 ~ period + YR, nino34, mean)[,c(&quot;YR&quot;,&q
 anom34$NINO3.4 &lt;- scale(anom34$NINO3.4)
 colnames(anom34)[c(1,3)] &lt;- c(&quot;year&quot;,&quot;anom34&quot;)</code></pre>
 </div>
-<div id="the-new-option" class="section level3">
-<h3>the new option</h3>
-<pre class="r"><code># first year of data
-yr.first &lt;- 1980
-# last year of data
-yr.last &lt;- 2011
-# first set of months
-mon1 &lt;- c(3,4,5)
-# second set of months
-mon2 &lt;- c(8,9,10)
-# get all ENSO data
-filename &lt;- &quot;http://www.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/detrend.nino34.ascii.txt&quot;
-enso &lt;- read.table(filename, header=TRUE)
-# trim data to correct years &amp; index
-nino34 &lt;- enso[enso$YR&gt;=yr.first &amp; enso$YR&lt;=yr.last,  c(&quot;YR&quot;,&quot;MON&quot;,&quot;TOTAL&quot;)]
-# assign months to periods
-nino34[nino34$MON %in% mon1,&quot;period&quot;] &lt;- 1
-nino34[nino34$MON %in% mon2,&quot;period&quot;] &lt;- 2
-# ts of period means
-anom34 &lt;- aggregate(TOTAL ~ period + YR, nino34, mean)[,c(&quot;YR&quot;,&quot;period&quot;,&quot;TOTAL&quot;)]
-# convert to z-score (i.e., a temperature anomoly)
-anom34$TOTAL &lt;- scale(anom34$TOTAL)
-colnames(anom34)[c(1,3)] &lt;- c(&quot;year&quot;,&quot;anom34&quot;)</code></pre>
-</div>
-<div id="harvest" class="section level3">
-<h3>3. Harvest</h3>
+<div id="harvest" class="section level4">
+<h4>3. Harvest</h4>
 <hr />
 </div>
 </div>
@@ -338,24 +324,14 @@ colnames(anom34)[c(1,3)] &lt;- c(&quot;year&quot;,&quot;anom34&quot;)</code></pr
 <pre class="r"><code>spec.names = c(&quot;Abalone&quot;,&quot;Cleaner.fish&quot;,&quot;Giant.kelp&quot;,&quot;Herb.fish&quot;,&quot;Large.invert.eating.fish&quot;,
   &quot;Limpets&quot;, &quot;Omni.inverts&quot;, &quot;Plankt.fish&quot;, &quot;Pred.inverts&quot;, &quot;Small.invert.eating.fish&quot;,   
   &quot;Small.pisc.fish&quot;, &quot;Snails&quot;, &quot;Understory.kelp&quot;, &quot;Urchins&quot;)</code></pre>
-<p>Number of sites, time steps, and species/guilds/groups:</p>
-<pre class="r"><code>nSites = 7
-n &lt;- dim(dat.m2)[1] # number of time points
-m &lt;- (dim(dat.m2)[2]-1)/nSites # number of guilds/ groups</code></pre>
-<pre class="r"><code>#Y1 = t(dat[,matrix(seq(1,m*m),m,m)[,4]]) # site 1, state 2
-#Y2 = t(dat[,matrix(seq(1,m*m),m,m)[,1]]) # site 2, state 1
-#Y3 = t(dat[,matrix(seq(1,m*m),m,m)[,2]]) # site 3, state 1
-#Y4 = t(dat[,matrix(seq(1,m*m),m,m)[,5]]) # site 4, state 3
-#Y5 = t(dat[,matrix(seq(1,m*m),m,m)[,6]]) # site 5, state 3
-#Y6 = t(dat[,matrix(seq(1,m*m),m,m)[,7]]) # site 6, state 4</code></pre>
 <p>Now we’ll read in the covariates. For this application, there are 3 covariates (ENSO, urchin harvest, otter counts), and 2 of the 3 have the same values for all regions becasue they are recorded at a coarser spatial scale than the sampling sites (ENSO, urchin harvest).</p>
 <pre class="r"><code># covars = read.csv(&quot;covariates_by_region.csv&quot;)
 
-# enso.wns = matrix(0,dim(covars)[1],m)
-# otters.w = matrix(0,dim(covars)[1],m) # dd.1
-# otters.n = matrix(0,dim(covars)[1],m) 
-# otters.s = matrix(0,dim(covars)[1],m)
-# for(i in 1:m) {
+# enso.wns = matrix(0,dim(covars)[1],MM)
+# otters.w = matrix(0,dim(covars)[1],MM) # CC_ottr.1
+# otters.n = matrix(0,dim(covars)[1],MM) 
+# otters.s = matrix(0,dim(covars)[1],MM)
+# for(i in 1:MM) {
 #   enso.wns[,i] = covars[,&quot;enso_W&quot;]
 #   otters.w[,i] = covars[,&quot;otter_W&quot;]
 #   otters.n[,i] = covars[,&quot;otter_N&quot;]
@@ -364,21 +340,19 @@ m &lt;- (dim(dat.m2)[2]-1)/nSites # number of guilds/ groups</code></pre>
 
 # For harvest, we're only including removals of urchins, hence
 # 0s for other species
-# harvest.wns = matrix(0,dim(covars)[1],m)
+# harvest.wns = matrix(0,dim(covars)[1],MM)
 # harvest.wns[,14] = covars[,&quot;harvest_W&quot;]</code></pre>
 </div>
 <div id="data-preparation" class="section level2">
 <h2>Data preparation</h2>
 <p>We need to vectorize the B matrix in our code, so we need to do some housekeeping to create some indices.</p>
-<pre class="r"><code>m2 = m*m
-rowIndices = rep(seq(1,m), m)
-colIndices = sort(rowIndices)
-Bindices = matrix(seq(1,m2),m,m)
-Bprior = diag(m2)
-BR = m2
-Bz = rep(0,m2)
-Bdiag = seq(1,m*m,by=(m+1)) # these are the indices of vecB for diagonal
-Boffdiag = seq(1,m*m)[-Bdiag]</code></pre>
+<pre class="r"><code>M2 &lt;- MM*MM
+row_idx &lt;- rep(seq(1,MM), MM)
+BB_idx &lt;- matrix(seq(1,M2),MM,MM)
+BB_prior &lt;- diag(M2)
+BB_mean &lt;- rep(0,M2)
+BB_diag &lt;- seq(1,M2,by=(MM+1)) # these are the indices of BB_vec for diagonal of BB_mat
+BB_off &lt;- seq(1,M2)[-BB_diag]</code></pre>
 </div>
 <div id="the-tvvarss-model-in-jags" class="section level2">
 <h2>The TVVARSS model in JAGS</h2>
@@ -386,110 +360,151 @@ Boffdiag = seq(1,m*m)[-Bdiag]</code></pre>
 
 model {
 
-  # B1 is interaction matrix
-  B1.tau ~ dwish(Bprior, m2); # B1.tau is precision matrix of interactions
-  B1.1[1:m2,1] ~ dmnorm(Bz,B1.tau); # interactions at time 1
-
-  # convert the B1 vec to a matrix for initial time step    
-  for(cols in 1:m) {
-    # go from vec space -&gt; matrix
-    Bmat.1[1:m,cols,1] &lt;- B1.1[Bindices[1,cols]:Bindices[m,cols],1]; # this is by column            
-  }
+  #--------
+    # PRIORS
+    #--------
+  # BB is interaction matrix
+  # precision matrix
+  BB_tau ~ dwish(BB_prior, M2); 
+  BB_tau_off ~ dgamma(0.001,0.001);
+  BB_tau_diag ~ dgamma(0.001,0.001);    
 
   # initial X0, or state of nature, varies by state, but shared prior
-  X0.tau ~ dwish(Bprior[1:m,1:m], m); # prior precision matrix
-  X.1[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 1
-  X.2[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 2
-  X.3[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 3
-  X.4[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 4
+  X0_tau ~ dwish(BB_prior[1:MM,1:MM], MM); # prior precision matrix
                 
   # process variance is independent/unequal by region
   # and independent/unequal across spp
-  for(i in 1:m) {
+  for(i in 1:MM) {
     for(j in 1:3) {
-      tauQ[i,j] ~ dgamma(0.01,0.01);
+      QQ_tau[i,j] ~ dgamma(0.01,0.01);
     }       
   }
 
-  B1.offDiagTau ~ dgamma(0.001,0.001);
-  B1.diagTau ~ dgamma(0.001,0.001);    
-
   # Priors for coefficients  
-  for(i in 1:m) {
-    CC[i,1] ~ dnorm(0,1); # effect of enso, varies by spp
-    DD[i,1] ~ dnorm(0,1); # effect of otters, varies by spp
+  for(i in 1:MM) {
+    CC_enso[i,1] ~ dnorm(0,0.001); # effect of enso, varies by spp
+    CC_ottr[i,1] ~ dnorm(0,0.001); # effect of otters, varies by spp
   }
   for(i in 1:13) {
-    EE[i,1] &lt;- 0; # effect of urchin harvest on non-urchin
+    CC_harv[i,1] &lt;- 0; # effect of urchin harvest on non-urchin
   }
-  EE[14,1] ~ dnorm(0,1); # effect of urchin harvest on urchins
+  CC_harv[14,1] ~ dnorm(0,0.001); # effect of urchin harvest on urchins
 
-  for(time in 2:n) {
-    for(cols in 1:m) {
+  #------------
+    # LIKELIHOOD
+    #------------
+  # first time step
+  # convert BB_vec to a matrix for initial time step  
+  for(cols in 1:MM) {
+    BB_mat[1:MM,cols,1] &lt;- BB_vec[BB_idx[1,cols]:BB_idx[MM,cols],1];            
+  }
+  BB_vec[1:M2,1] ~ dmnorm(BB_mean,BB_tau);  # interactions at time 1
+
+  X_1[1:MM,1] ~ dmnorm(BB_mean[1:MM],X0_tau); # state 1
+  X_2[1:MM,1] ~ dmnorm(BB_mean[1:MM],X0_tau); # state 2
+  X_3[1:MM,1] ~ dmnorm(BB_mean[1:MM],X0_tau); # state 3
+  X_4[1:MM,1] ~ dmnorm(BB_mean[1:MM],X0_tau); # state 4
+  
+  # time steps 2:TT
+  for(time in 2:TT) {
+    for(cols in 1:MM) {
       # go from vec space -&gt; matrix, but i think it's only way in jags
-      Bmat.1[1:m,cols,time] &lt;- B1.1[Bindices[1,cols]:Bindices[m,cols],time-1];         
+      BB_mat[1:MM,cols,time] &lt;- BB_vec[BB_idx[1,cols]:BB_idx[MM,cols],time-1];         
     }
         
     # calculate predicted state vector for states 1-4
-    predX.1[1:m,time] &lt;- Bmat.1[1:m,1:m,time-1] %*% (X.1[1:m,time-1]) + 
-                         CC[1:m,1] * enso.wns[time-1,] +
-                         DD[1:m,1] * otters.w[time-1,] +
-                         EE[1:m,1] * harvest.wns[time-1,];#site 2/3
+    mu_X_1[1:MM,time] &lt;- BB_mat[1:MM,1:MM,time-1] %*% (X_1[1:MM,time-1]) + 
+                         CC_enso[1:MM,1] * enso.wns[time-1,] +
+                         CC_ottr[1:MM,1] * otters.w[time-1,] +
+                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 2/3
 
-    predX.2[1:m,time] &lt;- Bmat.1[1:m,1:m,time-1] %*% (X.2[1:m,time-1]) +
-                         CC[1:m,1] * enso.wns[time-1,] +
-                         DD[1:m,1] * otters.n[time-1,] +
-                         EE[1:m,1] * harvest.wns[time-1,];#site 1
+    mu_X_2[1:MM,time] &lt;- BB_mat[1:MM,1:MM,time-1] %*% (X_2[1:MM,time-1]) +
+                         CC_enso[1:MM,1] * enso.wns[time-1,] +
+                         CC_ottr[1:MM,1] * otters.n[time-1,] +
+                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 1
         
-    predX.3[1:m,time] &lt;- Bmat.1[1:m,1:m,time-1] %*% (X.3[1:m,time-1]) +
-                         CC[1:m,1] * enso.wns[time-1,] +
-                         DD[1:m,1] * otters.s[time-1,] +
-                         EE[1:m,1] * harvest.wns[time-1,];#site 4/5
+    mu_X_3[1:MM,time] &lt;- BB_mat[1:MM,1:MM,time-1] %*% (X_3[1:MM,time-1]) +
+                         CC_enso[1:MM,1] * enso.wns[time-1,] +
+                         CC_ottr[1:MM,1] * otters.s[time-1,] +
+                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 4/5
 
-    predX.4[1:m,time] &lt;- Bmat.1[1:m,1:m,time-1] %*% (X.4[1:m,time-1]) +
-                         CC[1:m,1] * enso.wns[time-1,] +
-                         DD[1:m,1] * otters.s[time-1,] +
-                         EE[1:m,1] * harvest.wns[time-1,];#site 6
+    mu_X_4[1:MM,time] &lt;- BB_mat[1:MM,1:MM,time-1] %*% (X_4[1:MM,time-1]) +
+                         CC_enso[1:MM,1] * enso.wns[time-1,] +
+                         CC_ottr[1:MM,1] * otters.s[time-1,] +
+                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 6
 
     # include process variation - normally distributed errors
     # independent across spp and site
-    for(spp in 1:m) {
-      X.1[spp,time] ~ dnorm(predX.1[spp,time], tauQ[spp,1]);
-      X.2[spp,time] ~ dnorm(predX.2[spp,time], tauQ[spp,2]);
-      X.3[spp,time] ~ dnorm(predX.3[spp,time], tauQ[spp,3]);
-      X.4[spp,time] ~ dnorm(predX.4[spp,time], tauQ[spp,3]);                    
+    for(spp in 1:MM) {
+      X_1[spp,time] ~ dnorm(mu_X_1[spp,time], QQ_tau[spp,1]);
+      X_2[spp,time] ~ dnorm(mu_X_2[spp,time], QQ_tau[spp,2]);
+      X_3[spp,time] ~ dnorm(mu_X_3[spp,time], QQ_tau[spp,3]);
+      X_4[spp,time] ~ dnorm(mu_X_4[spp,time], QQ_tau[spp,3]);                   
     }
 
-  # update B0 and B1
-    for(i in 1:(m*m-m)) {
-      # off diagonal elements of B1 -- interactions
-      B1.1[Boffdiag[i],time] ~ dnorm(B1.1[Boffdiag[i],time-1], B1.offDiagTau);                      
+    # update BB
+    # off-diagonal elements of BB: interactions
+    for(i in 1:(M2-MM)) {
+      BB_vec[BB_off[i],time] ~ dnorm(BB_vec[BB_off[i],time-1], BB_tau_off);                     
     }
-    for(i in 1:m) {
-      # Diagonal elements of B1 -- density dep
-      B1.1[Bdiag[i],time] ~ dnorm(B1.1[Bdiag[i],time-1], B1.diagTau);                       
+    # diagonal elements of BB: density dependence
+    for(i in 1:MM) {
+      BB_vec[BB_diag[i],time] ~ dnorm(BB_vec[BB_diag[i],time-1], BB_tau_diag);                      
     }
   } # end time loop
 
-  # observation / data model, assume R = diag and equal
-  for(i in 1:m) {
-    tauR[i] ~ dgamma(0.001,0.001);
+  # observation / data model; assume RR = diagonal and unequal
+  for(i in 1:MM) {
+    RR_tau[i] ~ dgamma(0.001,0.001);
   } 
 
-  for(time in 1:n) {
-    for(spp in 1:m) {
-      Y2[spp,time] ~ dnorm(X.1[spp,time],tauR[spp]);
-      Y3[spp,time] ~ dnorm(X.1[spp,time],tauR[spp]);
-      Y1[spp,time] ~ dnorm(X.2[spp,time],tauR[spp]);
-      Y4[spp,time] ~ dnorm(X.3[spp,time],tauR[spp]);
-      Y5[spp,time] ~ dnorm(X.3[spp,time],tauR[spp]);
-      Y6[spp,time] ~ dnorm(X.4[spp,time],tauR[spp]);                                                                        
+  for(time in 1:TT) {
+    for(spp in 1:MM) {
+      Y_1[spp,time] ~ dnorm(X_1[spp,time],RR_tau[spp]);
+      Y_2[spp,time] ~ dnorm(X_2[spp,time],RR_tau[spp]);
+      Y_3[spp,time] ~ dnorm(X_2[spp,time],RR_tau[spp]);
+      Y_4[spp,time] ~ dnorm(X_3[spp,time],RR_tau[spp]);
+      Y_5[spp,time] ~ dnorm(X_3[spp,time],RR_tau[spp]);
+      Y_6[spp,time] ~ dnorm(X_4[spp,time],RR_tau[spp]);                                                                     
     }
   }
     
 } # end JAGS model description
 
 &quot;, file = &quot;TVVARSS.txt&quot;)</code></pre>
+</div>
+<div id="running-the-model" class="section level2">
+<h2>Running the model</h2>
+<pre class="r"><code>jags_dat &lt;- list(&quot;Y_1&quot;,&quot;Y_2&quot;,&quot;Y_3&quot;,&quot;Y_4&quot;,&quot;Y_5&quot;,&quot;Y_6&quot;,
+                 &quot;enso.wns&quot;, &quot;otters.w&quot;, &quot;otters.s&quot;, &quot;otters.n&quot;, &quot;harvest.wns&quot;,
+                 &quot;MM&quot;,&quot;M2&quot;,&quot;TT&quot;,&quot;BB_idx&quot;,&quot;BB_prior&quot;,&quot;BB_mean&quot;,&quot;BB_off&quot;,&quot;BB_diag&quot;)
+
+jags_par &lt;- c(&quot;BB_vec&quot;, &quot;BB_tau_off&quot;, &quot;BB_tau_diag&quot;, &quot;CC_enso&quot;, &quot;CC_ottr&quot;, &quot;CC_harv&quot;,
+              &quot;X_1&quot;, &quot;X_2&quot;, &quot;X_3&quot;, &quot;X_4&quot;, &quot;QQ_tau&quot;, &quot;RR_tau&quot;)
+
+jags_mod &lt;- list(data = jags_dat,
+                 parameters.to.save = jags_par,
+                 inits = NULL,
+                 model.file = &quot;TVVARSS.txt&quot;,
+                 n.chains = as.integer(4),
+                 n.burnin = as.integer(1.0e5),
+                 n.thin = as.integer(50),
+                 n.iter = as.integer(1.2e5),
+                 DIC = TRUE)
+
+# start timer
+timer_start &lt;- proc.time()
+
+# fit the model in JAGS &amp; store results
+# jags_fit &lt;- do.call(jags.parallel, jags_mod)
+
+# stop timer
+(run_time_in_min &lt;- round(((proc.time()-timer_start)/60)[&quot;elapsed&quot;], 0))</code></pre>
+<pre><code>## elapsed 
+##       0</code></pre>
+</div>
+<div id="model-diagnostics" class="section level2">
+<h2>Model diagnostics</h2>
 </div>
 
 

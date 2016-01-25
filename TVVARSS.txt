@@ -2,15 +2,14 @@
 
 model {
 
-  # B1 is interaction matrix
-  B1.tau ~ dwish(Bprior, m2); # B1.tau is precision matrix of interactions
-  B1.1[1:m2,1] ~ dmnorm(Bz,B1.tau);	# interactions at time 1
-
-  # convert the B1 vec to a matrix for initial time step	
-  for(cols in 1:m) {
-    # go from vec space -> matrix
-    Bmat.1[1:m,cols,1] <- B1.1[Bindices[1,cols]:Bindices[m,cols],1]; # this is by column            
-  }
+  #--------
+	# PRIORS
+	#--------
+  # BB is interaction matrix
+  # precision matrix
+  BB_tau ~ dwish(BB_prior, M2); 
+  BB_tau_off ~ dgamma(0.001,0.001);
+  BB_tau_diag ~ dgamma(0.001,0.001);    
 
   # initial X0, or state of nature, varies by state, but shared prior
   X0.tau ~ dwish(Bprior[1:m,1:m], m); # prior precision matrix
