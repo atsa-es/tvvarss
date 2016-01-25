@@ -268,9 +268,9 @@ mon1 <- c(3,4,5)
 # second set of months
 mon2 <- c(8,9,10)
 # get all ENSO data
-enso <- read.table("http://www.cpc.ncep.noaa.gov/data/indices/ersst4.nino.mth.81-10.ascii", header=TRUE)
+nino <- read.table("http://www.cpc.ncep.noaa.gov/data/indices/ersst4.nino.mth.81-10.ascii", header=TRUE)
 # trim data to correct years & index
-nino34 <- enso[enso$YR>=yr.first & enso$YR<=yr.last,  c("YR","MON","NINO3.4")]
+nino34 <- nino[nino$YR>=yr.first & nino$YR<=yr.last,  c("YR","MON","NINO3.4")]
 # assign months to periods (1=Spring; 2=Autumn)
 nino34[nino34$MON %in% mon1,"period"] <- 1
 nino34[nino34$MON %in% mon2,"period"] <- 2
@@ -279,9 +279,24 @@ anom34 <- aggregate(NINO3.4 ~ period + YR, nino34, mean)[,c("YR","period","NINO3
 # convert to z-score (i.e., a temperature anomoly)
 anom34$NINO3.4 <- scale(anom34$NINO3.4)
 colnames(anom34)[c(1,3)] <- c("year","anom34")
+# convert to [1 x TT] matrix for JAGS
+enso <- matrix(anom34$anom34,nrow=1)
 ```
 
 #### 3. Harvest
+
+We obtained the commercial harvest (in metric tonnes) of sea urchins around San Nicolas Island from __GET CONTACT INFO__ . The harvest data are also on the Github project site.
+
+```{r}
+# set URL
+URL <- "https://raw.githubusercontent.com/eric-ward/TVVARSS/master/"
+token <- "?token=AE0I0Cg5QEMXImfUitSN4lYQLBvd27BTks5Wr-vvwA%3D%3D"
+urchinFile <- "urchin_harvest_ts.csv"
+# get LUT of guild names
+urchins <- read.csv(textConnection(getURL(paste0(URL,urchinFile,token))))
+# convert to [1 x TT] matrix for JAGS
+harv <- matrix(urchins$sum,nrow=1)
+```
 
 ```{r}
 # covars = read.csv("covariates_by_region.csv")
@@ -375,24 +390,24 @@ model {
     # calculate predicted state vectors
     # state 1; from obs 1
     mu_X_1[1:MM,time] <- BB_mat[1:MM,1:MM,time] %*% (X_1[1:MM,time-1]) + 
-                         CC_enso[1:MM,1] * enso.wns[time-1,] +
-                         CC_ottr[1:MM,1] * otters.w[time-1,] +
-                         CC_harv[1:MM,1] * harvest.wns[time-1,];
+                         CC_enso[1:MM,1] %*% enso[1,time-1] +
+                         CC_ottr[1:MM,1] %*% ottr[2,time-1] +
+                         CC_harv[1:MM,1] %*% harv[1,time-1];
     # state 2; from obs 2 & 3
     mu_X_2[1:MM,time] <- BB_mat[1:MM,1:MM,time] %*% (X_2[1:MM,time-1]) +
-                         CC_enso[1:MM,1] * enso.wns[time-1,] +
-                         CC_ottr[1:MM,1] * otters.n[time-1,] +
-                         CC_harv[1:MM,1] * harvest.wns[time-1,];
+                         CC_enso[1:MM,1] %*% enso[1,time-1] +
+                         CC_ottr[1:MM,1] %*% ottr[1,time-1] +
+                         CC_harv[1:MM,1] %*% harv[1,time-1];
     # state 3; from obs 4 & 5
     mu_X_3[1:MM,time] <- BB_mat[1:MM,1:MM,time] %*% (X_3[1:MM,time-1]) +
-                         CC_enso[1:MM,1] * enso.wns[time-1,] +
-                         CC_ottr[1:MM,1] * otters.s[time-1,] +
-                         CC_harv[1:MM,1] * harvest.wns[time-1,];
+                         CC_enso[1:MM,1] %*% enso[1,time-1] +
+                         CC_ottr[1:MM,1] %*% ottr[3,time-1] +
+                         CC_harv[1:MM,1] %*% harv[1,time-1];
     # state 4; from obs 6
     mu_X_4[1:MM,time] <- BB_mat[1:MM,1:MM,time] %*% (X_4[1:MM,time-1]) +
-                         CC_enso[1:MM,1] * enso.wns[time-1,] +
-                         CC_ottr[1:MM,1] * otters.s[time-1,] +
-                         CC_harv[1:MM,1] * harvest.wns[time-1,];
+                         CC_enso[1:MM,1] %*% enso[1,time-1] +
+                         CC_ottr[1:MM,1] %*% ottr[3,time-1] +
+                         CC_harv[1:MM,1] %*% harv[1,time-1];
 
     # include process variation - normally distributed errors
     # independent across spp and site
