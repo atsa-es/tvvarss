@@ -12,93 +12,102 @@ model {
   BB_tau_diag ~ dgamma(0.001,0.001);    
 
   # initial X0, or state of nature, varies by state, but shared prior
-  X0.tau ~ dwish(Bprior[1:m,1:m], m); # prior precision matrix
-  X.1[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 1
-  X.2[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 2
-  X.3[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 3
-  X.4[1:m,1] ~ dmnorm(Bz[1:m],X0.tau); # state 4
+  X0_tau ~ dwish(BB_prior[1:MM,1:MM], MM); # prior precision matrix
 				
   # process variance is independent/unequal by region
   # and independent/unequal across spp
-  for(i in 1:m) {
+  for(i in 1:MM) {
     for(j in 1:3) {
-      tauQ[i,j] ~ dgamma(0.01,0.01);
+      QQ_tau[i,j] ~ dgamma(0.01,0.01);
     }		
   }
 
-  B1.offDiagTau ~ dgamma(0.001,0.001);
-  B1.diagTau ~ dgamma(0.001,0.001);    
-
   # Priors for coefficients  
-  for(i in 1:m) {
-    CC[i,1] ~ dnorm(0,1); # effect of enso, varies by spp
-    DD[i,1] ~ dnorm(0,1); # effect of otters, varies by spp
+  for(i in 1:MM) {
+    CC_enso[i,1] ~ dnorm(0,0.001); # effect of enso, varies by spp
+    CC_ottr[i,1] ~ dnorm(0,0.001); # effect of otters, varies by spp
   }
   for(i in 1:13) {
-    EE[i,1] <- 0; # effect of urchin harvest on non-urchin
+    CC_harv[i,1] <- 0; # effect of urchin harvest on non-urchin
   }
-  EE[14,1] ~ dnorm(0,1); # effect of urchin harvest on urchins
+  CC_harv[14,1] ~ dnorm(0,0.001); # effect of urchin harvest on urchins
 
-  for(time in 2:n) {
-    for(cols in 1:m) {
+  #------------
+	# LIKELIHOOD
+	#------------
+  # first time step
+  # convert BB_vec to a matrix for initial time step  
+  for(cols in 1:MM) {
+    BB_mat[1:MM,cols,1] <- BB_vec[BB_idx[1,cols]:BB_idx[MM,cols],1];            
+  }
+  BB_vec[1:M2,1] ~ dmnorm(BB_mean,BB_tau);  # interactions at time 1
+
+  X_1[1:MM,1] ~ dmnorm(BB_mean[1:MM],X0_tau); # state 1
+  X_2[1:MM,1] ~ dmnorm(BB_mean[1:MM],X0_tau); # state 2
+  X_3[1:MM,1] ~ dmnorm(BB_mean[1:MM],X0_tau); # state 3
+  X_4[1:MM,1] ~ dmnorm(BB_mean[1:MM],X0_tau); # state 4
+  
+  # time steps 2:TT
+  for(time in 2:TT) {
+    for(cols in 1:MM) {
       # go from vec space -> matrix, but i think it's only way in jags
-      Bmat.1[1:m,cols,time] <- B1.1[Bindices[1,cols]:Bindices[m,cols],time-1];    	   
+      BB_mat[1:MM,cols,time] <- BB_vec[BB_idx[1,cols]:BB_idx[MM,cols],time-1];    	   
     }
     	
     # calculate predicted state vector for states 1-4
-    predX.1[1:m,time] <- Bmat.1[1:m,1:m,time-1] %*% (X.1[1:m,time-1]) + 
-                         CC[1:m,1] * enso.wns[time-1,] +
-                         DD[1:m,1] * otters.w[time-1,] +
-                         EE[1:m,1] * harvest.wns[time-1,];#site 2/3
+    mu_X_1[1:MM,time] <- BB_mat[1:MM,1:MM,time-1] %*% (X_1[1:MM,time-1]) + 
+                         CC_enso[1:MM,1] * enso.wns[time-1,] +
+                         CC_ottr[1:MM,1] * otters.w[time-1,] +
+                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 2/3
 
-    predX.2[1:m,time] <- Bmat.1[1:m,1:m,time-1] %*% (X.2[1:m,time-1]) +
-                         CC[1:m,1] * enso.wns[time-1,] +
-                         DD[1:m,1] * otters.n[time-1,] +
-                         EE[1:m,1] * harvest.wns[time-1,];#site 1
+    mu_X_2[1:MM,time] <- BB_mat[1:MM,1:MM,time-1] %*% (X_2[1:MM,time-1]) +
+                         CC_enso[1:MM,1] * enso.wns[time-1,] +
+                         CC_ottr[1:MM,1] * otters.n[time-1,] +
+                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 1
     	
-    predX.3[1:m,time] <- Bmat.1[1:m,1:m,time-1] %*% (X.3[1:m,time-1]) +
-                         CC[1:m,1] * enso.wns[time-1,] +
-                         DD[1:m,1] * otters.s[time-1,] +
-                         EE[1:m,1] * harvest.wns[time-1,];#site 4/5
+    mu_X_3[1:MM,time] <- BB_mat[1:MM,1:MM,time-1] %*% (X_3[1:MM,time-1]) +
+                         CC_enso[1:MM,1] * enso.wns[time-1,] +
+                         CC_ottr[1:MM,1] * otters.s[time-1,] +
+                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 4/5
 
-    predX.4[1:m,time] <- Bmat.1[1:m,1:m,time-1] %*% (X.4[1:m,time-1]) +
-                         CC[1:m,1] * enso.wns[time-1,] +
-                         DD[1:m,1] * otters.s[time-1,] +
-                         EE[1:m,1] * harvest.wns[time-1,];#site 6
+    mu_X_4[1:MM,time] <- BB_mat[1:MM,1:MM,time-1] %*% (X_4[1:MM,time-1]) +
+                         CC_enso[1:MM,1] * enso.wns[time-1,] +
+                         CC_ottr[1:MM,1] * otters.s[time-1,] +
+                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 6
 
     # include process variation - normally distributed errors
     # independent across spp and site
-    for(spp in 1:m) {
-      X.1[spp,time] ~ dnorm(predX.1[spp,time], tauQ[spp,1]);
-      X.2[spp,time] ~ dnorm(predX.2[spp,time], tauQ[spp,2]);
-      X.3[spp,time] ~ dnorm(predX.3[spp,time], tauQ[spp,3]);
-      X.4[spp,time] ~ dnorm(predX.4[spp,time], tauQ[spp,3]);		    		
+    for(spp in 1:MM) {
+      X_1[spp,time] ~ dnorm(mu_X_1[spp,time], QQ_tau[spp,1]);
+      X_2[spp,time] ~ dnorm(mu_X_2[spp,time], QQ_tau[spp,2]);
+      X_3[spp,time] ~ dnorm(mu_X_3[spp,time], QQ_tau[spp,3]);
+      X_4[spp,time] ~ dnorm(mu_X_4[spp,time], QQ_tau[spp,3]);		    		
     }
 
-  # update B0 and B1
-    for(i in 1:(m*m-m)) {
-      # off diagonal elements of B1 -- interactions
-      B1.1[Boffdiag[i],time] ~ dnorm(B1.1[Boffdiag[i],time-1], B1.offDiagTau);	    		    	
+    # update BB
+    # off-diagonal elements of BB: interactions
+    for(i in 1:(M2-MM)) {
+      BB_vec[BB_off[i],time] ~ dnorm(BB_vec[BB_off[i],time-1], BB_tau_off);	    		    	
     }
-    for(i in 1:m) {
-      # Diagonal elements of B1 -- density dep
-      B1.1[Bdiag[i],time] ~ dnorm(B1.1[Bdiag[i],time-1], B1.diagTau);	    		    	
+    # diagonal elements of BB: density dependence
+    for(i in 1:MM) {
+      BB_vec[BB_diag[i],time] ~ dnorm(BB_vec[BB_diag[i],time-1], BB_tau_diag);	    		    	
     }
   } # end time loop
 
-  # observation / data model, assume R = diag and equal
-  for(i in 1:m) {
-    tauR[i] ~ dgamma(0.001,0.001);
+  # observation / data model; assume RR = diagonal and unequal
+  for(i in 1:MM) {
+    RR_tau[i] ~ dgamma(0.001,0.001);
   }	
 
-  for(time in 1:n) {
-    for(spp in 1:m) {
-      Y2[spp,time] ~ dnorm(X.1[spp,time],tauR[spp]);
-      Y3[spp,time] ~ dnorm(X.1[spp,time],tauR[spp]);
-      Y1[spp,time] ~ dnorm(X.2[spp,time],tauR[spp]);
-      Y4[spp,time] ~ dnorm(X.3[spp,time],tauR[spp]);
-      Y5[spp,time] ~ dnorm(X.3[spp,time],tauR[spp]);
-      Y6[spp,time] ~ dnorm(X.4[spp,time],tauR[spp]);																		
+  for(time in 1:TT) {
+    for(spp in 1:MM) {
+      Y_1[spp,time] ~ dnorm(X_1[spp,time],RR_tau[spp]);
+      Y_2[spp,time] ~ dnorm(X_2[spp,time],RR_tau[spp]);
+      Y_3[spp,time] ~ dnorm(X_2[spp,time],RR_tau[spp]);
+      Y_4[spp,time] ~ dnorm(X_3[spp,time],RR_tau[spp]);
+      Y_5[spp,time] ~ dnorm(X_3[spp,time],RR_tau[spp]);
+      Y_6[spp,time] ~ dnorm(X_4[spp,time],RR_tau[spp]);																		
     }
   }
 	
