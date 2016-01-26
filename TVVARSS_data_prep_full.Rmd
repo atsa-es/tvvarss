@@ -429,12 +429,12 @@ model {
 
   for(time in 1:TT) {
     for(spp in 1:MM) {
-      Y_1[spp,time] ~ dnorm(X_1[spp,time],RR_tau[spp]);
-      Y_2[spp,time] ~ dnorm(X_2[spp,time],RR_tau[spp]);
-      Y_3[spp,time] ~ dnorm(X_2[spp,time],RR_tau[spp]);
-      Y_4[spp,time] ~ dnorm(X_3[spp,time],RR_tau[spp]);
-      Y_5[spp,time] ~ dnorm(X_3[spp,time],RR_tau[spp]);
-      Y_6[spp,time] ~ dnorm(X_4[spp,time],RR_tau[spp]);																		
+      YY_1[spp,time] ~ dnorm(X_1[spp,time],RR_tau[spp]);
+      YY_2[spp,time] ~ dnorm(X_2[spp,time],RR_tau[spp]);
+      YY_3[spp,time] ~ dnorm(X_2[spp,time],RR_tau[spp]);
+      YY_4[spp,time] ~ dnorm(X_3[spp,time],RR_tau[spp]);
+      YY_5[spp,time] ~ dnorm(X_3[spp,time],RR_tau[spp]);
+      YY_6[spp,time] ~ dnorm(X_4[spp,time],RR_tau[spp]);																		
     }
   }
 	
@@ -446,7 +446,7 @@ model {
 ## Running the model
 
 ```{r, message=FALSE, warning=FALSE, cache=TRUE}
-jags_dat <- list("Y_1","Y_2","Y_3","Y_4","Y_5","Y_6",
+jags_dat <- list("YY_1","YY_2","YY_3","YY_4","YY_5","YY_6",
                  "enso.wns", "otters.w", "otters.s", "otters.n", "harvest.wns",
                  "MM","M2","TT","BB_idx","BB_prior","BB_mean","BB_off","BB_diag")
 
@@ -490,8 +490,8 @@ mean.X1 = apply(X_1,c(2,3),mean)
 par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.38,0.38,0.28,0.01))
 for(i in 1:14) {
   estMed = apply(X_1[,i,],2,quantile, 0.5)
-  plot(estMed, Y_2[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
-  points(estMed, Y_3[i,], col = "blue", pch=16, cex=0.8)
+  plot(estMed, YY_2[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
+  points(estMed, YY_3[i,], col = "blue", pch=16, cex=0.8)
   abline(0,1)
 }
 ```
@@ -506,7 +506,7 @@ mean.X2 = apply(X_2,c(2,3),mean)
 par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.38,0.38,0.28,0.01))
 for(i in 1:14) {
   estMed = apply(X_2[,i,],2,quantile, 0.5)
-  plot(estMed, Y_1[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
+  plot(estMed, YY_1[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
   abline(0,1)
 }
 ```
@@ -521,8 +521,8 @@ mean.X3 = apply(X_3,c(2,3),mean)
 par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.38,0.38,0.28,0.01))
 for(i in 1:14) {
   estMed = apply(X_3[,i,],2,quantile, 0.5)
-  plot(estMed, Y_4[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
-  points(estMed, Y_5[i,], col = "blue", pch=16, cex=0.8)
+  plot(estMed, YY_4[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
+  points(estMed, YY_5[i,], col = "blue", pch=16, cex=0.8)
   abline(0,1)
 }
 ```
@@ -537,7 +537,7 @@ mean.X4 = apply(X_4,c(2,3),mean)
 par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.38,0.38,0.28,0.01))
 for(i in 1:14) {
   estMed = apply(X_4[,i,],2,quantile, 0.5)
-  plot(estMed, Y_6[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
+  plot(estMed, YY_6[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
   abline(0,1)
 }
 ```
@@ -556,14 +556,14 @@ par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
 for(i in 1:14) {
   lowerCI = apply(X_1[,i,],2,quantile, 0.025)
   upperCI = apply(X_1[,i,],2,quantile, 0.975)  
-  ymin = min(c(lowerCI, Y_2[i,], Y_3[i,]), na.rm=T)
-  ymax = max(c(upperCI, Y_2[i,], Y_3[i,]), na.rm=T)
+  ymin = min(c(lowerCI, YY_2[i,], YY_3[i,]), na.rm=T)
+  ymax = max(c(upperCI, YY_2[i,], YY_3[i,]), na.rm=T)
   plot(mean.X1[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white", cex.main=0.9, cex.axis=0.9)
   # make polygon of 95% CIs of states
   Xs = seq(1,dim(X_1)[3])
   polygon(c(Xs, rev(Xs)), c(lowerCI, rev(upperCI)), border=NA, col="grey")
-  points(Y_2[i,], col="red", pch=16, cex=0.8)
-  points(Y_3[i,], col="blue", pch=16, cex=0.8)
+  points(YY_2[i,], col="red", pch=16, cex=0.8)
+  points(YY_3[i,], col="blue", pch=16, cex=0.8)
 }
 ```
 
@@ -579,13 +579,13 @@ par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
 for(i in 1:14) {
   lowerCI = apply(X_2[,i,],2,quantile, 0.025)
   upperCI = apply(X_2[,i,],2,quantile, 0.975)  
-  ymin = min(c(lowerCI, Y_1[i,]), na.rm=T)
-  ymax = max(c(upperCI, Y_1[i,]), na.rm=T)
+  ymin = min(c(lowerCI, YY_1[i,]), na.rm=T)
+  ymax = max(c(upperCI, YY_1[i,]), na.rm=T)
   plot(mean.X2[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white", cex.main=0.9, cex.axis=0.9)
   # make polygon of 95% CIs of states
   Xs = seq(1,dim(X_1)[3])
   polygon(c(Xs, rev(Xs)), c(lowerCI, rev(upperCI)), border=NA, col="grey")
-  points(Y_1[i,], col="red", pch=16, cex=0.8)
+  points(YY_1[i,], col="red", pch=16, cex=0.8)
 }
 ```
  
@@ -600,14 +600,14 @@ par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
 for(i in 1:14) {
   lowerCI = apply(X_3[,i,],2,quantile, 0.025)
   upperCI = apply(X_3[,i,],2,quantile, 0.975)  
-  ymin = min(c(lowerCI, Y_4[i,], Y_5[i,]), na.rm=T)
-  ymax = max(c(upperCI, Y_4[i,], Y_5[i,]), na.rm=T)
+  ymin = min(c(lowerCI, YY_4[i,], YY_5[i,]), na.rm=T)
+  ymax = max(c(upperCI, YY_4[i,], YY_5[i,]), na.rm=T)
   plot(mean.X3[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white", cex.main=0.9, cex.axis=0.9)
   # make polygon of 95% CIs of states
   Xs = seq(1,dim(X_3)[3])
   polygon(c(Xs, rev(Xs)), c(lowerCI, rev(upperCI)), border=NA, col="grey")
-  points(Y_4[i,], col="red", pch=16, cex=0.8)
-  points(Y_5[i,], col="blue", pch=16, cex=0.8)
+  points(YY_4[i,], col="red", pch=16, cex=0.8)
+  points(YY_5[i,], col="blue", pch=16, cex=0.8)
 }
 ```
 
@@ -622,13 +622,13 @@ par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
 for(i in 1:14) {
   lowerCI = apply(X_4[,i,],2,quantile, 0.025)
   upperCI = apply(X_4[,i,],2,quantile, 0.975)  
-  ymin = min(c(lowerCI, Y_6[i,]), na.rm=T)
-  ymax = max(c(upperCI, Y_6[i,]), na.rm=T)
+  ymin = min(c(lowerCI, YY_6[i,]), na.rm=T)
+  ymax = max(c(upperCI, YY_6[i,]), na.rm=T)
   plot(mean.X4[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white", cex.main=0.9, cex.axis=0.9)
   # make polygon of 95% CIs of states
   Xs = seq(1,dim(X_4)[3])
   polygon(c(Xs, rev(Xs)), c(lowerCI, rev(upperCI)), border=NA, col="grey")
-  points(Y_6[i,], col="red", pch=16, cex=0.8)
+  points(YY_6[i,], col="red", pch=16, cex=0.8)
 }
 ```
 
@@ -647,7 +647,7 @@ alpha <- 0.10# desired alpha for CIs
 
 # guilds 1-mm
 legend.key <- data.frame(index=seq(mm), 
- guild=sub("_+[0-9]","",rownames(Y_1)))
+ guild=sub("_+[0-9]","",rownames(YY_1)))
 
 spec2 <- c("Sm piscivores","Sheephead","Pred inverts",
   			   "Planktivores","Sm invert-eaters","Cleaner fish",

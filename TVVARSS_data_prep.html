@@ -80,13 +80,13 @@ img {
 <p><span class="math display">\[\mathbf{y}_{i,t} = \mathbf{x}_{j,t} + \mathbf{v}_{i,t}\]</span></p>
 <p><span class="math display">\[\mathbf{x}_{j,t} = \mathbf{B}_t \mathbf{x}_{j,t-1} + \mathbf{C} \mathbf{c}_{j,t} + \mathbf{w}_{j,t}\]</span></p>
 <p><span class="math display">\[\mathbf{B}_t = \mathbf{B}_{t-1} + \mathbf{e}_{t}\]</span></p>
-<p>The measured variates at station <span class="math inline">\(i\)</span> and time <span class="math inline">\(t\)</span> (log-density, <span class="math inline">\(\mathbf{y}_{i,t}\)</span>) are observations of some true, but unknown state <span class="math inline">\(j\)</span> at time <span class="math inline">\(t\)</span> (<span class="math inline">\(\mathbf{x}_t\)</span>). The states at time <span class="math inline">\(t\)</span> are a function of intra- and inter-guild interactions <span class="math inline">\(\left(\mathbf{B}_t \mathbf{x}_{j,t-1} \right)\)</span>, and environmental covariates <span class="math inline">\(\mathbf{C} \mathbf{c}_{j,t}\)</span>. The interaction matrix <span class="math inline">\(\mathbf{B}_t\)</span> follows a random walk.</p>
+<p>The measured variates (in log-space) at station <span class="math inline">\(i\)</span> and time <span class="math inline">\(t\)</span> <span class="math inline">\(\left(\mathbf{y}_{i,t}\right)\)</span> are observations of some true, but unknown state <span class="math inline">\(j\)</span> at time <span class="math inline">\(t\)</span> (<span class="math inline">\(\mathbf{x}_t\)</span>). The states at time <span class="math inline">\(t\)</span> are a function of intra- and inter-guild interactions <span class="math inline">\(\left(\mathbf{B}_t \mathbf{x}_{j,t-1} \right)\)</span>, and environmental covariates <span class="math inline">\(\left(\mathbf{C} \mathbf{c}_{j,t}\right)\)</span>. The interaction matrix <span class="math inline">\(\mathbf{B}_t\)</span> follows a random walk.</p>
 <p>When setting up the data below, it will be important to keep in mind the dimensions of the vectors and matrices for the equations above. Specifically, for <span class="math inline">\(m\)</span> species/guilds at <span class="math inline">\(n\)</span> sites/stations, <span class="math inline">\(q\)</span> covariates, and <span class="math inline">\(T\)</span> time points, we have:</p>
-<p><span class="math inline">\(\mathbf{y}_{i,t}\)</span> is <span class="math inline">\(\left[m \times 1 \right]\)</span> and hence <span class="math inline">\(\mathbf{y}_{i}\)</span> is <span class="math inline">\(\left[m \times T \right]\)</span>;</p>
-<p><span class="math inline">\(\mathbf{x}_{j,t}\)</span> is <span class="math inline">\(\left[m \times 1 \right]\)</span> and hence <span class="math inline">\(\mathbf{x}_{j}\)</span> is <span class="math inline">\(\left[m \times T \right]\)</span>;</p>
-<p><span class="math inline">\(\mathbf{B}_{t}\)</span> is <span class="math inline">\(\left[m \times m \right]\)</span>;</p>
-<p><span class="math inline">\(\mathbf{C}\)</span> is <span class="math inline">\(\left[m \times q \right]\)</span>;</p>
-<p><span class="math inline">\(\mathbf{c}_{j,t}\)</span> is <span class="math inline">\(\left[q \times 1 \right]\)</span> and hence <span class="math inline">\(\mathbf{c}_{j}\)</span> is <span class="math inline">\(\left[q \times T \right]\)</span>.</p>
+<p><span class="math inline">\(\mathbf{y}_{i,t}\)</span> is <span class="math inline">\(\left[ m \times 1 \right]\)</span> and hence <span class="math inline">\(\mathbf{y}_{i}\)</span> is <span class="math inline">\(\left[ m \times T \right]\)</span>;</p>
+<p><span class="math inline">\(\mathbf{x}_{j,t}\)</span> is <span class="math inline">\(\left[ m \times 1 \right]\)</span> and hence <span class="math inline">\(\mathbf{x}_{j}\)</span> is <span class="math inline">\(\left[ m \times T \right]\)</span>;</p>
+<p><span class="math inline">\(\mathbf{B}_{t}\)</span> is <span class="math inline">\(\left[ m \times m \right]\)</span>;</p>
+<p><span class="math inline">\(\mathbf{C}\)</span> is <span class="math inline">\(\left[ m \times q \right]\)</span>;</p>
+<p><span class="math inline">\(\mathbf{c}_{j,t}\)</span> is <span class="math inline">\(\left[ q \times 1 \right]\)</span> and hence <span class="math inline">\(\mathbf{c}_{j}\)</span> is <span class="math inline">\(\left[ q \times T \right]\)</span>.</p>
 </div>
 <div id="requirements" class="section level2">
 <h2>Requirements</h2>
@@ -258,6 +258,14 @@ MM &lt;- (dim(dat.m2)[2]-1)/NN
 for(i in 1:NN) {
   assign(paste0(&quot;YY_&quot;,i),t(dat.m2[,seq(2,by=NN,length.out=MM)+(i-1)]))
 }</code></pre>
+<p>The last thing we need to do here is define a few scalars and indices to use within the JAGS model below.</p>
+<pre class="r"><code>M2 &lt;- MM*MM
+row_idx &lt;- rep(seq(1,MM), MM)
+BB_idx &lt;- matrix(seq(1,M2),MM,MM)
+BB_prior &lt;- diag(M2)
+BB_mean &lt;- rep(0,M2)
+BB_diag &lt;- seq(1,M2,by=(MM+1)) # these are the indices of BB_vec for diagonal of BB_mat
+BB_off &lt;- seq(1,M2)[-BB_diag]</code></pre>
 </div>
 <div id="external-drivers-covariates" class="section level2">
 <h2>External drivers (covariates)</h2>
@@ -265,7 +273,15 @@ for(i in 1:NN) {
 <div id="otters" class="section level4">
 <h4>1. Otters</h4>
 <p>The sea otter data come from multiple sources. <strong>NEED INFO HERE RE: EARLY SOURCE(S)</strong> …and years from 1995-2011 come from Kenner et al. (2013).</p>
-<pre class="r"><code># get some otter data</code></pre>
+<p><strong>NOTE THAT THESE VALUES WILL BE REPLACED WITH NEW DATA</strong></p>
+<pre class="r"><code># set URL
+URL &lt;- &quot;https://raw.githubusercontent.com/eric-ward/TVVARSS/master/&quot;
+token &lt;- &quot;?token=AE0I0DnyZxrW9ZhZX0ySUZU720MJYQ4Yks5Wr_CrwA%3D%3D&quot;
+otterFile &lt;- &quot;adult_otters_current.csv&quot;
+# get LUT of guild names
+otters &lt;- read.csv(textConnection(getURL(paste0(URL,otterFile,token))))
+# convert to [1 x TT] matrix for JAGS
+ottr &lt;- t(otters[,-1])</code></pre>
 </div>
 <div id="el-nino-southern-oscillation" class="section level4">
 <h4>2. El Niño / Southern Oscillation</h4>
@@ -300,9 +316,9 @@ mon1 &lt;- c(3,4,5)
 # second set of months
 mon2 &lt;- c(8,9,10)
 # get all ENSO data
-enso &lt;- read.table(&quot;http://www.cpc.ncep.noaa.gov/data/indices/ersst4.nino.mth.81-10.ascii&quot;, header=TRUE)
+nino &lt;- read.table(&quot;http://www.cpc.ncep.noaa.gov/data/indices/ersst4.nino.mth.81-10.ascii&quot;, header=TRUE)
 # trim data to correct years &amp; index
-nino34 &lt;- enso[enso$YR&gt;=yr.first &amp; enso$YR&lt;=yr.last,  c(&quot;YR&quot;,&quot;MON&quot;,&quot;NINO3.4&quot;)]
+nino34 &lt;- nino[nino$YR&gt;=yr.first &amp; nino$YR&lt;=yr.last,  c(&quot;YR&quot;,&quot;MON&quot;,&quot;NINO3.4&quot;)]
 # assign months to periods (1=Spring; 2=Autumn)
 nino34[nino34$MON %in% mon1,&quot;period&quot;] &lt;- 1
 nino34[nino34$MON %in% mon2,&quot;period&quot;] &lt;- 2
@@ -310,59 +326,40 @@ nino34[nino34$MON %in% mon2,&quot;period&quot;] &lt;- 2
 anom34 &lt;- aggregate(NINO3.4 ~ period + YR, nino34, mean)[,c(&quot;YR&quot;,&quot;period&quot;,&quot;NINO3.4&quot;)]
 # convert to z-score (i.e., a temperature anomoly)
 anom34$NINO3.4 &lt;- scale(anom34$NINO3.4)
-colnames(anom34)[c(1,3)] &lt;- c(&quot;year&quot;,&quot;anom34&quot;)</code></pre>
+colnames(anom34)[c(1,3)] &lt;- c(&quot;year&quot;,&quot;anom34&quot;)
+# convert to [1 x TT] matrix for JAGS
+enso &lt;- matrix(anom34$anom34,nrow=1)</code></pre>
 </div>
 <div id="harvest" class="section level4">
 <h4>3. Harvest</h4>
+<p>We obtained the commercial harvest (in metric tonnes) of sea urchins around San Nicolas Island from <strong>GET CONTACT INFO</strong> . The harvest data are also on the Github project site.</p>
+<pre class="r"><code># set URL
+URL &lt;- &quot;https://raw.githubusercontent.com/eric-ward/TVVARSS/master/&quot;
+token &lt;- &quot;?token=AE0I0Cg5QEMXImfUitSN4lYQLBvd27BTks5Wr-vvwA%3D%3D&quot;
+urchinFile &lt;- &quot;urchin_harvest_ts.csv&quot;
+# get LUT of guild names
+urchins &lt;- read.csv(textConnection(getURL(paste0(URL,urchinFile,token))))
+# convert to [1 x TT] matrix for JAGS
+harv &lt;- matrix(urchins$sum,nrow=1)</code></pre>
 <hr />
 </div>
 </div>
 <div id="old-stuff-below-here" class="section level2">
 <h2>Old stuff below here</h2>
 <hr />
-<p>Read in the raw data on the guild abundances. These are in log-space, and the few 0s in the dataset have been replaced with NAs, because species are likely present in low density (just not detected).</p>
 <pre class="r"><code>spec.names = c(&quot;Abalone&quot;,&quot;Cleaner.fish&quot;,&quot;Giant.kelp&quot;,&quot;Herb.fish&quot;,&quot;Large.invert.eating.fish&quot;,
   &quot;Limpets&quot;, &quot;Omni.inverts&quot;, &quot;Plankt.fish&quot;, &quot;Pred.inverts&quot;, &quot;Small.invert.eating.fish&quot;,   
   &quot;Small.pisc.fish&quot;, &quot;Snails&quot;, &quot;Understory.kelp&quot;, &quot;Urchins&quot;)</code></pre>
-<p>Now we’ll read in the covariates. For this application, there are 3 covariates (ENSO, urchin harvest, otter counts), and 2 of the 3 have the same values for all regions becasue they are recorded at a coarser spatial scale than the sampling sites (ENSO, urchin harvest).</p>
-<pre class="r"><code># covars = read.csv(&quot;covariates_by_region.csv&quot;)
-
-# enso.wns = matrix(0,dim(covars)[1],MM)
-# otters.w = matrix(0,dim(covars)[1],MM) # CC_ottr.1
-# otters.n = matrix(0,dim(covars)[1],MM) 
-# otters.s = matrix(0,dim(covars)[1],MM)
-# for(i in 1:MM) {
-#   enso.wns[,i] = covars[,&quot;enso_W&quot;]
-#   otters.w[,i] = covars[,&quot;otter_W&quot;]
-#   otters.n[,i] = covars[,&quot;otter_N&quot;]
-#   otters.s[,i] = covars[,&quot;otter_S&quot;]
-# }
-
-# For harvest, we're only including removals of urchins, hence
-# 0s for other species
-# harvest.wns = matrix(0,dim(covars)[1],MM)
-# harvest.wns[,14] = covars[,&quot;harvest_W&quot;]</code></pre>
-</div>
-<div id="data-preparation" class="section level2">
-<h2>Data preparation</h2>
-<p>We need to vectorize the B matrix in our code, so we need to do some housekeeping to create some indices.</p>
-<pre class="r"><code>M2 &lt;- MM*MM
-row_idx &lt;- rep(seq(1,MM), MM)
-BB_idx &lt;- matrix(seq(1,M2),MM,MM)
-BB_prior &lt;- diag(M2)
-BB_mean &lt;- rep(0,M2)
-BB_diag &lt;- seq(1,M2,by=(MM+1)) # these are the indices of BB_vec for diagonal of BB_mat
-BB_off &lt;- seq(1,M2)[-BB_diag]</code></pre>
 </div>
 <div id="the-tvvarss-model-in-jags" class="section level2">
 <h2>The TVVARSS model in JAGS</h2>
-<pre class="r"><code>model = cat(&quot;
+<pre class="r"><code>model &lt;- cat(&quot;
 
 model {
 
   #--------
-    # PRIORS
-    #--------
+  # PRIORS
+  #--------
   # BB is interaction matrix
   # precision matrix
   BB_tau ~ dwish(BB_prior, M2); 
@@ -385,20 +382,20 @@ model {
     CC_enso[i,1] ~ dnorm(0,0.001); # effect of enso, varies by spp
     CC_ottr[i,1] ~ dnorm(0,0.001); # effect of otters, varies by spp
   }
-  for(i in 1:13) {
+  for(i in 1:(MM-1)) {
     CC_harv[i,1] &lt;- 0; # effect of urchin harvest on non-urchin
   }
-  CC_harv[14,1] ~ dnorm(0,0.001); # effect of urchin harvest on urchins
+  CC_harv[MM,1] ~ dnorm(0,0.001); # effect of urchin harvest on urchins
 
   #------------
-    # LIKELIHOOD
-    #------------
+  # LIKELIHOOD
+  #------------
   # first time step
+  BB_vec[1:M2,1] ~ dmnorm(BB_mean,BB_tau);  # interactions at time 1
   # convert BB_vec to a matrix for initial time step  
   for(cols in 1:MM) {
     BB_mat[1:MM,cols,1] &lt;- BB_vec[BB_idx[1,cols]:BB_idx[MM,cols],1];            
   }
-  BB_vec[1:M2,1] ~ dmnorm(BB_mean,BB_tau);  # interactions at time 1
 
   X_1[1:MM,1] ~ dmnorm(BB_mean[1:MM],X0_tau); # state 1
   X_2[1:MM,1] ~ dmnorm(BB_mean[1:MM],X0_tau); # state 2
@@ -409,29 +406,30 @@ model {
   for(time in 2:TT) {
     for(cols in 1:MM) {
       # go from vec space -&gt; matrix, but i think it's only way in jags
-      BB_mat[1:MM,cols,time] &lt;- BB_vec[BB_idx[1,cols]:BB_idx[MM,cols],time-1];         
+      BB_mat[1:MM,cols,time] &lt;- BB_vec[BB_idx[1,cols]:BB_idx[MM,cols],time];           
     }
         
-    # calculate predicted state vector for states 1-4
-    mu_X_1[1:MM,time] &lt;- BB_mat[1:MM,1:MM,time-1] %*% (X_1[1:MM,time-1]) + 
-                         CC_enso[1:MM,1] * enso.wns[time-1,] +
-                         CC_ottr[1:MM,1] * otters.w[time-1,] +
-                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 2/3
-
-    mu_X_2[1:MM,time] &lt;- BB_mat[1:MM,1:MM,time-1] %*% (X_2[1:MM,time-1]) +
-                         CC_enso[1:MM,1] * enso.wns[time-1,] +
-                         CC_ottr[1:MM,1] * otters.n[time-1,] +
-                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 1
-        
-    mu_X_3[1:MM,time] &lt;- BB_mat[1:MM,1:MM,time-1] %*% (X_3[1:MM,time-1]) +
-                         CC_enso[1:MM,1] * enso.wns[time-1,] +
-                         CC_ottr[1:MM,1] * otters.s[time-1,] +
-                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 4/5
-
-    mu_X_4[1:MM,time] &lt;- BB_mat[1:MM,1:MM,time-1] %*% (X_4[1:MM,time-1]) +
-                         CC_enso[1:MM,1] * enso.wns[time-1,] +
-                         CC_ottr[1:MM,1] * otters.s[time-1,] +
-                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 6
+    # calculate predicted state vectors
+    # state 1; from obs 1
+    mu_X_1[1:MM,time] &lt;- BB_mat[1:MM,1:MM,time] %*% (X_1[1:MM,time-1]) + 
+                         CC_enso[1:MM,1] %*% enso[1,time-1] +
+                         CC_ottr[1:MM,1] %*% ottr[2,time-1] +
+                         CC_harv[1:MM,1] %*% harv[1,time-1];
+    # state 2; from obs 2 &amp; 3
+    mu_X_2[1:MM,time] &lt;- BB_mat[1:MM,1:MM,time] %*% (X_2[1:MM,time-1]) +
+                         CC_enso[1:MM,1] %*% enso[1,time-1] +
+                         CC_ottr[1:MM,1] %*% ottr[1,time-1] +
+                         CC_harv[1:MM,1] %*% harv[1,time-1];
+    # state 3; from obs 4 &amp; 5
+    mu_X_3[1:MM,time] &lt;- BB_mat[1:MM,1:MM,time] %*% (X_3[1:MM,time-1]) +
+                         CC_enso[1:MM,1] %*% enso[1,time-1] +
+                         CC_ottr[1:MM,1] %*% ottr[3,time-1] +
+                         CC_harv[1:MM,1] %*% harv[1,time-1];
+    # state 4; from obs 6
+    mu_X_4[1:MM,time] &lt;- BB_mat[1:MM,1:MM,time] %*% (X_4[1:MM,time-1]) +
+                         CC_enso[1:MM,1] %*% enso[1,time-1] +
+                         CC_ottr[1:MM,1] %*% ottr[3,time-1] +
+                         CC_harv[1:MM,1] %*% harv[1,time-1];
 
     # include process variation - normally distributed errors
     # independent across spp and site

@@ -225,7 +225,6 @@ BB_off <- seq(1,M2)[-BB_diag]
 ```
 
 
-
 ## External drivers (covariates)
 
 There are several external drivers known to affect food web dynamics in kelp forest ecosystems. In particular, we are interested in the potential roles of 1) predatory sea otters; 2) the El Niño - Southern Oscillation (ENSO) climate phenomenon; and 3) commercial urchin harvest.
@@ -233,8 +232,17 @@ There are several external drivers known to affect food web dynamics in kelp for
 #### 1. Otters
 The sea otter data come from multiple sources. __NEED INFO HERE RE: EARLY SOURCE(S)__ ...and years from 1995-2011 come from Kenner et al. (2013).
 
+__NOTE THAT THESE VALUES WILL BE REPLACED WITH NEW DATA__
+
 ```{r}
-# get some otter data
+# set URL
+URL <- "https://raw.githubusercontent.com/eric-ward/TVVARSS/master/"
+token <- "?token=AE0I0DnyZxrW9ZhZX0ySUZU720MJYQ4Yks5Wr_CrwA%3D%3D"
+otterFile <- "adult_otters_current.csv"
+# get LUT of guild names
+otters <- read.csv(textConnection(getURL(paste0(URL,otterFile,token))))
+# convert to [1 x TT] matrix for JAGS
+ottr <- t(otters[,-1])
 ```
 
 #### 2. El Niño / Southern Oscillation
@@ -296,26 +304,6 @@ urchinFile <- "urchin_harvest_ts.csv"
 urchins <- read.csv(textConnection(getURL(paste0(URL,urchinFile,token))))
 # convert to [1 x TT] matrix for JAGS
 harv <- matrix(urchins$sum,nrow=1)
-```
-
-```{r}
-# covars = read.csv("covariates_by_region.csv")
-
-# enso.wns = matrix(0,dim(covars)[1],MM)
-# otters.w = matrix(0,dim(covars)[1],MM) # CC_ottr.1
-# otters.n = matrix(0,dim(covars)[1],MM) 
-# otters.s = matrix(0,dim(covars)[1],MM)
-# for(i in 1:MM) {
-#   enso.wns[,i] = covars[,"enso_W"]
-# 	otters.w[,i] = covars[,"otter_W"]
-# 	otters.n[,i] = covars[,"otter_N"]
-# 	otters.s[,i] = covars[,"otter_S"]
-# }
-
-# For harvest, we're only including removals of urchins, hence
-# 0s for other species
-# harvest.wns = matrix(0,dim(covars)[1],MM)
-# harvest.wns[,14] = covars[,"harvest_W"]
 ```
 
 ***
@@ -436,12 +424,12 @@ model {
 
   for(time in 1:TT) {
     for(spp in 1:MM) {
-      Y_1[spp,time] ~ dnorm(X_1[spp,time],RR_tau[spp]);
-      Y_2[spp,time] ~ dnorm(X_2[spp,time],RR_tau[spp]);
-      Y_3[spp,time] ~ dnorm(X_2[spp,time],RR_tau[spp]);
-      Y_4[spp,time] ~ dnorm(X_3[spp,time],RR_tau[spp]);
-      Y_5[spp,time] ~ dnorm(X_3[spp,time],RR_tau[spp]);
-      Y_6[spp,time] ~ dnorm(X_4[spp,time],RR_tau[spp]);																		
+      YY_1[spp,time] ~ dnorm(X_1[spp,time],RR_tau[spp]);
+      YY_2[spp,time] ~ dnorm(X_2[spp,time],RR_tau[spp]);
+      YY_3[spp,time] ~ dnorm(X_2[spp,time],RR_tau[spp]);
+      YY_4[spp,time] ~ dnorm(X_3[spp,time],RR_tau[spp]);
+      YY_5[spp,time] ~ dnorm(X_3[spp,time],RR_tau[spp]);
+      YY_6[spp,time] ~ dnorm(X_4[spp,time],RR_tau[spp]);																		
     }
   }
 	
@@ -452,9 +440,11 @@ model {
 
 ## Running the model
 
+Please note that the following code will take a LONG time to run (~2 hours).
+
 ```{r, message=FALSE, warning=FALSE, cache=TRUE}
-jags_dat <- list("Y_1","Y_2","Y_3","Y_4","Y_5","Y_6",
-                 "enso.wns", "otters.w", "otters.s", "otters.n", "harvest.wns",
+jags_dat <- list("YY_1","YY_2","YY_3","YY_4","YY_5","YY_6",
+                 "enso", "ottr", "harv",
                  "MM","M2","TT","BB_idx","BB_prior","BB_mean","BB_off","BB_diag")
 
 jags_par <- c("BB_vec", "BB_tau_off", "BB_tau_diag", "CC_enso", "CC_ottr", "CC_harv",
