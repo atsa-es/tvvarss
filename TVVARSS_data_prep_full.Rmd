@@ -511,7 +511,7 @@ for(i in 1:MM) {
 ```{r, fig.width=8, fig.height=8, fig.cap="Observed data (y-axis) versus predicted values (x-axis, posterior means) for West region, sites 2 (red) and 3 (blue). The reference line is the 1:1 line.",fig.pos="placeHere"}
 par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.4,0.4,0.3,0.05))
 for(i in 1:MM) {
-  X_med <- apply(X_1[,i,], 2, quantile, 0.5)
+  X_med <- apply(X_2[,i,], 2, quantile, 0.5)
   xmin <- min(X_med, na.rm=TRUE)
   xmax <- max(X_med, na.rm=TRUE)
   ymin <- min(c(YY_2[i,],YY_3[i,]), na.rm=TRUE)
