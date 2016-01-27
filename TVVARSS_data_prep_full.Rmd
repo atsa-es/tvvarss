@@ -18,25 +18,29 @@ $$\mathbf{x}_{j,t} = \mathbf{B}_t \mathbf{x}_{j,t-1} + \mathbf{C} \mathbf{c}_{j,
 
 $$\mathbf{B}_t = \mathbf{B}_{t-1} + \mathbf{e}_{t}$$
 
-The measured variates at station $i$ and time $t$ (log-density, $\mathbf{y}_{i,t}$) are observations of some true, but unknown state $j$ at time $t$ ($\mathbf{x}_t$). The states at time $t$ are a function of intra- and inter-guild interactions ($\mathbf{B}_t \mathbf{x}_{j,t-1}$), and environmental covariates $\mathbf{C} \mathbf{c}_{j,t}$. The interaction matrix $\mathbf{B}_t$ follows a random walk.
+The measured variates (in log-space) at station $i$ and time $t$ $\left(\mathbf{y}_{i,t}\right)$ are observations of some true, but unknown state $j$ at time $t$ $\left(\mathbf{x}_t\right)$. The states at time $t$ are a function of intra- and inter-guild interactions $\left(\mathbf{B}_t \mathbf{x}_{j,t-1} \right)$, and environmental covariates $\left(\mathbf{C} \mathbf{c}_{j,t}\right)$. The interaction matrix $\mathbf{B}_t$ follows a random walk.
 
-When setting up the data below, it will be important to keep in mind the dimensions of the vectors and matrices for the equations above. Specifically, for $M$ species/guilds at $n$ sites/stations, $q$ covariates, and $T$ time points, we have:
+When setting up the data below, it will be important to keep in mind the dimensions of the vectors and matrices for the equations above. Specifically, for $m$ species/guilds at $n$ sites/stations, $q$ covariates, and $T$ time points, we know:
 
-$\mathbf{y}_{i,t}$ is $\left[M \times 1 \right]$ and hence $\mathbf{y}_{i}$ is $\left[M \times T \right]$;
+* $\mathbf{y}_{i,t}$ is $\left[ m \times 1 \right]$ and hence $\mathbf{y}_{i}$ is $\big[ m \times T \big]$;
 
-$\mathbf{x}_{j,t}$ is $\left[M \times 1 \right]$ and hence $\mathbf{x}_{j}$ is $\left[M \times T \right]$;
+* $\mathbf{x}_{j,t}$ is $\left[ m \times 1 \right]$ and hence $\mathbf{x}_{j}$ is $\big[ m \times T \big]$;
 
-$\mathbf{B}_{t}$ is $\left[M \times M \right]$;
+* $\mathbf{B}_{t}$ is $\big[ m \times m \big]$;
 
-$\mathbf{C}$ is $\left[M \times q \right]$;
+* $\mathbf{C}$ is $\left[ m \times q \right]$;
 
-$\mathbf{c}_{j,t}$ is $\left[q \times 1 \right]$ and hence $\mathbf{c}_{j}$ is $\left[q \times T \right]$.
+* $\mathbf{c}_{j,t}$ is $\left[ q \times 1 \right]$ and hence $\mathbf{c}_{j}$ is $\left[ q \times T \right]$.
 
-
+***
 ## Requirements
 Our analyses require several packages not installed with base `R`, so we being by installing them (if necessary) and then loading them.
 
 ```{r, message=FALSE}
+if(!require("RCurl")) {
+    install.packages("RCurl")
+    library("RCurl")
+}
 if(!require("reshape2")) {
     install.packages("reshape2")
     library("reshape2")
@@ -45,85 +49,82 @@ if(!require("R2jags")) {
     install.packages("R2jags")
     library("R2jags")
 }
-if(!require("RCurl")) {
-    install.packages("RCurl")
-    library("RCurl")
-}
 ```
 
-
+***
 ## Loading the raw data
 We begin with the original data from Kenner et al. (2013), which are available from the Ecological Society of America Archives at
 
 http://www.esapubs.org/archive/ecol/E094/244/
 
+We will use the benthic plant, invertebrate, and fish data, plus the midwater fish data. Be patient as these files will take a little while to download.
+
 ```{r}
 # set URL
 URL <- "http://www.esapubs.org/archive/ecol/E094/244/"
 # get benthic algae/invert data
-dat.bi <- read.csv(paste0(URL,"Benthic%20density%20raw%20data.csv"))
-colnames(dat.bi) <- tolower(colnames(dat.bi))
+dat_bi <- read.csv(paste0(URL,"Benthic%20density%20raw%20data.csv"))
+colnames(dat_bi) <- tolower(colnames(dat_bi))
 # get benthic fish data
-dat.bf <- read.csv(paste0(URL,"Benthic%20fish%20density%20raw%20data.csv"))
-colnames(dat.bf) <- tolower(colnames(dat.bf))
+dat_bf <- read.csv(paste0(URL,"Benthic%20fish%20density%20raw%20data.csv"))
+colnames(dat_bf) <- tolower(colnames(dat_bf))
 # get midwater fish data
-dat.mf <- read.csv(paste0(URL,"Midwater%20fish%20density%20raw%20data.csv"))
-colnames(dat.mf) <- tolower(colnames(dat.mf))
+dat_mf <- read.csv(paste0(URL,"Midwater%20fish%20density%20raw%20data.csv"))
+colnames(dat_mf) <- tolower(colnames(dat_mf))
 ```
 
 For our purposes we want the mean density of each species by sampling occasion and location.
 
 ```{r}
 # benthic algae/invert data
-benthos <- aggregate(density ~ speciescode + station + period, data=dat.bi, "mean")
+benthos <- aggregate(density ~ speciescode + station + period, data=dat_bi, "mean")
 # combine bottom & midwater fish data
-fish <- rbind(dat.bf,dat.mf)
+fish <- rbind(dat_bf,dat_mf)
 # include juveniles and adults together
 fish[,"density"] <- fish[,"adultdensity"] + fish[,"juvdensity"]
 # fish data
-fish2 <- aggregate(density ~ speciescode + station + period, data=fish, "mean")
+fish_2 <- aggregate(density ~ speciescode + station + period, data=fish, "mean")
 # all data together
-dat <- rbind(benthos,fish2)
+dat <- rbind(benthos,fish_2)
 ```
 
-
+***
 ## Setting up the guilds
 
-***
 **NOTES for this version**
 
 1. We need the `RCurl` package to read from secure URL's.
 2. We also need the token below to access the secure Gitub site; the token probably changes by IP address.
 3. Once Github site is public, we won't need the token anymore.
 
-***
-
 We assign all of the species in the Kenner dataset to 1 of 16 guilds (see Table S? of the manuscript for a print version). We have saved the lookup table as a .csv file, which is available on the Github project site.
 
 ```{r}
 # set URL
 URL <- "https://raw.githubusercontent.com/eric-ward/TVVARSS/master/"
-token <- "?token=AE0I0KvRgq2xRDsnNauXCnTjTqw73Cphks5Wp3pDwA%3D%3D"
-fileName <- "species_sampled_lookup.csv"
+token <- "?token=AE0I0KEXdUSM-xFT_esp3H6446JfyOqQks5WsQ-ywA%3D%3D"
+guilds_file <- "species_sampled_lookup.csv"
 # get LUT of guild names
-guilds <- read.csv(textConnection(getURL(paste0(URL,fileName,token))))
+guilds <- read.csv(textConnection(getURL(paste0(URL,guilds_file,token))))
 colnames(guilds) <- tolower(colnames(guilds))
 # assign guilds names
 for(i in 1:dim(guilds)[1]) {
   dat[dat[,"speciescode"] %in% guilds[i,"speciescode"],"guild"] <- guilds[i,"guild"]
-	}
+  }
 ```
 
 There are two guilds that we do not want to include in our analysis because they are too rare in the dataset: 1) "large piscivores" (e.g., leopard shark, _Triakis semifasciata_), and 2) "pelagic piscivores" (i.e., jack mackerel, _Trachurus symmetricus_).
 
 ```{r}
 # spp to drop/eliminate
-spp.out <- c("Piscivorous fishes - pelagic","Large piscivorous fishes")
+spp_out <- c("Piscivorous fishes - pelagic","Large piscivorous fishes")
 # drop spp/guilds of no interest
-dat <- dat[!(dat$guild %in% spp.out),]
+dat <- dat[!(dat$guild %in% spp_out),]
+# guild names
+guild_names <- sort(as.vector(unique(guilds$guild)[!(unique(guilds$guild) %in% spp_out)]))
 ```
 
-
+***
 ## Identifying the sampling stations
 
 The original data were collected at 7 stations around San Nicolas, but we only model the dynamics of 6 of them. The seventh station, Sandy Cove, was added later in the study, is relatively deep compared to the other stations, and was surveyed with much less frequency. We assume that the data from the 6 stations are observations of 4 underlying "states", or realizations of the San Nicolas community (see table below). In the North region, we treat station 1 as a single observation of one state. In the West region, we treat stations 2 and 3 as samples from the same state. In the South region, we model 2 different states. Stations 4 and 5 are observations of a third state, and station 6 is from a fourth state.
@@ -138,29 +139,25 @@ tabl_1 <- "
 |    4    | East Dutch Harbor | South  |   3   |
 |    5    | West Dutch Harbor | South  |   3   |
 |    6    | Daytona           | South  |   4   |
+|         |                   |        |       |
 "
 cat(tabl_1) # output the table in a format good for HTML/PDF/docx conversion
 ```
 
-Now we drop station 7 and assign the remaining observations to their respective states.
+So, we begin by dropping station 7.
 
 ```{r}
 # drop station 7
 dat <- dat[dat$station != 7,]
-# assign obs to states
-dat$state <- NA
-dat$state[dat$station==1] <- 1
-dat$state[dat$station==2 | dat$station==3] <- 2
-dat$state[dat$station==4 | dat$station==5] <- 3
-dat$state[dat$station==6] <- 4
 ```
 
+***
 ## Data aggregation & transformation
 
 Now we need to aggregate the data by guild and sampling station.
 
 ```{r}
-dat.m <- aggregate(density ~ guild + station + period, data=dat, "sum")  		  
+dat_agg <- aggregate(density ~ guild + station + period, data=dat, "sum")        
 ```
 
 We will treat 0's in the aggregated data as NA's for two reasons:
@@ -169,62 +166,90 @@ We will treat 0's in the aggregated data as NA's for two reasons:
 2. We need to use log-density, which would require some us to add some arbitrary, non-zero constant.
 
 ```{r}
-dat.m[dat.m$density==0,"density"] <- NA
+dat_agg[dat_agg$density==0,"density"] <- NA
 ```
 
 We need to use log-density to meet model assumptions, and we want to de-mean the data so that we do not need to estimate the means within the model.
 
 ```{r}
 # log of density
-dat.m$ldens <- log(dat.m$density)
+dat_agg$ldens <- log(dat_agg$density)
 # transform data to wide form (rows: time; cols: guilds x stations)
-dat.m2 <- dcast(dat.m, period ~ guild + station, value.var="ldens")
+dat_agg_w <- dcast(dat_agg, period ~ guild + station, value.var="ldens")
 # de-mean the data
-dat.m2[,-1] <- scale(dat.m2[,-1],center=TRUE,scale=FALSE)
+dat_agg_w[,-1] <- scale(dat_agg_w[,-1],center=TRUE,scale=FALSE)
 ```
 
 There are a few time periods with missing samples that we need to set to NA.
 
 ```{r}
 # get time periods with no samples (ie, NAs)
-per.miss <- seq(max(dat.m2[,"period"]))[!(seq(max(dat.m2[,"period"])) %in% dat.m2[,"period"])]
+prd_miss <- seq(max(dat_agg_w[,"period"]))[!(seq(max(dat_agg_w[,"period"])) %in% dat_agg_w[,"period"])]
 # insert NAs for missing dates
-dat.miss <- cbind(per.miss,matrix(NA,length(per.miss),ncol(dat.m2)-1))
-colnames(dat.miss) <- colnames(dat.m2)
+dat_miss <- cbind(prd_miss,matrix(NA,length(prd_miss),ncol(dat_agg_w)-1))
+colnames(dat_miss) <- colnames(dat_agg_w)
 # concatenate the 2 data frames
-dat.m2 <- rbind(dat.m2,dat.miss)
+dat_agg_w <- rbind(dat_agg_w,dat_miss)
 # re-order the data by time
-dat.m2 <- dat.m2[order(dat.m2[,"period"]),]
-rownames(dat.m2) <- NULL
+dat_agg_w <- dat_agg_w[order(dat_agg_w[,"period"]),]
+rownames(dat_agg_w) <- NULL
 ```
 
-The data are now organized within one data frame, which is $\left[T \times (M \times n) \right]$, but we want our data to be $n$ different matrices that are each $\left[M \times T \right]$.
+The data are now organized within one data frame, which is $\left[T \times (m \times n) \right]$, but we want our data to be $n$ different matrices that are each $\left[m \times T \right]$.
 
 ```{r}
 # number of time points
-TT <- dim(dat.m2)[1]
+TT <- dim(dat_agg_w)[1]
 # number of stations
 NN <- length(unique(dat$station))
 # number of guilds
-MM <- (dim(dat.m2)[2]-1)/NN
+MM <- (dim(dat_agg_w)[2]-1)/NN
+# create station-specific matrices of data
 for(i in 1:NN) {
-  assign(paste0("YY_",i),t(dat.m2[,seq(2,by=NN,length.out=MM)+(i-1)]))
+  tmp <- t(dat_agg_w[,seq(2,by=NN,length.out=MM)+(i-1)])
+  rownames(tmp) <- guild_names
+  assign(paste0("YY_",i),tmp)
 }
 ```
 
+The last thing we need to do here is define a few scalars and indices to use within the JAGS model below.
 
+```{r}
+M2 <- MM*MM
+row_idx <- rep(seq(1,MM), MM)
+BB_idx <- matrix(seq(1,M2),MM,MM)
+BB_prior <- diag(M2)
+BB_mean <- rep(0,M2)
+BB_diag <- seq(1,M2,by=(MM+1)) # these are the indices of BB_vec for diagonal of BB_mat
+BB_off <- seq(1,M2)[-BB_diag]
+```
+
+***
 ## External drivers (covariates)
 
 There are several external drivers known to affect food web dynamics in kelp forest ecosystems. In particular, we are interested in the potential roles of 1) predatory sea otters; 2) the El Niño - Southern Oscillation (ENSO) climate phenomenon; and 3) commercial urchin harvest.
 
-#### 1. Otters
+### 1. Otters
 The sea otter data come from multiple sources. __NEED INFO HERE RE: EARLY SOURCE(S)__ ...and years from 1995-2011 come from Kenner et al. (2013).
 
+__NOTE THAT THESE VALUES WILL BE REPLACED WITH NEW DATA__
+
 ```{r}
-# get some otter data
+# set URL
+URL <- "https://raw.githubusercontent.com/eric-ward/TVVARSS/master/"
+token <- "?token=AE0I0EUPnZXeDpa9rfe68HuRJKHW1Iniks5Wr_aVwA%3D%3D"
+otterFile <- "adult_otters_current.csv"
+# get LUT of guild names
+otters <- read.csv(textConnection(getURL(paste0(URL,otterFile,token))))
+# convert to [3 x TT] matrix for JAGS; each row is different region
+ottr <- t(otters[,c("north","south","west")])
+# rescale to make comparable with other covariates
+ottr_m <- mean(ottr)
+ottr_s <- sqrt(var(as.vector(ottr)))
+ottr <- diag(1/rep(ottr_s),nrow(ottr)) %*% (ottr - ottr_m)
 ```
 
-#### 2. El Niño / Southern Oscillation
+### 2. El Niño / Southern Oscillation
 We used the El Niño / Southern Oscillation (ENSO) index to capture large-scale environmental conditions around San Nicolas. Strong ENSO events are characterized by relatively warm water and intense winter storms that physically disturb benthic habitats. Specifically, we used the sea-surface temperatures (SST) from the ENSO 3.4 region of the tropical Pacific Ocean (for more information on ENSO, click [here]).
 
 [here]: https://www.ncdc.noaa.gov/teleconnections/enso/enso-tech.php
@@ -237,29 +262,26 @@ tabl_2 <- "
 |:-------|:---------------------------|
 | Spring | March, April, May          |
 | Autumn | August, September, October |
+|        |                            |
 "
 cat(tabl_2) # output the table in a format good for HTML/PDF/docx conversion
 ```
 
-The SST data (and several other atmosphereic indices) are available from NOAA's Climate Prediction Center.
-
-http://www.cpc.ncep.noaa.gov/data/indices/
-
-Let's download the file and trim away the information we don't need.
+The SST data (and several other atmosphereic indices) are available from NOAA's [Climate Prediction Center](http://www.cpc.ncep.noaa.gov/data/indices/). Let's download the file and trim away the information we don't need.
 
 ```{r}
 # first year of data
-yr.first <- 1980
+yr_first <- 1980
 # last year of data
-yr.last <- 2011
+yr_last <- 2011
 # first set of months
 mon1 <- c(3,4,5)
 # second set of months
 mon2 <- c(8,9,10)
 # get all ENSO data
-enso <- read.table("http://www.cpc.ncep.noaa.gov/data/indices/ersst4.nino.mth.81-10.ascii", header=TRUE)
+nino <- read.table("http://www.cpc.ncep.noaa.gov/data/indices/ersst4.nino.mth.81-10.ascii", header=TRUE)
 # trim data to correct years & index
-nino34 <- enso[enso$YR>=yr.first & enso$YR<=yr.last,  c("YR","MON","NINO3.4")]
+nino34 <- nino[nino$YR>=yr_first & nino$YR<=yr_last,  c("YR","MON","NINO3.4")]
 # assign months to periods (1=Spring; 2=Autumn)
 nino34[nino34$MON %in% mon1,"period"] <- 1
 nino34[nino34$MON %in% mon2,"period"] <- 2
@@ -268,70 +290,38 @@ anom34 <- aggregate(NINO3.4 ~ period + YR, nino34, mean)[,c("YR","period","NINO3
 # convert to z-score (i.e., a temperature anomoly)
 anom34$NINO3.4 <- scale(anom34$NINO3.4)
 colnames(anom34)[c(1,3)] <- c("year","anom34")
+# convert to [1 x TT] matrix for JAGS
+enso <- matrix(anom34$anom34,nrow=1)
 ```
 
-#### 3. Harvest
+### 3. Urchin harvest
 
+We obtained the commercial harvest (in metric tonnes) of sea urchins around San Nicolas Island from __GET CONTACT INFO__ . The harvest data are also on the Github project site.
 
+```{r}
+# set URL
+URL <- "https://raw.githubusercontent.com/eric-ward/TVVARSS/master/"
+token <- "?token=AE0I0Cg5QEMXImfUitSN4lYQLBvd27BTks5Wr-vvwA%3D%3D"
+urchin_file <- "urchin_harvest_ts.csv"
+# get LUT of guild names
+urchins <- read.csv(textConnection(getURL(paste0(URL,urchin_file,token))))
+# rescale & convert to [1 x TT] matrix for JAGS
+harv <- matrix(scale(urchins$sum),nrow=1)
+```
 
 ***
-## Old stuff below here
-***
-
-Read in the raw data on the guild abundances. These are in log-space, and the few 0s in the dataset have been replaced with NAs, because species are likely present in low density (just not detected).
-
-```{r}
-spec.names = c("Abalone","Cleaner.fish","Giant.kelp","Herb.fish","Large.invert.eating.fish",
-  "Limpets", "Omni.inverts", "Plankt.fish", "Pred.inverts", "Small.invert.eating.fish",   
-  "Small.pisc.fish", "Snails", "Understory.kelp", "Urchins")
-```
-
-
-
-
-Now we'll read in the covariates. For this application, there are 3 covariates (ENSO, urchin harvest, otter counts), and 2 of the 3 have the same values for all regions becasue they are recorded at a coarser spatial scale than the sampling sites (ENSO, urchin harvest).  
-
-```{r}
-# covars = read.csv("covariates_by_region.csv")
-
-# enso.wns = matrix(0,dim(covars)[1],MM)
-# otters.w = matrix(0,dim(covars)[1],MM) # CC_ottr.1
-# otters.n = matrix(0,dim(covars)[1],MM) 
-# otters.s = matrix(0,dim(covars)[1],MM)
-# for(i in 1:MM) {
-# 	enso.wns[,i] = covars[,"enso_W"]
-# 	otters.w[,i] = covars[,"otter_W"]
-# 	otters.n[,i] = covars[,"otter_N"]
-# 	otters.s[,i] = covars[,"otter_S"]
-# }
-
-# For harvest, we're only including removals of urchins, hence
-# 0s for other species
-# harvest.wns = matrix(0,dim(covars)[1],MM)
-# harvest.wns[,14] = covars[,"harvest_W"]
-```
-
-## Data preparation
-We need to vectorize the B matrix in our code, so we need to do some housekeeping to create some indices.
-```{r}
-M2 <- MM*MM
-row_idx <- rep(seq(1,MM), MM)
-BB_idx <- matrix(seq(1,M2),MM,MM)
-BB_prior <- diag(M2)
-BB_mean <- rep(0,M2)
-BB_diag <- seq(1,M2,by=(MM+1)) # these are the indices of BB_vec for diagonal of BB_mat
-BB_off <- seq(1,M2)[-BB_diag]
-```
-
 ## The TVVARSS model in JAGS
+
+We need to specify the TVVARSS model in JAGS notation before we can fit it. Note that the code below is not written to be universally generic, but rather to emphasize the number of states, observations, and covariates in this specific application.
+
 ```{r}
-model = cat("
+model <- cat("
 
 model {
 
   #--------
-	# PRIORS
-	#--------
+  # PRIORS
+  #--------
   # BB is interaction matrix
   # precision matrix
   BB_tau ~ dwish(BB_prior, M2); 
@@ -340,7 +330,7 @@ model {
 
   # initial X0, or state of nature, varies by state, but shared prior
   X0_tau ~ dwish(BB_prior[1:MM,1:MM], MM); # prior precision matrix
-				
+      	
   # process variance is independent/unequal by region
   # and independent/unequal across spp
   for(i in 1:MM) {
@@ -349,25 +339,25 @@ model {
     }		
   }
 
-  # Priors for coefficients  
+  # Priors for covariate effects  
   for(i in 1:MM) {
     CC_enso[i,1] ~ dnorm(0,0.001); # effect of enso, varies by spp
     CC_ottr[i,1] ~ dnorm(0,0.001); # effect of otters, varies by spp
   }
-  for(i in 1:13) {
+  for(i in 1:(MM-1)) {
     CC_harv[i,1] <- 0; # effect of urchin harvest on non-urchin
   }
-  CC_harv[14,1] ~ dnorm(0,0.001); # effect of urchin harvest on urchins
+  CC_harv[MM,1] ~ dnorm(0,0.001); # effect of urchin harvest on urchins
 
   #------------
-	# LIKELIHOOD
-	#------------
+  # LIKELIHOOD
+  #------------
   # first time step
+  BB_vec[1:M2,1] ~ dmnorm(BB_mean,BB_tau);  # interactions at time 1
   # convert BB_vec to a matrix for initial time step  
   for(cols in 1:MM) {
     BB_mat[1:MM,cols,1] <- BB_vec[BB_idx[1,cols]:BB_idx[MM,cols],1];            
   }
-  BB_vec[1:M2,1] ~ dmnorm(BB_mean,BB_tau);  # interactions at time 1
 
   X_1[1:MM,1] ~ dmnorm(BB_mean[1:MM],X0_tau); # state 1
   X_2[1:MM,1] ~ dmnorm(BB_mean[1:MM],X0_tau); # state 2
@@ -378,29 +368,29 @@ model {
   for(time in 2:TT) {
     for(cols in 1:MM) {
       # go from vec space -> matrix, but i think it's only way in jags
-      BB_mat[1:MM,cols,time] <- BB_vec[BB_idx[1,cols]:BB_idx[MM,cols],time-1];    	   
+      BB_mat[1:MM,cols,time] <- BB_vec[BB_idx[1,cols]:BB_idx[MM,cols],time];    	   
     }
     	
-    # calculate predicted state vector for states 1-4
-    mu_X_1[1:MM,time] <- BB_mat[1:MM,1:MM,time-1] %*% (X_1[1:MM,time-1]) + 
-                         CC_enso[1:MM,1] * enso.wns[time-1,] +
-                         CC_ottr[1:MM,1] * otters.w[time-1,] +
-                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 2/3
+    # calculate predicted state vectors
+    mu_X_1[1:MM,time] <- BB_mat[1:MM,1:MM,time] %*% (X_1[1:MM,time-1]) + 
+                         CC_enso[1:MM,1] * enso[1,time-1] +
+                         CC_ottr[1:MM,1] * ottr[2,time-1] +
+                         CC_harv[1:MM,1] * harv[1,time-1];
 
-    mu_X_2[1:MM,time] <- BB_mat[1:MM,1:MM,time-1] %*% (X_2[1:MM,time-1]) +
-                         CC_enso[1:MM,1] * enso.wns[time-1,] +
-                         CC_ottr[1:MM,1] * otters.n[time-1,] +
-                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 1
-    	
-    mu_X_3[1:MM,time] <- BB_mat[1:MM,1:MM,time-1] %*% (X_3[1:MM,time-1]) +
-                         CC_enso[1:MM,1] * enso.wns[time-1,] +
-                         CC_ottr[1:MM,1] * otters.s[time-1,] +
-                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 4/5
+    mu_X_2[1:MM,time] <- BB_mat[1:MM,1:MM,time] %*% (X_2[1:MM,time-1]) +
+                         CC_enso[1:MM,1] * enso[1,time-1] +
+                         CC_ottr[1:MM,1] * ottr[1,time-1] +
+                         CC_harv[1:MM,1] * harv[1,time-1];
 
-    mu_X_4[1:MM,time] <- BB_mat[1:MM,1:MM,time-1] %*% (X_4[1:MM,time-1]) +
-                         CC_enso[1:MM,1] * enso.wns[time-1,] +
-                         CC_ottr[1:MM,1] * otters.s[time-1,] +
-                         CC_harv[1:MM,1] * harvest.wns[time-1,];#site 6
+    mu_X_3[1:MM,time] <- BB_mat[1:MM,1:MM,time] %*% (X_3[1:MM,time-1]) +
+                         CC_enso[1:MM,1] * enso[1,time-1] +
+                         CC_ottr[1:MM,1] * ottr[3,time-1] +
+                         CC_harv[1:MM,1] * harv[1,time-1];
+
+    mu_X_4[1:MM,time] <- BB_mat[1:MM,1:MM,time] %*% (X_4[1:MM,time-1]) +
+                         CC_enso[1:MM,1] * enso[1,time-1] +
+                         CC_ottr[1:MM,1] * ottr[3,time-1] +
+                         CC_harv[1:MM,1] * harv[1,time-1];
 
     # include process variation - normally distributed errors
     # independent across spp and site
@@ -443,16 +433,28 @@ model {
 ", file = "TVVARSS.txt")
 ```
 
-## Running the model
+***
+## Fitting the model
+
+The last thing we need to do before fitting the model in JAGS is to specify
+
+1. the data and indices that go into the model;
+2. the model parameters and states that we want JAGS to return;
+3. the MCMC control parameters.
+
+Please note that the following code will take a LONG time to run (~2 hours).
 
 ```{r, message=FALSE, warning=FALSE, cache=TRUE}
+# 1. data and indices to pass to JAGS
 jags_dat <- list("YY_1","YY_2","YY_3","YY_4","YY_5","YY_6",
-                 "enso.wns", "otters.w", "otters.s", "otters.n", "harvest.wns",
+                 "enso", "ottr", "harv",
                  "MM","M2","TT","BB_idx","BB_prior","BB_mean","BB_off","BB_diag")
 
+# 2. model params/states for JAGS to return
 jags_par <- c("BB_vec", "BB_tau_off", "BB_tau_diag", "CC_enso", "CC_ottr", "CC_harv",
               "X_1", "X_2", "X_3", "X_4", "QQ_tau", "RR_tau")
 
+# 3. MCMC control params
 jags_mod <- list(data = jags_dat,
                  parameters.to.save = jags_par,
                  inits = NULL,
@@ -467,257 +469,270 @@ jags_mod <- list(data = jags_dat,
 timer_start <- proc.time()
 
 # fit the model in JAGS & store results
-jags_fit <- do.call(jags.parallel, jags_mod)
+# jags_fit <- do.call(jags.parallel, jags_mod)
+load(url("http://faculty.washington.edu/scheuerl/tmp_JAGS_fit.RData"))
 
 # stop timer
-(run_time_in_min <- round(((proc.time()-timer_start)/60)["elapsed"], 0))
+run_time_in_min <- round(((proc.time()-timer_start)/60)["elapsed"], 0)
 ```
 
-## Diagnostics
+***
+## Model diagnostics
 
-### Observed versus predicted values
-Estimates from state space models can be used to produce two kinds of residuals; process error residuals (differences between predicted and 'true' or latent states of nature), and observation error residuals (differences between latent states of nature and observed data). 
+There are several diagnostic measures we can examine to evaluate the model fit. To facilitate this, we will first "attach" the JAGS model object to the workspace so we can easily access what are otherwise deeply embedded list objects.
 
-We'll start by examining the observation error residuals, which are interpreted more as how well the model matches observed data. 
-
-```{r, fig.cap="Observed data (y-axis) versus predicted values (x-axis, posterior means) for West region, sites 2 (red) and 3 (blue). The reference line is the 1:1 line.",fig.pos="placeHere", echo=FALSE}
-# Attach model to workspace
+```{r, message=FALSE}
 attach.jags(jags_fit)
+```
 
-# take mean for each state
-mean.X1 = apply(X_1,c(2,3),mean)
+### Observed versus etimated states
 
-par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.38,0.38,0.28,0.01))
-for(i in 1:14) {
-  estMed = apply(X_1[,i,],2,quantile, 0.5)
-  plot(estMed, YY_2[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
-  points(estMed, YY_3[i,], col = "blue", pch=16, cex=0.8)
-  abline(0,1)
+We'll start by examining X-Y plots of the observed data versus the estimated true states for each of the `r MM` guilds.
+
+#### STATE 1 (North)
+```{r, fig.width=8, fig.height=8, fig.cap="Observed data (y-axis) versus predicted values (x-axis, posterior means) for North region, sites 1 (red). The reference line is the 1:1 line.",fig.pos="placeHere"}
+par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.4,0.4,0.3,0.05))
+for(i in 1:MM) {
+  X_med <- apply(X_1[,i,], 2, quantile, 0.5)
+  xmin <- min(X_med, na.rm=TRUE)
+  xmax <- max(X_med, na.rm=TRUE)
+  ymin <- min(YY_1[i,], na.rm=TRUE)
+  ymax <- max(YY_1[i,], na.rm=TRUE)
+  plot(X_med, YY_1[i,], col="blue", pch=16, cex=0.8,
+       xlim=c(xmin,xmax), ylim=c(ymin,ymax),
+       main=guild_names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
+  abline(0,1,col="darkgray")
 }
 ```
 
-```{r, fig.cap="Observed data (y-axis) versus predicted values (x-axis, posterior means) for North region, sites 1 (red). The reference line is the 1:1 line.",fig.pos="placeHere", echo=FALSE}
-# Attach model to workspace
-attach.jags(jags_fit)
+<br>
 
-# take mean for each state
-mean.X2 = apply(X_2,c(2,3),mean)
-
-par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.38,0.38,0.28,0.01))
-for(i in 1:14) {
-  estMed = apply(X_2[,i,],2,quantile, 0.5)
-  plot(estMed, YY_1[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
-  abline(0,1)
+#### STATE 2 (West)
+```{r, fig.width=8, fig.height=8, fig.cap="Observed data (y-axis) versus predicted values (x-axis, posterior means) for West region, sites 2 (red) and 3 (blue). The reference line is the 1:1 line.",fig.pos="placeHere"}
+par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.4,0.4,0.3,0.05))
+for(i in 1:MM) {
+  X_med <- apply(X_1[,i,], 2, quantile, 0.5)
+  xmin <- min(X_med, na.rm=TRUE)
+  xmax <- max(X_med, na.rm=TRUE)
+  ymin <- min(c(YY_2[i,],YY_3[i,]), na.rm=TRUE)
+  ymax <- max(c(YY_2[i,],YY_3[i,]), na.rm=TRUE)
+  plot(X_med, YY_2[i,], col="blue", pch=16, cex=0.8,
+       xlim=c(xmin,xmax), ylim=c(ymin,ymax),
+       main=guild_names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
+  points(X_med, YY_3[i,], col = "darkred", pch=16, cex=0.8)
+  abline(0,1,col="darkgray")
 }
 ```
 
-```{r, fig.cap="Observed data (y-axis) versus predicted values (x-axis, posterior means) for South region, sites 4 (red) and 5 (blue). The reference line is the 1:1 line.",fig.pos="placeHere", echo=FALSE}
-# Attach model to workspace
-attach.jags(jags_fit)
+<br>
 
-# take mean for each state
-mean.X3 = apply(X_3,c(2,3),mean)
-
-par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.38,0.38,0.28,0.01))
-for(i in 1:14) {
-  estMed = apply(X_3[,i,],2,quantile, 0.5)
-  plot(estMed, YY_4[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
-  points(estMed, YY_5[i,], col = "blue", pch=16, cex=0.8)
-  abline(0,1)
+#### STATE 3 (South)
+```{r, fig.width=8, fig.height=8, fig.cap="Observed data (y-axis) versus predicted values (x-axis, posterior means) for South region, sites 4 (red) and 5 (blue). The reference line is the 1:1 line.",fig.pos="placeHere"}
+par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.4,0.4,0.3,0.05))
+for(i in 1:MM) {
+  X_med <- apply(X_3[,i,], 2, quantile, 0.5)
+  xmin <- min(X_med, na.rm=TRUE)
+  xmax <- max(X_med, na.rm=TRUE)
+  ymin <- min(c(YY_4[i,],YY_5[i,]), na.rm=TRUE)
+  ymax <- max(c(YY_4[i,],YY_5[i,]), na.rm=TRUE)
+  plot(X_med, YY_4[i,], col="blue", pch=16, cex=0.8,
+       xlim=c(xmin,xmax), ylim=c(ymin,ymax),
+       main=guild_names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
+  points(X_med, YY_5[i,], col = "darkred", pch=16, cex=0.8)
+  abline(0,1,col="darkgray")
 }
 ```
 
-```{r, fig.cap="Observed data (y-axis) versus predicted values (x-axis, posterior means) for South region, sites 6 (red). The reference line is the 1:1 line.",fig.pos="placeHere", echo=FALSE}
-# Attach model to workspace
-attach.jags(jags_fit)
+<br>
 
-# take mean for each state
-mean.X4 = apply(X_4,c(2,3),mean)
-
-par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.38,0.38,0.28,0.01))
-for(i in 1:14) {
-  estMed = apply(X_4[,i,],2,quantile, 0.5)
-  plot(estMed, YY_6[i,], col = "red", pch=16, cex=0.8, main = spec.names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
-  abline(0,1)
+#### STATE 4 (South)
+```{r, fig.width=8, fig.height=8, fig.cap="Observed data (y-axis) versus predicted values (x-axis, posterior means) for South region, sites 6 (red). The reference line is the 1:1 line.",fig.pos="placeHere"}
+par(mfrow = c(4,4), mgp=c(2,1,0), mai=c(0.4,0.4,0.3,0.05))
+for(i in 1:MM) {
+  X_med <- apply(X_4[,i,], 2, quantile, 0.5)
+  xmin <- min(X_med, na.rm=TRUE)
+  xmax <- max(X_med, na.rm=TRUE)
+  ymin <- min(YY_6[i,], na.rm=TRUE)
+  ymax <- max(YY_6[i,], na.rm=TRUE)
+  plot(X_med, YY_6[i,], col="blue", pch=16, cex=0.8,
+       xlim=c(xmin,xmax), ylim=c(ymin,ymax),
+       main=guild_names[i], xlab="Estimated", ylab="Observed", cex.main=0.9)
+  abline(0,1,col="darkgray")
 }
 ```
 
-### Time series of observed and predicted values
-We'll examine first how the observed data matches up with the estimated states. This can be done for each of the 4 states.  
+### Time series of observed data and estimates states
 
-```{r, fig.cap="Time series estimated states (95% CIs in grey) and observed data for West region, sites 2 (red) and 3 (blue). The scale of the y-axis is log abundances that have been centered or de-meaned. ",fig.pos="placeHere", echo=FALSE}
-# Attach model to workspace
-attach.jags(jags_fit)
+We can also examine time series of the estimated states $\pm$ 95% credible intervals with the observed data overlaid.  
 
-# take mean for each state
-mean.X1 = apply(X_1,c(2,3),mean)
+#### STATE 1 (North)
+```{r, fig.width=8, fig.height=8, fig.cap="Time series estimated states (95% CIs in grey) and observed data for North region, site 1 (red). The scale of the y-axis is log abundances that have been centered or de-meaned. ",fig.pos="placeHere"}
+# get median for each state
+median_X1 <- apply(X_1,c(2,3),median)
 
-par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
-for(i in 1:14) {
-  lowerCI = apply(X_1[,i,],2,quantile, 0.025)
-  upperCI = apply(X_1[,i,],2,quantile, 0.975)  
-  ymin = min(c(lowerCI, YY_2[i,], YY_3[i,]), na.rm=T)
-  ymax = max(c(upperCI, YY_2[i,], YY_3[i,]), na.rm=T)
-  plot(mean.X1[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white", cex.main=0.9, cex.axis=0.9)
-  # make polygon of 95% CIs of states
-  Xs = seq(1,dim(X_1)[3])
+par(mfrow=c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.3,0.05))
+for(i in 1:MM) {
+  lowerCI <- apply(X_1[,i,],2,quantile, 0.025)
+  upperCI <- apply(X_1[,i,],2,quantile, 0.975)  
+  ymin <- min(c(lowerCI, YY_1[i,]), na.rm=T)
+  ymax <- max(c(upperCI, YY_1[i,]), na.rm=T)
+  plot(median_X1[i,], main = guild_names[i], ylim=c(ymin, ymax), type="n",
+       cex.main=0.9, cex.axis=0.9, xaxt="n")
+  axis(1,at=seq(1,61,20),labels=seq(1980,2010,10))
+  Xs <- seq(1,dim(X_1)[3])
   polygon(c(Xs, rev(Xs)), c(lowerCI, rev(upperCI)), border=NA, col="grey")
-  points(YY_2[i,], col="red", pch=16, cex=0.8)
-  points(YY_3[i,], col="blue", pch=16, cex=0.8)
+  lines(median_X1[i,], col="black", pch=16, cex=0.8)
+  points(YY_1[i,], col="blue", pch=16, cex=0.8)
 }
 ```
 
+<br>
 
-```{r, fig.cap="Time series estimated states (95% CIs in grey) and observed data for North region, site 1 (red). The scale of the y-axis is log abundances that have been centered or de-meaned. ",fig.pos="placeHere", echo=FALSE}
-# Attach model to workspace
-attach.jags(jags_fit)
+#### STATE 2 (West) 
+```{r, fig.width=8, fig.height=8, fig.cap="Time series estimated states (95% CIs in grey) and observed data for West region, sites 2 (red) and 3 (blue). The scale of the y-axis is log abundances that have been centered or de-meaned. ",fig.pos="placeHere"}
+# take median for each state
+median_X2 <- apply(X_2,c(2,3),median)
 
-# take mean for each state
-mean.X2 = apply(X_2,c(2,3),mean)
-
-par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
-for(i in 1:14) {
-  lowerCI = apply(X_2[,i,],2,quantile, 0.025)
-  upperCI = apply(X_2[,i,],2,quantile, 0.975)  
-  ymin = min(c(lowerCI, YY_1[i,]), na.rm=T)
-  ymax = max(c(upperCI, YY_1[i,]), na.rm=T)
-  plot(mean.X2[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white", cex.main=0.9, cex.axis=0.9)
-  # make polygon of 95% CIs of states
-  Xs = seq(1,dim(X_1)[3])
+par(mfrow=c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.3,0.05))
+for(i in 1:MM) {
+  lowerCI <- apply(X_2[,i,],2,quantile, 0.025)
+  upperCI <- apply(X_2[,i,],2,quantile, 0.975)  
+  ymin <- min(c(lowerCI, YY_2[i,], YY_3[i,]), na.rm=T)
+  ymax <- max(c(upperCI, YY_2[i,], YY_3[i,]), na.rm=T)
+  plot(median_X2[i,], main = guild_names[i], ylim=c(ymin, ymax), type="n",
+       cex.main=0.9, cex.axis=0.9, xaxt="n")
+  axis(1,at=seq(1,61,20),labels=seq(1980,2010,10))
+  Xs <- seq(1,dim(X_2)[3])
   polygon(c(Xs, rev(Xs)), c(lowerCI, rev(upperCI)), border=NA, col="grey")
-  points(YY_1[i,], col="red", pch=16, cex=0.8)
+  lines(median_X2[i,], col="black", pch=16, cex=0.8)
+  points(YY_2[i,], col="blue", pch=16, cex=0.8)
+  points(YY_3[i,], col="darkred", pch=16, cex=0.8)
 }
 ```
- 
-```{r, fig.cap="Time series estimated states (95% CIs in grey) and observed data for the first state in the South region, sites 4 (red) and 5 (blue). The scale of the y-axis is log abundances that have been centered or de-meaned. ",fig.pos="placeHere", echo=FALSE}
-# Attach model to workspace
-attach.jags(jags_fit)
 
-# take mean for each state
-mean.X3 = apply(X_3,c(2,3),mean)
+<br>
 
-par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
-for(i in 1:14) {
-  lowerCI = apply(X_3[,i,],2,quantile, 0.025)
-  upperCI = apply(X_3[,i,],2,quantile, 0.975)  
-  ymin = min(c(lowerCI, YY_4[i,], YY_5[i,]), na.rm=T)
-  ymax = max(c(upperCI, YY_4[i,], YY_5[i,]), na.rm=T)
-  plot(mean.X3[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white", cex.main=0.9, cex.axis=0.9)
-  # make polygon of 95% CIs of states
-  Xs = seq(1,dim(X_3)[3])
+#### STATE 3 (South)
+```{r, fig.width=8, fig.height=8, fig.cap="Time series estimated states (95% CIs in grey) and observed data for the first state in the South region, sites 4 (red) and 5 (blue). The scale of the y-axis is log abundances that have been centered or de-meaned. ",fig.pos="placeHere"}
+# take median for each state
+median_X3 <- apply(X_3,c(2,3),median)
+
+par(mfrow=c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.3,0.05))
+for(i in 1:MM) {
+  lowerCI <- apply(X_3[,i,],2,quantile, 0.025)
+  upperCI <- apply(X_3[,i,],2,quantile, 0.975)  
+  ymin <- min(c(lowerCI, YY_4[i,], YY_5[i,]), na.rm=T)
+  ymax <- max(c(upperCI, YY_4[i,], YY_5[i,]), na.rm=T)
+  plot(median_X3[i,], main = guild_names[i], ylim=c(ymin, ymax), type="n",
+       cex.main=0.9, cex.axis=0.9, xaxt="n")
+  axis(1,at=seq(1,61,20),labels=seq(1980,2010,10))
+  Xs <- seq(1,dim(X_3)[3])
   polygon(c(Xs, rev(Xs)), c(lowerCI, rev(upperCI)), border=NA, col="grey")
-  points(YY_4[i,], col="red", pch=16, cex=0.8)
-  points(YY_5[i,], col="blue", pch=16, cex=0.8)
+  lines(median_X3[i,], col="black", pch=16, cex=0.8)
+  points(YY_4[i,], col="blue", pch=16, cex=0.8)
+  points(YY_5[i,], col="darkred", pch=16, cex=0.8)
 }
 ```
 
-```{r, fig.cap="Time series estimated states (95% CIs in grey) and observed data for the second state in the South region, site 6 (red). The scale of the y-axis is log abundances that have been centered or de-meaned. ",fig.pos="placeHere", echo=FALSE}
-# Attach model to workspace
-attach.jags(jags_fit)
+<br>
 
-# take mean for each state
-mean.X4 = apply(X_4,c(2,3),mean)
+#### STATE 4 (South)
+```{r, fig.width=8, fig.height=8, fig.cap="Time series estimated states (95% CIs in grey) and observed data for the second state in the South region, site 6 (red). The scale of the y-axis is log abundances that have been centered or de-meaned. ",fig.pos="placeHere"}
+# take median for each state
+median_X4 <- apply(X_4,c(2,3),median)
 
-par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
-for(i in 1:14) {
-  lowerCI = apply(X_4[,i,],2,quantile, 0.025)
-  upperCI = apply(X_4[,i,],2,quantile, 0.975)  
-  ymin = min(c(lowerCI, YY_6[i,]), na.rm=T)
-  ymax = max(c(upperCI, YY_6[i,]), na.rm=T)
-  plot(mean.X4[i,], main = spec.names[i], ylim=c(ymin, ymax), col="white", cex.main=0.9, cex.axis=0.9)
-  # make polygon of 95% CIs of states
-  Xs = seq(1,dim(X_4)[3])
+par(mfrow=c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.3,0.05))
+for(i in 1:MM) {
+  lowerCI <- apply(X_4[,i,],2,quantile, 0.025)
+  upperCI <- apply(X_4[,i,],2,quantile, 0.975)  
+  ymin <- min(c(lowerCI, YY_6[i,]), na.rm=T)
+  ymax <- max(c(upperCI, YY_6[i,]), na.rm=T)
+  plot(median_X4[i,], main = guild_names[i], ylim=c(ymin, ymax), type="n",
+       cex.main=0.9, cex.axis=0.9, xaxt="n")
+  axis(1,at=seq(1,61,20),labels=seq(1980,2010,10))
+  Xs <- seq(1,dim(X_4)[3])
   polygon(c(Xs, rev(Xs)), c(lowerCI, rev(upperCI)), border=NA, col="grey")
-  points(YY_6[i,], col="red", pch=16, cex=0.8)
+  lines(median_X4[i,], col="black", pch=16, cex=0.8)
+  points(YY_6[i,], col="blue", pch=16, cex=0.8)
 }
 ```
 
+***
 ## Results
 
-We can also include some estimated parameters, similar to the plots made in Scheuerell et al. 
+Now lets look at some of estimated parameters, similar to those in Scheuerell et al. First, we'll look at the large matrix of time varying coefficients (__B__ matrix). Elements on off-diagonals (green) represent inter-guild interactions like competition and predation. Elements on the diaganol (in blue) represent intra-guild density dependence.
 
-First, we'll look at the giant matrix of time varying coefficients (B matrix). Elements on off-diagonals (green) represent interspecific interactions. Elements in blue (on the diaganol) represent intraspecific density dependence. 
-
-```{r, echo=FALSE, fig.cap="Time series of estimated species interactions (80% CIs in shaded region). The interactions are interpreted as the effect of the species in each column on the species in each row. ",fig.pos="placeHere"}
-attach.jags(jags_fit)
-
-mm <- sqrt(dim(BB_vec)[2])# num of states
-TT <- dim(BB_vec)[3]# times steps
-alpha <- 0.10# desired alpha for CIs
-
-# guilds 1-mm
-legend.key <- data.frame(index=seq(mm), 
- guild=sub("_+[0-9]","",rownames(YY_1)))
-
-spec2 <- c("Sm piscivores","Sheephead","Pred inverts",
-  			   "Planktivores","Sm invert-eaters","Cleaner fish",
-				   "Omni inverts","Abalone","Herb fishes",
-				   "Snails","Urchins","Limpets",
-				   "Giant kelp","Under kelp")
-
-#dev.new(height=12, width=12)
-
-layout(matrix(seq(mm^2),mm,mm, byrow=FALSE),
-		widths=c(rep(1,mm),6))
-
-par(mai=rep(0.025,4), omi=c(0,0.3,0.3,0))
-
-spec = c("ABO", "CLF", "GKP", "HBF", "SHP", "LIM", 
-"OIN", "PLF", "PIN", "SIF", "SPF", "SNL", "UKP", "URC")
+```{r, fig.width=8, fig.height=8, fig.cap="Time series of estimated species interactions (80% CIs in shaded region). The interactions are interpreted as the effect of the species in each column on the species in each row. ",fig.pos="placeHere"}
+# desired alpha for CIs
+alpha <- 0.10
+# short guild names for plots
+guilds_SH <- c("Sm piscivores","Sheephead","Pred inverts",
+               "Planktivores","Sm invert-eaters","Cleaner fish",
+               "Omni inverts","Abalone","Herb fishes",
+               "Snails","Urchins","Limpets",
+               "Giant kelp","Under kelp")
+# re-order guild names from upper to lower trophic levels
 reorder <- c(11, 5, 9, 8, 10, 2, 7, 1, 4, 12, 14, 6, 3, 13) 
-BB_idx = matrix(seq(1,mm^2), mm,mm) # This is for re-ordering 
-toprow = BB_idx[1,]
-BB_idx = c(BB_idx[reorder,reorder])
-    
-for(i in 1:mm^2) {
-	# plot mean
-	pdat <- cbind(apply(BB_vec[,BB_idx[i],],2,quantile,alpha/2),
-				  apply(BB_vec[,BB_idx[i],],2,mean),
-				  apply(BB_vec[,BB_idx[i],],2,quantile,1-alpha/2))
-		
+# index for plotting
+BB_plt <- c(BB_idx[reorder,reorder])
+# setup plot region    
+layout(matrix(seq(M2), MM, MM, byrow=FALSE), widths=c(rep(1,MM),6))
+par(mai=rep(0.025,4), omi=c(0,0.3,0.3,0))
+# plot time series of interaction coefficients
+for(i in 1:M2) {
+	pdat <- cbind(apply(BB_vec[,BB_plt[i],],2,quantile,alpha/2),
+				  apply(BB_vec[,BB_plt[i],],2,mean),
+				  apply(BB_vec[,BB_plt[i],],2,quantile,1-alpha/2))
 	matplot(seq(TT), pdat, type="n", xaxt="n",xlab="",yaxt="n",ylab="",ylim=c(-0.9,0.9))
 	abline(h=0, col="gray")
-	clr="green4" 
-	fill.clr = rgb(0, 139, 0, alpha = 50, maxColorValue = 255)# based on green4
-	if(i %in% seq(1,mm^2,mm+1)) { 
-		clr="blue"
-		fill.clr = rgb(0, 0, 255, alpha = 50, maxColorValue = 255)
+	clr <- "green4" 
+	fill_clr = rgb(0, 139, 0, alpha = 50, maxColorValue = 255)# based on green4
+	if(i %in% seq(1,M2,MM+1)) { 
+		clr <- "blue"
+		fill_clr = rgb(0, 0, 255, alpha = 50, maxColorValue = 255)
 	} 	
-	polygon(c(seq(TT),rev(seq(TT))), c(pdat[,1], rev(pdat[,3])), col = fill.clr, border = NA)
+	polygon(c(seq(TT),rev(seq(TT))), c(pdat[,1], rev(pdat[,3])), col = fill_clr, border = NA)
 	lines(seq(TT), pdat[,2],lwd = 2.5, col = clr)
-	
-	if(i <= mm) { mtext(spec2[i], side=2, line=0.3,cex=0.3) }
-	if(i %in% toprow) { mtext(spec2[which(toprow==i)], side=3, line=0.3,cex=0.3) }
-	
-	#if(i==1) { mtext("A", at=-60, line=1.2, font=2) }
-	}
-
-```
-
-Next, we can look at the estimated covariate effects. First, the effect of otters: 
-
-```{r, echo=FALSE, fig.cap="Estimated effects of otters on species guilds.",fig.pos="placeHere"}
-attach.jags(jags_fit)
-par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
-for(i in 1:14) {
-  hist(CC_ottr[,i,1], 20, col="grey", main = spec.names[i], cex.main=0.9, cex.axis=0.9)
+	if(i <= MM) { mtext(guilds_SH[i], side=2, line=0.3,cex=0.3) }
+	if(i %in% BB_idx[1,]) { mtext(guilds_SH[which(BB_idx[1,]==i)], side=3, line=0.3,cex=0.3) }
 }
 ```
 
-We can also look at the effects of ENSO on each guild, 
+<br>
 
-```{r, echo=FALSE, fig.cap="Estimated effects of ENSO on species guilds.",fig.pos="placeHere"}
-attach.jags(jags_fit)
-par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.28,0.01))
-for(i in 1:14) {
-  hist(CC_enso[,i,1], 20, col="grey", main = spec.names[i], cex.main=0.9, cex.axis=0.9)
+#### Otter effects
+Next, we can look at the estimated covariate effects. First, the effect of otters. 
+
+```{r, fig.width=8, fig.height=8, fig.cap="Estimated effects of otters on species guilds.",fig.pos="placeHere"}
+par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.3,0.05))
+brks <- seq(floor(min(CC_ottr)*40),ceiling(max(CC_ottr)*40))/40
+for(i in 1:MM) {
+  hist(CC_ottr[,i], 20, col="grey", border=NA, freq=TRUE, breaks=brks,
+       main=guild_names[i], cex.main=0.9, cex.axis=0.9)
 }
 ```
 
-And finally, the effect of urchin harvest on urchins, 
+<br>
 
-```{r, echo=FALSE, fig.cap="Estimated effects of urchin harvest on urchins.",fig.pos="placeHere"}
-attach.jags(jags_fit)
-  hist(CC_harv[,14,1], 20, col="grey", xlab="", main = "Effect of harvest on urchins", cex.main=0.9, cex.axis=0.9)
+#### ENSO effects
+We can also look at the effects of ENSO on each guild. 
 
+```{r, fig.width=8, fig.height=8, fig.cap="Estimated effects of ENSO on species guilds.",fig.pos="placeHere"}
+par(mfrow = c(4,4), mgp=c(2,0.5,0), mai=c(0.2,0.25,0.3,0.05))
+brks <- seq(floor(min(CC_enso)*40),ceiling(max(CC_enso)*40))/40
+for(i in 1:MM) {
+  hist(CC_enso[,i], 20, col="grey", border=NA, freq=TRUE, breaks=brks,
+       main=guild_names[i], cex.main=0.9, cex.axis=0.9)
+}
+```
+
+<br>
+
+#### Harvest effects
+And finally, here is the effect of urchin harvest on urchins.
+
+```{r, fig.width=3.5, fig.height=3.5, fig.cap="Estimated effects of urchin harvest on urchins.",fig.pos="placeHere"}
+brks <- seq(floor(min(CC_harv[,MM])*40),ceiling(max(CC_harv[,MM])*40))/40
+hist(CC_harv[,MM], 20, col="grey", border=NA, xlab="", breaks=brks,
+     main = "Effect of harvest on urchins", cex.main=0.9, cex.axis=0.9)
 ```
