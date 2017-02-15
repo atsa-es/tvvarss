@@ -10,9 +10,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<meta name="author" content="Eric Ward" />
+<meta name="author" content="Eric Ward, Mark Scheuerell, Steve Katz" />
 
-<meta name="date" content="2017-02-15" />
+<meta name="date" content="2017-02-14" />
 
 <title>Package tvvarss</title>
 
@@ -69,8 +69,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 
 <h1 class="title toc-ignore">Package tvvarss</h1>
-<h4 class="author"><em>Eric Ward</em></h4>
-<h4 class="date"><em>February 15, 2017</em></h4>
+<h4 class="author"><em>Eric Ward, Mark Scheuerell, Steve Katz</em></h4>
+<h4 class="date"><em>February 14, 2017</em></h4>
 
 
 
@@ -96,6 +96,15 @@ devtools::<span class="kw">install_github</span>(<span class="st">&quot;eric-war
 <p>The full set of function options is</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">tvvarss</span>(<span class="dt">y =</span> y, <span class="dt">include_trend =</span> <span class="ot">TRUE</span>, <span class="dt">x0 =</span> <span class="ot">NULL</span>, <span class="dt">shared_q =</span> <span class="ot">NULL</span>, <span class="dt">shared_r =</span> <span class="ot">NULL</span>, <span class="dt">shared_u =</span> <span class="ot">NULL</span>, <span class="dt">mcmc_iter =</span> <span class="dv">1000</span>, <span class="dt">mcmc_warmup =</span> <span class="dv">500</span>, <span class="dt">mcmc_thin =</span> <span class="dv">1</span>, <span class="dt">mcmc_chain =</span> <span class="dv">3</span>)</code></pre></div>
 <p>The MCMC parameters are straightforward (and need to be set to much smaller models than the same models in JAGS). However, the remaining parameters are useful for changing the model structure.</p>
+<div id="initial-states" class="section level3">
+<h3>Initial states</h3>
+<p>The location or mean of the prior on initial states defaults to being centered on the observed data, but can be modified with the <code>x0</code> argument (or 0s if any NAs are present in the first time step). This can be modified by passing in a matrix (dimensioned sites by species). For a 4 site / 3 species model, where the initial log abundance for the 2nd species was thought to be near 10, and the initial log abundance for the 3rd species was thought to be near 5, this could be something like:</p>
+<pre><code>##      [,1] [,2] [,3]
+## [1,]    0   10    5
+## [2,]    0   10    5
+## [3,]    0   10    5
+## [4,]    0   10    5</code></pre>
+</div>
 <div id="trends" class="section level3">
 <h3>Trends</h3>
 <p>Including linear trends in the process equation is optional, and can be turned off by setting <code>include_trend = FALSE</code>. By default, they’re estimated. Second, trends may be shared across species or sites. By default, they’re shared across sites but unique to each species. To change this, alternative forms may be specified by changing the structure of <code>shared_u</code>, dimensioned as a species x site matrix. As an example, with 3 sites and 7 species, the matrix defaults to</p>
@@ -108,7 +117,6 @@ devtools::<span class="kw">install_github</span>(<span class="st">&quot;eric-war
 ## [6,]    6    6    6
 ## [7,]    7    7    7</code></pre>
 <p>Each species in each site could have a unique trend, and to do this the <code>shared_u</code> matrix could be input as</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">matrix</span>(<span class="kw">seq</span>(<span class="dv">1</span>,<span class="dv">7</span>*<span class="dv">3</span>), <span class="dv">7</span>, <span class="dv">3</span>)</code></pre></div>
 <pre><code>##      [,1] [,2] [,3]
 ## [1,]    1    8   15
 ## [2,]    2    9   16
@@ -122,6 +130,8 @@ devtools::<span class="kw">install_github</span>(<span class="st">&quot;eric-war
 <div id="variances" class="section level3">
 <h3>Variances</h3>
 <p>Both process and observation variances may be specied similarly to how we specify trends. The process variance matrix has the same dimension as <code>shared_u</code> but is called <code>shared_q</code>. It also defaults to unique species trends, shared across sites. Similarly, the observation variance can be altered by inputting <code>shared_r</code>, which has the same dimension as the matrices for the process variance and trend.</p>
+<p>Putting it all together, we could run a model with a single process variance, observation error, and trend parameter (shared across sites and species) for a dataset with 4 species and 3 sites as</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">tvvarss</span>(y, <span class="dt">shared_q =</span> <span class="kw">matrix</span>(<span class="dv">1</span>, <span class="dv">4</span>, <span class="dv">3</span>), <span class="dt">shared_r =</span> <span class="kw">matrix</span>(<span class="dv">1</span>, <span class="dv">4</span>, <span class="dv">3</span>), <span class="dt">shared_u =</span> <span class="kw">matrix</span>(<span class="dv">1</span>, <span class="dv">4</span>, <span class="dv">3</span>))</code></pre></div>
 </div>
 </div>
 <div id="working-with-parameters" class="section level2">

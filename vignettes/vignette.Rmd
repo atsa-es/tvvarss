@@ -4,7 +4,7 @@ author: "Eric Ward, Mark Scheuerell, Steve Katz"
 date: "February 14, 2017"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Put the title of your vignette here}
+  %\VignetteIndexEntry{tvvarss}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
