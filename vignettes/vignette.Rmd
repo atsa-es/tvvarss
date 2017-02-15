@@ -1,0 +1,118 @@
+---
+title: "Package tvvarss"
+author: "Eric Ward, Mark Scheuerell, Steve Katz"
+date: "February 14, 2017"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Put the title of your vignette here}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Installation
+
+```{r install, eval=FALSE}
+library(rstan)
+library(devtools)
+devtools::install_github("eric-ward/tvvarss")
+library(tvvarss)
+# for optimizing stan on your machine,
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+```
+
+## Data
+
+The `tvvarss` package takes data as a 3 dimensional array (sites, years, species). Missing values can be included as `NA`.
+
+```{r data}
+y = array(rnorm(240), dim=c(3, 20, 4))
+```
+
+## Model Fitting
+
+The single function to run the `tvvarss` Stan models is 
+
+```{r function, echo=TRUE, eval=FALSE}
+tvvarss(y = y)
+```
+
+The full set of function options is
+
+```{r function2, echo=TRUE, eval=FALSE}
+tvvarss(y = y, include_trend = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3)
+```
+
+The MCMC parameters are straightforward (and need to be set to much smaller models than the same models in JAGS). However, the remaining parameters are useful for changing the model structure. 
+
+### Initial states
+The location or mean of the prior on initial states defaults to being centered on the observed data, but can be modified with the `x0` argument (or 0s if any NAs are present in the first time step). This can be modified by passing in a matrix (dimensioned sites by species). For a 4 site / 3 species model, where the initial log abundance for the 2nd species was thought to be near 10, and the initial log abundance for the 3rd species was thought to be near 5, this could be something like: 
+
+```{r, echo=FALSE}
+matrix(c(rep(0,4), rep(10,4), rep(5,4)), 4, 3)
+```
+
+
+### Trends
+Including linear trends in the process equation is optional, and can be turned off by setting 
+`include_trend = FALSE`. By default, they're estimated. Second, trends may be shared across species or sites. By default, they're shared across sites but unique to each species. To change this, alternative forms may be specified by changing the structure of `shared_u`, dimensioned as a species x site matrix. As an example, with 3 sites and 7 species, the matrix defaults to 
+
+```{r, echo=FALSE}
+matrix(rep(1:7,3), 7, 3)
+```
+
+Each species in each site could have a unique trend, and to do this the `shared_u` matrix could be input as 
+
+```{r, echo=FALSE}
+matrix(seq(1,7*3), 7, 3)
+```
+
+Each unique integer is treated as a unique parameter to be estimated. 
+
+### Variances
+
+Both process and observation variances may be specied similarly to how we specify trends. The process variance matrix has the same dimension as `shared_u` but is called `shared_q`. It also defaults to unique species trends, shared across sites. Similarly, the observation variance can be altered by inputting `shared_r`, which has the same dimension as the matrices for the process variance and trend. 
+
+Putting it all together, we could run a model with a single process variance, observation error, and trend parameter (shared across sites and species) for a dataset with 4 species and 3 sites as 
+
+```{r, eval=FALSE}
+tvvarss(y, shared_q = matrix(1, 4, 3), shared_r = matrix(1, 4, 3), shared_u = matrix(1, 4, 3))
+```
+
+
+## Working with parameters
+
+The function `tvvarss` returns a `stanfit` object. This can be plotted directly, using 
+
+```{r, eval=FALSE}
+plot(fitted_model, pars = c("B[3,2,2]", "u[1]"))
+traceplot(fitted_model, pars = c("B[3,2,2]", "u[1]"))
+```
+
+Or the parameters may be stored in a new object, 
+
+```{r, eval=FALSE}
+pars = extract(fitted_model, permuted = TRUE)
+```
+To retain the original samples by MCMC chain, set `permuted=FALSE`
+
+Parameters may also be extracted via the `broom` package, into a data frame that just contains the estimate and standard error (where they can be passed to ggplot, etc). 
+
+```{r, eval=FALSE}
+library(broom)
+tidy_pars = tidy(fitted_model)
+```
+
+## Model Selection
+We'll use the `loo` package for model selection. The Leave One Out Information Criterion (LOOIC) is similar to AIC (lower is better). LOOIC can be extracted from `tvvarss` models with
+
+```{r, eval=FALSE}
+library(loo)
+loo(extract_log_lik(fitted_model))$looic
+
+```
+
