@@ -2,6 +2,7 @@
 #'
 #' @param y The data (array, with dimensions = site, year, species)
 #' @param include_trend Whether to include time trends. Defaults to TRUE
+#' @param de_mean Whether or not to de_mean the process model, defaults to TRUE. For example, X_t+1 = B * (X_t - pred[X_t]) versus X_t+1 = B * (X_t)
 #' @param x0 The location matrix (mean) of priors on initial states. Defaults to centered on observed data
 #' @param shared_q Optional matrix (number of species x number of sites) with integers indicating which process variance parameters are shared. Defaults to shared process variances across sites, but unique to each species
 #' @param shared_r Optional matrix (number of species x number of sites) with integers indicating which observation variance parameters are shared. Defaults to shared observation variances across sites, but unique to each species
@@ -16,7 +17,7 @@
 #' @return an object of class 'stanfit'
 #' @export
 #'
-tvvarss <- function(y, include_trend = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3) {
+tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3) {
 
   n_year = dim(y)[2]
   n_spp = dim(y)[3]
@@ -39,6 +40,7 @@ tvvarss <- function(y, include_trend = TRUE, x0 = NULL, shared_q = NULL, shared_
   }
 
   est_trend = ifelse(include_trend,1,0); # estimate the trend
+  demean = ifelse(de_mean, 1, 0);
 
   if(is.null(shared_q)) shared_q = matrix(rep(1:n_spp,n_site), n_spp, n_site) # default to shared acros site,  unique by spp
   n_q = max(shared_q);
@@ -81,6 +83,7 @@ tvvarss <- function(y, include_trend = TRUE, x0 = NULL, shared_q = NULL, shared_
     b_diag,
     x0,
     est_trend,
+    demean,
     shared_q,
     n_q,
     shared_r,

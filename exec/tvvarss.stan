@@ -11,6 +11,7 @@ data {
   int<lower=0> shared_u[n_spp,n_site]; # matrix indicating which sites/spp share trends
   int<lower=0> n_u; # number of trends being estimated, max(shared_u)
   int<lower=0> est_trend;
+  int<lower=0> demean;
   int<lower=0> row_indices[(n_spp*n_spp)];
   int<lower=0> col_indices[(n_spp*n_spp)];
   int<lower=0> n_pos;
@@ -57,8 +58,10 @@ transformed parameters {
 
     # do projection to calculate predicted values
     for(s in 1:n_site) {
-    if(est_trend == 0) pred[s,t,] = x[s,t-1,] * B[t-1,,];
-    if(est_trend == 1) pred[s,t,] = x[s,t-1,] * B[t-1,,] + u_mat[,s]';
+    if(est_trend == 0 & demean == 0) pred[s,t,] = x[s,t-1,] * B[t-1,,];
+    if(est_trend == 1 & demean == 0) pred[s,t,] = x[s,t-1,] * B[t-1,,] + u_mat[,s]';
+    if(est_trend == 0 & demean == 1) pred[s,t,] = (x[s,t-1,]-pred[s,t-1,]) * B[t-1,,];
+    if(est_trend == 1 & demean == 1) pred[s,t,] = (x[s,t-1,]-pred[s,t-1,]) * B[t-1,,] + u_mat[,s]';
     }
   }
 

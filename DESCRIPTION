@@ -7,10 +7,10 @@ Maintainer: Eric Ward <eric.ward@noaa.gov>
 Description: The tvvarss package uses Stan to fit multi-site multivariate
     autoregressive (aka vector autoregressive) state space models with time varying
     interaction (B elements)
-License: What license is it under?
+License: GPL 3.0
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 5.0.1
-Depends: Rcpp
+Depends: Rcpp, rstan
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr

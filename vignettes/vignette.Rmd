@@ -44,7 +44,7 @@ tvvarss(y = y)
 The full set of function options is
 
 ```{r function2, echo=TRUE, eval=FALSE}
-tvvarss(y = y, include_trend = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3)
+tvvarss(y = y, include_trend = TRUE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3)
 ```
 
 The MCMC parameters are straightforward (and need to be set to much smaller models than the same models in JAGS). However, the remaining parameters are useful for changing the model structure. 
@@ -72,6 +72,8 @@ matrix(seq(1,7*3), 7, 3)
 ```
 
 Each unique integer is treated as a unique parameter to be estimated. 
+
+For the process model, we also use `de_mean=TRUE` to specify whether the states are de-meaned or not before multiplication via the **B** matrix. When this option is used, the model can be written as ${ X }_{ t+1 }=B\cdot { \left( { X }_{ t }-E[{ X }_{ t }] \right) }$, and when the states are de-meaned, the model becomes ${ X }_{ t+1 }=B\cdot { X }_{ t }$.
 
 ### Variances
 
