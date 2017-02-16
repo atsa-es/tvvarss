@@ -55,12 +55,15 @@ tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, x0 = NULL, shared_q
   demean = ifelse(de_mean, 1, 0);
 
   if(is.null(shared_q)) shared_q = matrix(rep(1:n_spp,n_site), n_spp, n_site) # default to shared acros site,  unique by spp
+  shared_q = cbind(shared_q, 0);
   n_q = max(shared_q);
 
   if(is.null(shared_r)) shared_r = matrix(rep(1:n_spp,n_site), n_spp, n_site) # default to shared acros site,  unique by spp
+  shared_r = cbind(shared_r, 0);
   n_r = max(shared_r);
 
   if(is.null(shared_u)) shared_u = matrix(rep(1:n_spp,n_site), n_spp, n_site) # default to shared acros site,  unique by spp
+  shared_u = cbind(shared_u, 0);
   n_u = max(shared_u);
 
   # we also need to find values that aren't NA to allow for missing data

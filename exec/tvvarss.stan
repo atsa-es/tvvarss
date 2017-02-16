@@ -4,11 +4,11 @@ data {
   int<lower=0> n_spp;
   int<lower=0> b_diag[n_spp*n_spp]; # vector indicating whether elements are on diagonal
   matrix[n_site,n_spp] x0; # data
-  int<lower=0> shared_q[n_spp,n_site]; # matrix indicating which sites/spp share residual process variances
+  int<lower=0> shared_q[n_spp,n_site+1]; # matrix indicating which sites/spp share residual process variances
   int<lower=0> n_q; # number of variances being estimated, max(shared_q)
-  int<lower=0> shared_r[n_spp,n_site]; # matrix indicating which sites/spp share obs variances
+  int<lower=0> shared_r[n_spp,n_site+1]; # matrix indicating which sites/spp share obs variances
   int<lower=0> n_r; # number of obs variances being estimated, max(shared_q)
-  int<lower=0> shared_u[n_spp,n_site]; # matrix indicating which sites/spp share trends
+  int<lower=0> shared_u[n_spp,n_site+1]; # matrix indicating which sites/spp share trends
   int<lower=0> n_u; # number of trends being estimated, max(shared_u)
   int<lower=0> est_trend;
   int<lower=0> demean;
@@ -29,9 +29,9 @@ parameters {
   real u[n_u]; # trends
 }
 transformed parameters {
-  vector[(n_spp*n_spp)] sigma_rw;
-  matrix[n_spp, n_site] resid_process_mat;
-  matrix[n_spp, n_site] obs_mat;
+  vector<lower=0>[(n_spp*n_spp)] sigma_rw;
+  matrix<lower=0>[n_spp, n_site] resid_process_mat;
+  matrix<lower=0>[n_spp, n_site] obs_mat;
   matrix[n_spp, n_site] u_mat;
   matrix[n_spp,n_spp] B[(n_year-1)]; # B matrix, accessed as n_year, n_spp, n_spp
   matrix[n_year,n_spp] pred[n_site]; # predicted unobserved states
