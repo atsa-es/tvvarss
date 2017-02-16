@@ -56,15 +56,19 @@ transformed parameters {
       B[t-1,row_indices[i],col_indices[i]] = vecB[t-1,i];
     }
 
-    # do projection to calculate predicted values
+    # do projection to calculate predicted values. modify code depending on whether
+    # predictions should be demeaned before projected, and whether or not trend included.
     for(s in 1:n_site) {
-    if(est_trend == 0 & demean == 0) pred[s,t,] = x[s,t-1,] * B[t-1,,];
-    if(est_trend == 1 & demean == 0) pred[s,t,] = x[s,t-1,] * B[t-1,,] + u_mat[,s]';
-    if(est_trend == 0 & demean == 1) pred[s,t,] = (x[s,t-1,]-pred[s,t-1,]) * B[t-1,,];
-    if(est_trend == 1 & demean == 1) pred[s,t,] = (x[s,t-1,]-pred[s,t-1,]) * B[t-1,,] + u_mat[,s]';
+     if(est_trend == 0) {
+      if(demean==0) {pred[s,t,] = x[s,t-1,] * B[t-1,,];}
+      if(demean==1) {pred[s,t,] = (x[s,t-1,]-pred[s,t-1,]) * B[t-1,,];}
+     }
+     if(est_trend == 1) {
+      if(demean==0) {pred[s,t,] = x[s,t-1,] * B[t-1,,] + u_mat[,s]';}
+      if(demean==1) {pred[s,t,] = (x[s,t-1,]-pred[s,t-1,]) * B[t-1,,] + u_mat[,s]';}
+     }
     }
   }
-
 }
 model {
   sigma_rw_pars[1] ~ cauchy(0,5);

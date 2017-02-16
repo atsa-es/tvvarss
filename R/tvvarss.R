@@ -19,9 +19,21 @@
 #'
 tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3) {
 
-  n_year = dim(y)[2]
-  n_spp = dim(y)[3]
-  n_site = ifelse(is.na(dim(y)[1]), 1, dim(y)[1])
+  if(length(dim(y)) == 2) {
+    # matrix for 1 site, coerce to 3d
+    n_year = dim(y)[1]
+    n_site = 1
+    n_spp = dim(y)[2]
+    y_new = array(0, dim = c(2, dim(y)[1], dim(y)[2]))
+    y_new[1,,] = y # make the first array data, rest = NA
+    y = y_new
+  }
+  if(length(dim(y))==3) {
+    # multiple sites in array, site=1st d
+    n_year = dim(y)[2]
+    n_spp = dim(y)[3]
+    n_site = ifelse(is.na(dim(y)[1]), 1, dim(y)[1])
+  }
 
   # vec B matrix, so we need to create a matrix of indices
   n_spp2 = n_spp*n_spp
