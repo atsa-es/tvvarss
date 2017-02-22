@@ -12,7 +12,7 @@ y[4,,] = as.matrix(dat4[,c("g1","g2","P1","P2")])
 
 
 # fit the tvvarss model
-model = tvvarss(y=y, include_trend=TRUE, de_mean=TRUE)
+model = tvvarss(y=y, include_trend=TRUE, de_mean=TRUE, mcmc_chain=3, mcmc_iter=700, mcmc_warmup = 300)
 
 # fit tvvarss model without de-meaning
 model = tvvarss(y=y, de_mean=FALSE)
