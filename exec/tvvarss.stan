@@ -19,6 +19,8 @@ data {
   int<lower=0> site_indices_pos[n_pos];
   int<lower=0> year_indices_pos[n_pos];
   real y[n_pos]; # vector[n_pos] y; # data
+  int y_int[n_pos]; # vector[n_pos] y; # data
+  int family;
 }
 parameters {
   vector[(n_spp*n_spp)] vecB[n_year]; # elements accessed [n_year,n_spp]
@@ -61,11 +63,11 @@ transformed parameters {
     for(s in 1:n_site) {
      if(est_trend == 0) {
       if(demean==0) {pred[s,t,] = x[s,t-1,] * B[t-1,,];}
-      if(demean==1) {pred[s,t,] = (x[s,t-1,]-pred[s,t-1,]) * B[t-1,,];}
+      if(demean==1) {pred[s,t,] = (x[s,t-1,]- u_mat[,s]') * B[t-1,,];}
      }
      if(est_trend == 1) {
       if(demean==0) {pred[s,t,] = x[s,t-1,] * B[t-1,,] + u_mat[,s]';}
-      if(demean==1) {pred[s,t,] = (x[s,t-1,]-pred[s,t-1,]) * B[t-1,,] + u_mat[,s]';}
+      if(demean==1) {pred[s,t,] = (x[s,t-1,]-u_mat[,s]') * B[t-1,,] + u_mat[,s]';}
      }
     }
   }
@@ -85,12 +87,13 @@ model {
   }
   # process model for remaining sites
   for(t in 2:n_year) {
-  for(site in 1:n_site) {
+   for(site in 1:n_site) {
     for(spp in 1:n_spp) {
       x[site,t,spp] ~ normal(pred[site,t,spp], resid_process_mat[spp,site]);
     }
+   }
   }
-  }
+
   for(i in 1:n_q) {
     # prior on process standard deviations
     resid_process_sd[i] ~ cauchy(0,5);
@@ -102,13 +105,21 @@ model {
 
   # gaussian likelihood for now
   for(i in 1:n_pos) {
-    y[i] ~ normal(x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]], obs_mat[spp_indices_pos[i],site_indices_pos[i]]);
+    if(family==1) y[i] ~ normal(x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]], obs_mat[spp_indices_pos[i],site_indices_pos[i]]);
+    if(family==2) y_int[i] ~ bernoulli_logit(x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]]);
+    if(family==3) y_int[i] ~ poisson_log(x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]]);
+    if(family==4) y[i] ~ gamma(obs_mat[spp_indices_pos[i],site_indices_pos[i]], obs_mat[spp_indices_pos[i],site_indices_pos[i]] ./ x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]]);
+    if(family==5) y[i] ~ lognormal(x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]], obs_mat[spp_indices_pos[i],site_indices_pos[i]]);
   }
 
 }
 generated quantities {
   vector[n_pos] log_lik;
   # for use in loo() package
-  for (n in 1:n_pos) log_lik[n] = normal_lpdf(y[n] | x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]], obs_mat[spp_indices_pos[n],site_indices_pos[n]]);
+  if(family==1) for (n in 1:n_pos) log_lik[n] = normal_lpdf(y[n] | x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]], obs_mat[spp_indices_pos[n],site_indices_pos[n]]);
+  if(family==2) for (n in 1:n_pos) log_lik[n] = bernoulli_lpmf(y_int[n] | inv_logit(x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]]) );
+  if(family==3) for (n in 1:n_pos) log_lik[n] = poisson_lpmf(y_int[n] | exp(x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]]) );
+  if(family==4) for (n in 1:n_pos) log_lik[n] = gamma_lpdf(y[n] | obs_mat[spp_indices_pos[n],site_indices_pos[n]], obs_mat[spp_indices_pos[n],site_indices_pos[n]] ./ x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]]);
+  if(family==5) for (n in 1:n_pos) log_lik[n] = lognormal_lpdf(y[n] | x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]], obs_mat[spp_indices_pos[n],site_indices_pos[n]]);
 }
 

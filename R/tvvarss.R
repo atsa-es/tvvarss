@@ -10,14 +10,17 @@
 #' @param mcmc_iter Number of MCMC iterations, defaults to 1000
 #' @param mcmc_warmup Warmup / burn in phase, defaults to 500
 #' @param mcmc_thin MCMC thin, defaults to 1
-#' @param mcmc_chains MCMC chains, defaults to 3
-#'
+#' @param mcmc_chain MCMC chains, defaults to 3
+#' @param family observation model, defaults to 'gaussian'
 
 #'
 #' @return an object of class 'stanfit'
 #' @export
 #'
-tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3) {
+tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3, family="gaussian") {
+
+  dist = c("gaussian", "binomial", "poisson", "gamma", "lognormal")
+  family = which(dist==family)
 
   if(length(dim(y))==3) {
     # multiple sites in array, site=1st d
@@ -87,6 +90,7 @@ tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, x0 = NULL, shared_q
   }
   n_pos = length(spp_indices_pos)
   y = vec_y
+  y_int = round(y)
 
   stan_dir = find.package("tvvarss")
   model = paste0(stan_dir, "/exec/tvvarss.stan")
@@ -110,7 +114,9 @@ tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, x0 = NULL, shared_q
     spp_indices_pos,
     site_indices_pos,
     year_indices_pos,
-    n_pos)
+    n_pos,
+    y_int,
+    family)
 
   pars = c("sigma_rw_pars", "resid_process_sd", "obs_sd", "B", "pred", "log_lik")
   if(include_trend) pars = c(pars, "u")

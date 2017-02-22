@@ -4,14 +4,16 @@
 \alias{tvvarss}
 \title{tvvarss is the primary function for fitting tvvarss models to time series data.}
 \usage{
-tvvarss(y, include_trend = TRUE, x0 = NULL, shared_q = NULL,
-  shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500,
-  mcmc_thin = 1, mcmc_chain = 3)
+tvvarss(y, include_trend = TRUE, de_mean = TRUE, x0 = NULL,
+  shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000,
+  mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3, family = "gaussian")
 }
 \arguments{
 \item{y}{The data (array, with dimensions = site, year, species)}
 
 \item{include_trend}{Whether to include time trends. Defaults to TRUE}
+
+\item{de_mean}{Whether or not to de_mean the process model, defaults to TRUE. For example, X_t+1 = B * (X_t - pred[X_t]) versus X_t+1 = B * (X_t)}
 
 \item{x0}{The location matrix (mean) of priors on initial states. Defaults to centered on observed data}
 
@@ -27,7 +29,9 @@ tvvarss(y, include_trend = TRUE, x0 = NULL, shared_q = NULL,
 
 \item{mcmc_thin}{MCMC thin, defaults to 1}
 
-\item{mcmc_chains}{MCMC chains, defaults to 3}
+\item{mcmc_chain}{MCMC chains, defaults to 3}
+
+\item{family}{observation model, defaults to 'gaussian'}
 }
 \value{
 an object of class 'stanfit'
@@ -35,4 +39,3 @@ an object of class 'stanfit'
 \description{
 tvvarss is the primary function for fitting tvvarss models to time series data.
 }
-
