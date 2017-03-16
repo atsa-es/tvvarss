@@ -3,8 +3,10 @@
 #' \code{simTVVAR} simulates the process (state) component of a TVVARSS model.
 #'
 #' The matrix \code{B0} must contain a mix of \code{character} and
-#' \code{numeric} values. Use 0 to indicate no interaction and
-#' the following \code{character} codes for interactions
+#' \code{numeric} values in the off-diagonal elements -- the
+#' diagonal should always contain 0's as density-dependence is
+#' implicit in this model. Use 0 to indicate no interaction and
+#' the following \code{character} codes for interactions:
 #' \itemize{
 #' \item use \code{'td'} to indicate a "top-down" interaction
 #' \item use \code{'bu'} to indicate a "bottom-up" interaction
