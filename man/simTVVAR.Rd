@@ -14,11 +14,11 @@ simTVVAR(B0, TT, var_QX, cov_QX, var_QB, cov_QB = 0, QQ_XX = NULL,
 
 \item{\code{var_QX}}{Scalar or vector of variances for process errors of states.}
 
-\item{\code{cov_QX}}{Covariance, if any, of process errors of states; it \code{cov_QX} > 0, then \code{var_QX} must be a scalar.}
+\item{\code{cov_QX}}{Covariance, if any, of the process errors of the states; if \code{cov_QX} > 0, then \code{var_QX} must be a scalar.}
 
 \item{\code{var_QB}}{Scalar or vector of variances for process errors of \strong{B}.}
 
-\item{\code{cov_QB}}{Covariance, if any, of process error of \strong{B}s; it \code{cov_QB} > 0, then \code{var_QB} must be a scalar.}
+\item{\code{cov_QB}}{Covariance, if any, of the process errors of \strong{B}; if \code{cov_QB} > 0, then \code{var_QB} must be a scalar.}
 
 \item{\code{QQ_XX}}{[Optional] Specify the explicit form for the var-cov matrix \strong{Q} of the process errors.}
 
