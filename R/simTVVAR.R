@@ -79,11 +79,6 @@
 #' 
 #' @export
 simTVVAR <- function(B0,TT,var_QX,cov_QX,var_QB,cov_QB=0,QQ_XX=NULL,QQ_BB=NULL,X0=NULL,CC=NULL,cc=NULL) {
-  ## load required pkg
-  if(!require("MASS")) {
-    install.packages("MASS")
-    library("MASS")
-  }
   if(class(B0)!="matrix" & class(B0)!="array") {
     stop("'B0' must be an [n x n] matrix or [n x n x T] array.\n\n")
   } else {
