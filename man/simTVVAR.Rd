@@ -18,7 +18,7 @@ simTVVAR(B0, TT, var_QX, cov_QX, var_QB, cov_QB = 0, QQ_XX = NULL,
 
 \item{\code{var_QB}}{Scalar or vector of variances for process errors of \strong{B}.}
 
-\item{\code{cov_QB}}{Covariance, if any, of the process errors of \strong{B}; if \code{cov_QB} > 0, then \code{var_QB} must be a scalar.}
+\item{\code{cov_QB}}{Covariance, if any, of process errors of \strong{B}; if \code{cov_QB} > 0, then \code{var_QB} must be a scalar.}
 
 \item{\code{QQ_XX}}{[Optional] Specify the explicit form for the var-cov matrix \strong{Q} of the process errors.}
 
@@ -46,9 +46,9 @@ A list with the following components:
 }
 \details{
 The matrix \code{B0} must contain a mix of \code{character} and
-\code{numeric} values in the off-diagonal elements; the
-diagonal should be 0 for every element as density-dependence
-is implicit in this model. Use 0 to indicate no interaction and
+\code{numeric} values in the off-diagonal elements -- the
+diagonal should always contain 0's as density-dependence is
+implicit in this model. Use 0 to indicate no interaction and
 the following \code{character} codes for interactions:
 \itemize{
 \item use \code{'td'} to indicate a "top-down" interaction
