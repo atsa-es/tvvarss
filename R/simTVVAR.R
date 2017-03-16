@@ -17,9 +17,9 @@
 #' @param \code{B0} A matrix describing the topology of the food web (see 'Details').
 #' @param \code{TT} Number of time steps to simulate.
 #' @param \code{var_QX} Scalar or vector of variances for process errors of states.
-#' @param \code{cov_QX} Covariance, if any, of process errors of states; it \code{cov_QX} > 0, then \code{var_QX} must be a scalar. 
+#' @param \code{cov_QX} Covariance, if any, of the process errors of the states; if \code{cov_QX} > 0, then \code{var_QX} must be a scalar. 
 #' @param \code{var_QB} Scalar or vector of variances for process errors of \strong{B}.
-#' @param \code{cov_QB} Covariance, if any, of process error of \strong{B}s; it \code{cov_QB} > 0, then \code{var_QB} must be a scalar.
+#' @param \code{cov_QB} Covariance, if any, of process errors of \strong{B}; if \code{cov_QB} > 0, then \code{var_QB} must be a scalar.
 #' @param \code{QQ_XX} [Optional] Specify the explicit form for the var-cov matrix \strong{Q} of the process errors. 
 #' @param \code{QQ_BB} [Optional] Specify the explicit form for the var-cov matrix \strong{Q} of \strong{B}. 
 #' @param \code{X0} [Optional] Specify vector of initial states; \code{nrow(X0)} must equal \code{nrow(B0)}. 
