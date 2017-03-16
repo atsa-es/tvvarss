@@ -23,7 +23,7 @@
 #' @param \code{X0} [Optional] Specify vector of initial states; \code{nrow(X0)} must equal \code{nrow(B0)}. 
 #' @param \code{CC} [Optional] Specify matrix of covariate effects on states. 
 #' @param \code{cc} [Optional] Specify matrix of covariates. 
-
+#'
 #' @return A list with the following components:
 #' \describe{
 #' \item{\code{B_mat}}{An array of the \strong{B} matrix over time; \code{dim(B_mat) = c(n,n,T)}.}
@@ -59,7 +59,6 @@
 #' matplot(t(cp$states),type="l")
 #'
 #' @export
-## simulator function
 simTVVAR <- function(B0,TT,var_QX,cov_QX,var_QB,cov_QB=0,
                    QQ_XX=NULL,QQ_BB=NULL,X0=NULL,CC=NULL,cc=NULL) {
   ## load required pkgs
