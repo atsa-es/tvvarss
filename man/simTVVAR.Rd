@@ -20,23 +20,23 @@ simTVVAR(B0, TT, var_QX, cov_QX, var_QB, cov_QB = 0, QQ_XX = NULL,
 
 \item{\code{cov_QB}}{Covariance, if any, of process errors of \strong{B}; if \code{cov_QB} > 0, then \code{var_QB} must be a scalar.}
 
-\item{\code{QQ_XX}}{[Optional] Specify the explicit form for the var-cov matrix \strong{Q} of the process errors.}
+\item{\code{QQ_XX}}{[optional] Specify the explicit form for the var-cov matrix \strong{Q} of the process errors.}
 
-\item{\code{QQ_BB}}{[Optional] Specify the explicit form for the var-cov matrix \strong{Q} of \strong{B}.}
+\item{\code{QQ_BB}}{[optional] Specify the explicit form for the var-cov matrix \strong{Q} of \strong{B}.}
 
-\item{\code{X0}}{[Optional] Specify vector of initial states; \code{nrow(X0)} must equal \code{nrow(B0)}.}
+\item{\code{X0}}{[optional] Specify vector of initial states; \code{nrow(X0)} must equal \code{nrow(B0)}.}
 
-\item{\code{CC}}{[Optional] Specify matrix of covariate effects on states.}
+\item{\code{CC}}{[optional] Specify matrix of covariate effects on states.}
 
-\item{\code{cc}}{[Optional] Specify matrix of covariates.}
+\item{\code{cc}}{[optional] Specify matrix of covariates.}
 }
 \value{
 A list with the following components:
 \describe{
-\item{\code{B_mat}}{An array of the \strong{B} matrix over time; \code{dim(B_mat) = c(n,n,T)}.}
+\item{\code{B_mat}}{An array of the \strong{B} matrix over time; \code{dim(B_mat) = c(n,n,T+1)}.}
 \item{\code{WW_BB}}{The process errors for \strong{B}.}
 \item{\code{QQ_BB}}{Variance-covariance matrix of the process errors for \strong{B}.}
-\item{\code{states}}{A matrix of the states over time; \code{dim(states) = c(n,T)}.}
+\item{\code{states}}{A matrix of the states over time; \code{dim(states) = c(n,T+1)}.}
 \item{\code{WW_XX}}{The process errors (innovations) for the states.}
 \item{\code{QQ_XX}}{Variance-covariance matrix of the process errors for the states.}
 }
@@ -45,15 +45,22 @@ A list with the following components:
 \code{simTVVAR} simulates the process (state) component of a TVVARSS model.
 }
 \details{
-The matrix \code{B0} must contain a mix of \code{character} and
-\code{numeric} values in the off-diagonal elements -- the
-diagonal should always contain 0's as density-dependence is
-implicit in this model. Use 0 to indicate no interaction and
-the following \code{character} codes for interactions:
-\itemize{
-\item use \code{'td'} to indicate a "top-down" interaction
-\item use \code{'bu'} to indicate a "bottom-up" interaction
-\item use \code{'td'} to indicate a "competitive/facilitative " interaction
+\code{B0} can be used in one of two ways when simulating a TVVAR model:
+\enumerate{
+  \item an [n x n] \code{'matrix'} with a combination of \code{character} and
+    \code{numeric} values in the off-diagonal elements; the diagonal should
+    always contain 0's as density-dependence is implicit in this model. Use
+    0 to indicate no interaction and the following \code{character} codes for
+    interactions:
+    \itemize{
+      \item use \code{'td'} to indicate a "top-down" interaction
+      \item use \code{'bu'} to indicate a "bottom-up" interaction
+      \item use \code{'cf'} to indicate a "competitive/facilitative"
+        interaction
+    }
+  \item an [n x n x (T+1)] \code{array} with actual values of B for each time
+    step, including B0. This is useful for simulating multiple realizations
+    of the same process.
 }
 See 'Examples' for details on formatting \code{B0}.
 }
@@ -63,22 +70,32 @@ set.seed(123)
 TT <- 30
 ## number of spp/guilds
 nn <- 4
-## linear food chain
+
+## CASE 1: linear food chain
 B0_lfc <- matrix(list(0),nn,nn)
 for(i in 1:(nn-1)) {
-B0_lfc[i,i+1] <- "td"
-B0_lfc[i+1,i] <- "bu"
+  B0_lfc[i,i+1] <- "td"
+  B0_lfc[i+1,i] <- "bu"
 }
+## inspect B0
 B0_lfc
+## simulate & plot states
 lfc <- simTVVAR(B0_lfc,TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
 matplot(t(lfc$states),type="l")
-## 1 consumer; n-1 producers
+
+## CASE 2: 1 consumer & n-1 producers
 B0_cp <- matrix(list("cf"),nn,nn)
 B0_cp[1:(nn-1),nn] <- "td"
 B0_cp[nn,1:(nn-1)] <- "bu"
 diag(B0_cp) <- 0
+## inspect B0
 B0_cp
+## simulate & plot states
 cp <- simTVVAR(B0_cp,TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
 matplot(t(cp$states),type="l")
+
+## simulate a second realization of CASE 2 using same B
+cp2 <- simTVVAR(cp$B_mat,TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
+matplot(t(cp2$states),type="l")
 
 }
