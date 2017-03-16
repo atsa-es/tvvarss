@@ -94,7 +94,7 @@ devtools::<span class="kw">install_github</span>(<span class="st">&quot;eric-war
 <p>The single function to run the <code>tvvarss</code> Stan models is</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">tvvarss</span>(<span class="dt">y =</span> y)</code></pre></div>
 <p>The full set of function options is</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">tvvarss</span>(<span class="dt">y =</span> y, <span class="dt">include_trend =</span> <span class="ot">TRUE</span>, <span class="dt">x0 =</span> <span class="ot">NULL</span>, <span class="dt">shared_q =</span> <span class="ot">NULL</span>, <span class="dt">shared_r =</span> <span class="ot">NULL</span>, <span class="dt">shared_u =</span> <span class="ot">NULL</span>, <span class="dt">mcmc_iter =</span> <span class="dv">1000</span>, <span class="dt">mcmc_warmup =</span> <span class="dv">500</span>, <span class="dt">mcmc_thin =</span> <span class="dv">1</span>, <span class="dt">mcmc_chain =</span> <span class="dv">3</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">tvvarss</span>(<span class="dt">y =</span> y, <span class="dt">include_trend =</span> <span class="ot">TRUE</span>, <span class="dt">de_mean =</span> <span class="ot">TRUE</span>, <span class="dt">x0 =</span> <span class="ot">NULL</span>, <span class="dt">shared_q =</span> <span class="ot">NULL</span>, <span class="dt">shared_r =</span> <span class="ot">NULL</span>, <span class="dt">shared_u =</span> <span class="ot">NULL</span>, <span class="dt">mcmc_iter =</span> <span class="dv">1000</span>, <span class="dt">mcmc_warmup =</span> <span class="dv">500</span>, <span class="dt">mcmc_thin =</span> <span class="dv">1</span>, <span class="dt">mcmc_chain =</span> <span class="dv">3</span>)</code></pre></div>
 <p>The MCMC parameters are straightforward (and need to be set to much smaller models than the same models in JAGS). However, the remaining parameters are useful for changing the model structure.</p>
 <div id="initial-states" class="section level3">
 <h3>Initial states</h3>
@@ -126,6 +126,7 @@ devtools::<span class="kw">install_github</span>(<span class="st">&quot;eric-war
 ## [6,]    6   13   20
 ## [7,]    7   14   21</code></pre>
 <p>Each unique integer is treated as a unique parameter to be estimated.</p>
+<p>For the process model, we also use <code>de_mean=TRUE</code> to specify whether the states are de-meaned or not before multiplication via the <strong>B</strong> matrix. When this option is used, the model can be written as <span class="math inline">\({ X }_{ t+1 }=B\cdot { \left( { X }_{ t }-E[{ X }_{ t }] \right) }\)</span>, and when the states are de-meaned, the model becomes <span class="math inline">\({ X }_{ t+1 }=B\cdot { X }_{ t }\)</span>.</p>
 </div>
 <div id="variances" class="section level3">
 <h3>Variances</h3>
