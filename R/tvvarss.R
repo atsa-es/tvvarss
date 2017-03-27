@@ -54,18 +54,20 @@ tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL
   if("cf"%in%B) B[which(B=="cf")] = 4
   class(B) = "numeric"
   B1_index = which(B==1)
-  B2_index = which(B==2)
-  B3_index = which(B==3)
-  B4_index = which(B==4)
+  B2_index = which(B!=1)
   nB1 = length(B1_index)
   nB2 = length(B2_index)
-  nB3 = length(B3_index)
-  nB4 = length(B4_index)
 
+  b_limits = matrix(0, 4, 2)
+  b_limits[1,] = c(0,0)
+  b_limits[2,] = c(-1, 0)
+  b_limits[3,] = c(0, 1)
+  b_limits[4,] = c(-1, 1)
   # vec B matrix, so we need to create a matrix of indices
   n_spp2 = n_spp*n_spp
   row_indices = rep(seq(1,n_spp), n_spp)
   col_indices = sort(row_indices)
+  b_indices = c(B)
   #Bindices = matrix(seq(1,n_spp2),n_spp,n_spp)
 
   # vector of 0s and 1s indicating whether element of vecB is on diagonal
@@ -141,14 +143,12 @@ tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL
     n_pos,
     y_int,
     family,
+    b_indices,
+    b_limits,
     B1_index,
     B2_index,
-    B3_index,
-    B4_index,
     nB1,
-    nB2,
-    nB3,
-    nB4)
+    nB2)
 
   pars = c("sigma_rw_pars", "resid_process_sd", "obs_sd", "B", "pred", "log_lik")
   if(include_trend) pars = c(pars, "u")
