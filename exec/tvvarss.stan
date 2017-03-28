@@ -21,6 +21,14 @@ data {
   real y[n_pos]; # vector[n_pos] y; # data
   int y_int[n_pos]; # vector[n_pos] y; # data
   int family;
+  int nB1;
+  int nB2;
+  int nB3;
+  int nB4;
+  int B1_index[nB1];
+  int B2_index[nB2];
+  int B3_index[nB3];
+  int B4_index[nB4];
 }
 parameters {
   vector[(n_spp*n_spp)] vecB[n_year]; # elements accessed [n_year,n_spp]
@@ -54,9 +62,34 @@ transformed parameters {
   }
   for(t in 2:n_year) {
     # fill in B matrix, shared across sites
-    for(i in 1:(n_spp*n_spp)) {
-      B[t-1,row_indices[i],col_indices[i]] = vecB[t-1,i];
+    if(nB1 > 0) {
+      for(i in 1:nB1) {
+        # zeroed out interactions
+        B[t-1,row_indices[B1_index[i]],col_indices[B1_index[i]]] = 0;
+      }
     }
+    if(nB2 > 0) {
+      for(i in 1:nB2) {
+        # top down (td) interactions
+        B[t-1,row_indices[B2_index[i]],col_indices[B2_index[i]]] = -exp(vecB[t-1,B2_index[i]])/(1+exp(vecB[t-1,B2_index[i]]));
+      }
+    }
+    if(nB3 > 0) {
+      for(i in 1:nB3) {
+        # bottom up (bu) interactions
+        B[t-1,row_indices[B3_index[i]],col_indices[B3_index[i]]] = exp(vecB[t-1,B3_index[i]])/(1+exp(vecB[t-1,B3_index[i]]));
+      }
+    }
+    if(nB4 > 0) {
+      for(i in 1:nB4) {
+        # competitive interactions (-1, 1)
+        B[t-1,row_indices[B4_index[i]],col_indices[B4_index[i]]] = 2*exp(vecB[t-1,B4_index[i]])/(1+exp(vecB[t-1,B4_index[i]])) - 1;
+      }
+    }
+
+    #for(i in 1:(n_spp*n_spp)) {
+    #  B[t-1,row_indices[i],col_indices[i]] = vecB[t-1,i];
+    #}
 
     # do projection to calculate predicted values. modify code depending on whether
     # predictions should be demeaned before projected, and whether or not trend included.

@@ -4,7 +4,7 @@
 \alias{tvvarss}
 \title{tvvarss is the primary function for fitting tvvarss models to time series data.}
 \usage{
-tvvarss(y, include_trend = TRUE, de_mean = TRUE, x0 = NULL,
+tvvarss(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL,
   shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000,
   mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3, family = "gaussian")
 }
@@ -14,6 +14,8 @@ tvvarss(y, include_trend = TRUE, de_mean = TRUE, x0 = NULL,
 \item{include_trend}{Whether to include time trends. Defaults to TRUE}
 
 \item{de_mean}{Whether or not to de_mean the process model, defaults to TRUE. For example, X_t+1 = B * (X_t - pred[X_t]) versus X_t+1 = B * (X_t)}
+
+\item{B}{The list matrix describing optionally whether elements are 'zero', top-down ('td'), bottom up ('bu'), competitive-facilitative ('cf')}
 
 \item{x0}{The location matrix (mean) of priors on initial states. Defaults to centered on observed data}
 
