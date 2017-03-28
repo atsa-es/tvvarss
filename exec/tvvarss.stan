@@ -23,10 +23,6 @@ data {
   int family;
   int<lower=0> b_indices[(n_spp*n_spp)];
   matrix[4,2] b_limits;
-  int nB1;
-  int nB2;
-  int B1_index[nB1];
-  int B2_index[nB2];
 }
 parameters {
   vector[(n_spp*n_spp)] vecB[n_year]; # elements accessed [n_year,n_spp]
@@ -60,16 +56,11 @@ transformed parameters {
   }
   for(t in 2:n_year) {
     # fill in B matrix, shared across sites
-    if(nB1 > 0) {
-      for(i in 1:nB1) {
-        # zeroed out interactions
-        B[t-1,row_indices[B1_index[i]],col_indices[B1_index[i]]] = 0;
-      }
-    }
-    // estimated interactions
-    for(i in 1:nB2) {
+
+    # estimated interactions
+    for(i in 1:(n_spp*n_spp)) {
       # top down (td) interactions
-      B[t-1,row_indices[B2_index[i]],col_indices[B2_index[i]]] = (b_limits[b_indices[i],2] - b_limits[b_indices[i],1]) * exp(vecB[t-1,B2_index[i]])/(1+exp(vecB[t-1,B2_index[i]])) - b_limits[b_indices[i],1];
+      B[t-1,row_indices[i],col_indices[i]] = (b_limits[b_indices[i],2] - b_limits[b_indices[i],1]) * exp(vecB[t-1,i])/(1+exp(vecB[t-1,i])) - b_limits[b_indices[i],1];
     }
 
     #for(i in 1:(n_spp*n_spp)) {

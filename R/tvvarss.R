@@ -53,10 +53,6 @@ tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL
   if("bu"%in%B) B[which(B=="bu")] = 3
   if("cf"%in%B) B[which(B=="cf")] = 4
   class(B) = "numeric"
-  B1_index = which(B==1)
-  B2_index = which(B!=1)
-  nB1 = length(B1_index)
-  nB2 = length(B2_index)
 
   b_limits = matrix(0, 4, 2)
   b_limits[1,] = c(0,0)
@@ -144,11 +140,7 @@ tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL
     y_int,
     family,
     b_indices,
-    b_limits,
-    B1_index,
-    B2_index,
-    nB1,
-    nB2)
+    b_limits)
 
   pars = c("sigma_rw_pars", "resid_process_sd", "obs_sd", "B", "pred", "log_lik")
   if(include_trend) pars = c(pars, "u")
