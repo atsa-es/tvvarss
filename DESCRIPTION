@@ -2,11 +2,15 @@ Package: tvvarss
 Type: Package
 Title: Time Varying Vector Autoregressive State Space Models
 Version: 0.1.0
-Author: Eric Ward, Mark Scheuerell, Steve Katz
+Authors@R: as.person(c(
+    "Eric Ward <eric.ward@noaa.gov> [aut, cre]", 
+    "Mark Scheuerell <mark.scheuerell@noaa.gov> [aut]",
+    "Steve Katz <steve.katz@wsu.edu> [aut]"
+  ))
 Maintainer: Eric Ward <eric.ward@noaa.gov>
-Description: The tvvarss package uses Stan (mc-stan.org) to fit multi-site multivariate
-    autoregressive (aka vector autoregressive) state space models with time varying
-    interaction (B elements)
+Description: The tvvarss package uses Stan (mc-stan.org) to fit multi-site
+    multivariate autoregressive (aka vector autoregressive) state space models
+    with time varying interaction matrix.
 License: GPL (>=3)
 Encoding: UTF-8
 LazyData: true
