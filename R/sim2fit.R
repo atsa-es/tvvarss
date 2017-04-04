@@ -27,7 +27,7 @@
 #'   B0_lfc[i+1,i] <- "bu"
 #' }
 #' ## simulate process
-#' lfc <- simTVVAR(B0_lfc,TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
+#' lfc <- simTVVAR(B0_lfc, TT, var_QX=rev(seq(1,4)/40), cov_QX=0, var_QB=0.05, cov_QB=0)
 #' ## create data array with 3 realizations of the process
 #' dat <- sim2fit(lfc, 3)
 #'
