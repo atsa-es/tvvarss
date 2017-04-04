@@ -7,9 +7,9 @@
 #' simulates multiple realizations of the process before adding Gaussian
 #' obsveration errors.
 #'
-#' @param \code{obj} A fitted \code{simTVVAR} object.
-#' @param \code{n_sim} The number of realizations of the TVVAR process.
-#' @param \code{sd} The standard deviation of the Gaussian observation errors.
+#' @param obj A fitted \code{simTVVAR} object.
+#' @param n_sim The number of realizations of the TVVAR process.
+#' @param sd The standard deviation of the Gaussian observation errors.
 #'   Can be set to 0 for no observation error.
 #'
 #' @return An array with dimensions \code{c(n_sim, TT, n_spp)}.
