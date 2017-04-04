@@ -70,7 +70,6 @@ set.seed(123)
 TT <- 30
 ## number of spp/guilds
 nn <- 4
-
 ## CASE 1: linear food chain
 B0_lfc <- matrix(list(0),nn,nn)
 for(i in 1:(nn-1)) {
@@ -82,7 +81,6 @@ B0_lfc
 ## simulate & plot states
 lfc <- simTVVAR(B0_lfc,TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
 matplot(t(lfc$states),type="l")
-
 ## CASE 2: 1 consumer & n-1 producers
 B0_cp <- matrix(list("cf"),nn,nn)
 B0_cp[1:(nn-1),nn] <- "td"
