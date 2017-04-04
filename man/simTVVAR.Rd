@@ -8,37 +8,38 @@ simTVVAR(B0, TT, var_QX, cov_QX, var_QB, cov_QB = 0, QQ_XX = NULL,
   QQ_BB = NULL, X0 = NULL, CC = NULL, cc = NULL)
 }
 \arguments{
-\item{\code{B0}}{A matrix describing the topology of the food web (see 'Details').}
+\item{B0}{A matrix describing the topology of the food web (see 'Details').}
 
-\item{\code{TT}}{Number of time steps to simulate.}
+\item{TT}{Number of time steps to simulate.}
 
-\item{\code{var_QX}}{Scalar or vector of variances for process errors of states.}
+\item{var_QX}{Scalar or vector of variances for process errors of states.}
 
-\item{\code{cov_QX}}{Covariance, if any, of the process errors of the states; if \code{cov_QX} > 0, then \code{var_QX} must be a scalar.}
+\item{cov_QX}{Covariance, if any, of the process errors of the states; if \code{cov_QX} > 0, then \code{var_QX} must be a scalar.}
 
-\item{\code{var_QB}}{Scalar or vector of variances for process errors of \strong{B}.}
+\item{var_QB}{Scalar or vector of variances for process errors of \strong{B}.}
 
-\item{\code{cov_QB}}{Covariance, if any, of process errors of \strong{B}; if \code{cov_QB} > 0, then \code{var_QB} must be a scalar.}
+\item{cov_QB}{Covariance, if any, of process errors of \strong{B}; if \code{cov_QB} > 0, then \code{var_QB} must be a scalar.}
 
-\item{\code{QQ_XX}}{[optional] Specify the explicit form for the var-cov matrix \strong{Q} of the process errors.}
+\item{QQ_XX}{[optional] Specify the explicit form for the var-cov matrix \strong{Q} of the process errors.}
 
-\item{\code{QQ_BB}}{[optional] Specify the explicit form for the var-cov matrix \strong{Q} of \strong{B}.}
+\item{QQ_BB}{[optional] Specify the explicit form for the var-cov matrix \strong{Q} of \strong{B}.}
 
-\item{\code{X0}}{[optional] Specify vector of initial states; \code{nrow(X0)} must equal \code{nrow(B0)}.}
+\item{X0}{[optional] Specify vector of initial states; \code{nrow(X0)} must equal \code{nrow(B0)}.}
 
-\item{\code{CC}}{[optional] Specify matrix of covariate effects on states.}
+\item{CC}{[optional] Specify matrix of covariate effects on states.}
 
-\item{\code{cc}}{[optional] Specify matrix of covariates.}
+\item{cc}{[optional] Specify matrix of covariates.}
 }
 \value{
 A list with the following components:
 \describe{
 \item{\code{B_mat}}{An array of the \strong{B} matrix over time; \code{dim(B_mat) = c(n,n,T+1)}.}
-\item{\code{WW_BB}}{The process errors for \strong{B}.}
-\item{\code{QQ_BB}}{Variance-covariance matrix of the process errors for \strong{B}.}
+\item{\code{WW_BB}}{The process errors for \strong{B}; \code{dim(WW_BB) = c(n^2,T)}.}
+\item{\code{QQ_BB}}{Variance-covariance matrix of the process errors for \strong{B}; \code{dim(QQ_BB) = c(n^2,n^2)}.}
 \item{\code{states}}{A matrix of the states over time; \code{dim(states) = c(n,T+1)}.}
-\item{\code{WW_XX}}{The process errors (innovations) for the states.}
-\item{\code{QQ_XX}}{Variance-covariance matrix of the process errors for the states.}
+\item{\code{WW_XX}}{The process errors (innovations) for the states; \code{dim(WW_XX) = c(n,T)}.}
+\item{\code{QQ_XX}}{Variance-covariance matrix of the process errors for the states; \code{dim(QQ_XX) = c(n,n)}.}
+\item{\code{call}}{The function call as returned by \code{match.call()}.}
 }
 }
 \description{
@@ -97,3 +98,4 @@ cp2 <- simTVVAR(cp$B_mat,TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=
 matplot(t(cp2$states),type="l")
 
 }
+
