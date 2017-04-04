@@ -2,7 +2,7 @@
 % Please edit documentation in R/sim2fit.R
 \name{sim2fit}
 \alias{sim2fit}
-\title{Convert simulated TVVARSS model to form suitable for fitting}
+\title{Simulate TVVAR model and add observation error}
 \usage{
 sim2fit(obj, n_sim, sd = 0.1)
 }

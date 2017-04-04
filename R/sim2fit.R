@@ -1,4 +1,4 @@
-#' Convert simulated TVVARSS model to form suitable for fitting
+#' Simulate TVVAR model and add observation error
 #'
 #' \code{sim2fit} adds observation error to a simulated TVVAR process and
 #'   converts it to a form suitable for fitting with \code{tvvarss}.
