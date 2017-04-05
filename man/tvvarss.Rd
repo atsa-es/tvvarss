@@ -41,4 +41,3 @@ an object of class 'stanfit'
 \description{
 tvvarss is the primary function for fitting tvvarss models to time series data.
 }
-

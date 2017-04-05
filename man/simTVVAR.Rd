@@ -98,4 +98,3 @@ cp2 <- simTVVAR(cp$B_mat,TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=
 matplot(t(cp2$states),type="l")
 
 }
-
