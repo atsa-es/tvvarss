@@ -31,6 +31,8 @@
 #' ## create data array with 3 realizations of the process
 #' dat <- sim2fit(lfc, 3)
 #'
+#' @importFrom stats rnorm
+#'
 #' @export
 sim2fit <- function(obj, n_sim, sd=0.1) {
   if(n_sim < 1 | round(n_sims) - n_sims != 0) {
