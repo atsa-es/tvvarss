@@ -44,4 +44,3 @@ lfc <- simTVVAR(B0_lfc, TT, var_QX=rev(seq(1,4)/40), cov_QX=0, var_QB=0.05, cov_
 dat <- sim2fit(lfc, 3)
 
 }
-
