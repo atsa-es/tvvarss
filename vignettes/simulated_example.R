@@ -22,26 +22,14 @@ for(i in 1:(nn-1)) {
   B0_lfc[i,i+1] <- "td"
   B0_lfc[i+1,i] <- "bu"
 }
+for(i in 1:nn) {
+  B0_lfc[i,i] = "bu"
+}
+
 ## simulate & plot states
 lfc <- simTVVAR(B0_lfc,TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
-matplot(t(lfc$states),type="l")
+matplot(lfc$states,type="l")
 
 ## ------------------------------------------------------------------------
-
-
-## ------------------------------------------------------------------------
-#' ## CASE 2: 1 consumer & n-1 producers
-#' B0_cp <- matrix(list("cf"),nn,nn)
-#' B0_cp[1:(nn-1),nn] <- "td"
-#' B0_cp[nn,1:(nn-1)] <- "bu"
-#' diag(B0_cp) <- 0
-#' ## inspect B0
-#' B0_cp
-#' ## simulate & plot states
-#' cp <- simTVVAR(B0_cp,TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
-#' matplot(t(cp$states),type="l")
-#'
-#' ## simulate a second realization of CASE 2 using same B
-#' cp2 <- simTVVAR(cp$B_mat,TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
-#' matplot(t(cp2$states),type="l")
+dat_obs = lfc$states + matrix(rnorm(dim(lfc$states)[1]*dim(lfc$states)[2], 0, 0.1), nrow=dim(lfc$states)[1])
 
