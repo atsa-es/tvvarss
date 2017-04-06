@@ -15,7 +15,7 @@ tvvarss(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL,
 
 \item{de_mean}{Whether or not to de_mean the process model, defaults to TRUE. For example, X_t+1 = B * (X_t - pred[X_t]) versus X_t+1 = B * (X_t)}
 
-\item{B}{The list matrix describing optionally whether elements are 'zero', top-down ('td'), bottom up ('bu'), competitive-facilitative ('cf')}
+\item{B}{The list matrix describing optionally whether elements are 'zero', top-down ('td'), bottom up ('bu'), competitive-facilitative ('cf'), or density dependent ('dd)}
 
 \item{x0}{The location matrix (mean) of priors on initial states. Defaults to centered on observed data}
 

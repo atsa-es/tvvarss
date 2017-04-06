@@ -30,6 +30,20 @@ for(i in 1:nn) {
 lfc <- simTVVAR(B0_lfc,TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
 matplot(lfc$states,type="l")
 
-## ------------------------------------------------------------------------
-dat_obs = lfc$states + matrix(rnorm(dim(lfc$states)[1]*dim(lfc$states)[2], 0, 0.1), nrow=dim(lfc$states)[1])
+## ---- eval = FALSE-------------------------------------------------------
+#  dat_obs = lfc$states + matrix(rnorm(dim(lfc$states)[1]*dim(lfc$states)[2], 0, 0.1), nrow=dim(lfc$states)[1])
+
+## ---- eval = FALSE-------------------------------------------------------
+#  B = B0_lfc
+#  
+#  stanmod = tvvarss(y = dat_obs, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3)
+
+## ---- eval = FALSE-------------------------------------------------------
+#  pred = apply(extract(stanmod, c("pred"))$pred, c(3,4), mean)
+#  
+#  par(mfrow = c(2,2), mgp=c(2,1,0), mai=c(0.3,0.3,0.1,0.1))
+#  for(i in 1:4) {
+#    plot(pred[,i], type="l", ylim=range(c(dat_obs[,i], pred[,i])))
+#    points(dat_obs[,i], col="red")
+#  }
 

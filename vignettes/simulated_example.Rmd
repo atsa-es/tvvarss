@@ -50,13 +50,13 @@ matplot(lfc$states,type="l")
 
 ## Observation Error
 
-```{r}
+```{r, eval = FALSE}
 dat_obs = lfc$states + matrix(rnorm(dim(lfc$states)[1]*dim(lfc$states)[2], 0, 0.1), nrow=dim(lfc$states)[1])
 ```
 
 ## Fitting
 
-```{r}
+```{r, eval = FALSE}
 B = B0_lfc
 
 stanmod = tvvarss(y = dat_obs, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3)
@@ -64,7 +64,7 @@ stanmod = tvvarss(y = dat_obs, include_trend = FALSE, de_mean = TRUE, x0 = NULL,
 
 ## Validation
 
-```{r}
+```{r, eval = FALSE}
 pred = apply(extract(stanmod, c("pred"))$pred, c(3,4), mean)
 
 par(mfrow = c(2,2), mgp=c(2,1,0), mai=c(0.3,0.3,0.1,0.1))

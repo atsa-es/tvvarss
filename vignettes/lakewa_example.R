@@ -44,9 +44,7 @@ B[6,c(1,5,7)] = "cf"
 B[7,c(1,5)] = "cf"
 
 ## ---- eval = FALSE-------------------------------------------------------
-#  B = B0_lfc
-#  
-#  stanmod = tvvarss(y = dat_obs, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3)
+#  stanmod = tvvarss(y = lakeWAplankton_log, include_trend = FALSE, de_mean = TRUE, B = B, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 200, mcmc_warmup = 100, mcmc_thin = 1, mcmc_chain = 1)
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  pred = apply(extract(stanmod, c("pred"))$pred, c(3,4), mean)

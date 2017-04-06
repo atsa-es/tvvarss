@@ -144,9 +144,7 @@ B[<span class="dv">7</span>,<span class="kw">c</span>(<span class="dv">1</span>,
 </div>
 <div id="fitting" class="section level2">
 <h2>Fitting</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">B =<span class="st"> </span>B0_lfc
-
-stanmod =<span class="st"> </span><span class="kw">tvvarss</span>(<span class="dt">y =</span> dat_obs, <span class="dt">include_trend =</span> <span class="ot">FALSE</span>, <span class="dt">de_mean =</span> <span class="ot">TRUE</span>, <span class="dt">x0 =</span> <span class="ot">NULL</span>, <span class="dt">shared_q =</span> <span class="ot">NULL</span>, <span class="dt">shared_r =</span> <span class="ot">NULL</span>, <span class="dt">shared_u =</span> <span class="ot">NULL</span>, <span class="dt">mcmc_iter =</span> <span class="dv">1000</span>, <span class="dt">mcmc_warmup =</span> <span class="dv">500</span>, <span class="dt">mcmc_thin =</span> <span class="dv">1</span>, <span class="dt">mcmc_chain =</span> <span class="dv">3</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">stanmod =<span class="st"> </span><span class="kw">tvvarss</span>(<span class="dt">y =</span> lakeWAplankton_log, <span class="dt">include_trend =</span> <span class="ot">FALSE</span>, <span class="dt">de_mean =</span> <span class="ot">TRUE</span>, <span class="dt">B =</span> B, <span class="dt">x0 =</span> <span class="ot">NULL</span>, <span class="dt">shared_q =</span> <span class="ot">NULL</span>, <span class="dt">shared_r =</span> <span class="ot">NULL</span>, <span class="dt">shared_u =</span> <span class="ot">NULL</span>, <span class="dt">mcmc_iter =</span> <span class="dv">200</span>, <span class="dt">mcmc_warmup =</span> <span class="dv">100</span>, <span class="dt">mcmc_thin =</span> <span class="dv">1</span>, <span class="dt">mcmc_chain =</span> <span class="dv">1</span>)</code></pre></div>
 </div>
 <div id="validation" class="section level2">
 <h2>Validation</h2>
