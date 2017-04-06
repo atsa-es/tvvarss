@@ -125,7 +125,7 @@ Non-daphnid cladocerans</p>
 <p>Like Hampton et al. 2006, we used monthly samples 1962-1994, and we replaced zeros in this data with small random values between zero and half the smallest value observed per taxa. Resulting values were log-transformed to achieve approximate normality.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">for(i in <span class="dv">1</span>:<span class="kw">ncol</span>(lakeWAplankton)) {
   zeros =<span class="st"> </span><span class="kw">which</span>(lakeWAplankton[,i]==<span class="dv">0</span>)
-  lakeWAplankton[zeros,i] =<span class="st"> </span><span class="kw">runif</span>(<span class="dt">n =</span> <span class="kw">length</span>(zeros), <span class="dt">min =</span> <span class="dv">0</span>, <span class="dt">max =</span> <span class="fl">0.5</span> *<span class="st"> </span><span class="kw">min</span>(lakeWAplankton[,i], <span class="dt">na.rm=</span>T))
+  if(<span class="kw">length</span>(zeros)&gt;<span class="dv">0</span>) lakeWAplankton[zeros,i] =<span class="st"> </span><span class="ot">NA</span>
 }
 
 <span class="co"># log transform</span>
@@ -144,16 +144,32 @@ B[<span class="dv">7</span>,<span class="kw">c</span>(<span class="dv">1</span>,
 </div>
 <div id="fitting" class="section level2">
 <h2>Fitting</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">stanmod =<span class="st"> </span><span class="kw">tvvarss</span>(<span class="dt">y =</span> lakeWAplankton_log, <span class="dt">include_trend =</span> <span class="ot">FALSE</span>, <span class="dt">de_mean =</span> <span class="ot">TRUE</span>, <span class="dt">B =</span> B, <span class="dt">x0 =</span> <span class="ot">NULL</span>, <span class="dt">shared_q =</span> <span class="ot">NULL</span>, <span class="dt">shared_r =</span> <span class="ot">NULL</span>, <span class="dt">shared_u =</span> <span class="ot">NULL</span>, <span class="dt">mcmc_iter =</span> <span class="dv">200</span>, <span class="dt">mcmc_warmup =</span> <span class="dv">100</span>, <span class="dt">mcmc_thin =</span> <span class="dv">1</span>, <span class="dt">mcmc_chain =</span> <span class="dv">1</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># If model hasn't been run</span>
+if(<span class="kw">file.exists</span>(<span class="st">&quot;vignettes/lakewa.rds&quot;</span>)) {
+stanmod =<span class="st"> </span><span class="kw">tvvarss</span>(<span class="dt">y =</span> lakeWAplankton_log, <span class="dt">include_trend =</span> <span class="ot">FALSE</span>, <span class="dt">de_mean =</span> <span class="ot">TRUE</span>, <span class="dt">B =</span> B, <span class="dt">x0 =</span> <span class="ot">NULL</span>, <span class="dt">shared_q =</span> <span class="ot">NULL</span>, <span class="dt">shared_r =</span> <span class="ot">NULL</span>, <span class="dt">shared_u =</span> <span class="ot">NULL</span>, <span class="dt">mcmc_iter =</span> <span class="dv">3000</span>, <span class="dt">mcmc_warmup =</span> <span class="dv">2000</span>, <span class="dt">mcmc_thin =</span> <span class="dv">1</span>, <span class="dt">mcmc_chain =</span> <span class="dv">3</span>)
+
+<span class="kw">saveRDS</span>(stanmod, <span class="st">&quot;vignettes/lakewa.rds&quot;</span>)
+}</code></pre></div>
+</div>
+<div id="plotting" class="section level2">
+<h2>Plotting</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">Best =<span class="st"> </span><span class="kw">apply</span>(<span class="kw">extract</span>(stanmod, <span class="kw">c</span>(<span class="st">&quot;B&quot;</span>))$B, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>), mean)
+
+<span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">7</span>,<span class="dv">7</span>), <span class="dt">mgp=</span><span class="kw">c</span>(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">0</span>), <span class="dt">mai=</span><span class="kw">c</span>(<span class="fl">0.1</span>,<span class="fl">0.1</span>,<span class="fl">0.1</span>,<span class="fl">0.1</span>))
+for(i in <span class="dv">1</span>:<span class="dv">7</span>) {
+  for(j in <span class="dv">1</span>:<span class="dv">7</span>) {
+  <span class="kw">plot</span>(Best[,i,j], <span class="dt">type=</span><span class="st">&quot;l&quot;</span>)
+  }
+}</code></pre></div>
 </div>
 <div id="validation" class="section level2">
 <h2>Validation</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">pred =<span class="st"> </span><span class="kw">apply</span>(<span class="kw">extract</span>(stanmod, <span class="kw">c</span>(<span class="st">&quot;pred&quot;</span>))$pred, <span class="kw">c</span>(<span class="dv">3</span>,<span class="dv">4</span>), mean)
 
-<span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>,<span class="dv">2</span>), <span class="dt">mgp=</span><span class="kw">c</span>(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">0</span>), <span class="dt">mai=</span><span class="kw">c</span>(<span class="fl">0.3</span>,<span class="fl">0.3</span>,<span class="fl">0.1</span>,<span class="fl">0.1</span>))
-for(i in <span class="dv">1</span>:<span class="dv">4</span>) {
-  <span class="kw">plot</span>(pred[,i], <span class="dt">type=</span><span class="st">&quot;l&quot;</span>, <span class="dt">ylim=</span><span class="kw">range</span>(<span class="kw">c</span>(dat_obs[,i], pred[,i])))
-  <span class="kw">points</span>(dat_obs[,i], <span class="dt">col=</span><span class="st">&quot;red&quot;</span>)
+<span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">4</span>,<span class="dv">2</span>), <span class="dt">mgp=</span><span class="kw">c</span>(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">0</span>), <span class="dt">mai=</span><span class="kw">c</span>(<span class="fl">0.3</span>,<span class="fl">0.3</span>,<span class="fl">0.1</span>,<span class="fl">0.1</span>))
+for(i in <span class="dv">1</span>:<span class="dv">7</span>) {
+  <span class="kw">plot</span>(pred[,i], <span class="dt">type=</span><span class="st">&quot;l&quot;</span>, <span class="dt">ylim=</span><span class="kw">range</span>(<span class="kw">c</span>(lakeWAplankton_log[,i], pred[,i]), <span class="dt">na.rm=</span>T))
+  <span class="kw">points</span>(lakeWAplankton_log[,i], <span class="dt">col=</span><span class="st">&quot;red&quot;</span>, <span class="dt">cex=</span><span class="fl">0.1</span>)
 }</code></pre></div>
 </div>
 

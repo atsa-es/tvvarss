@@ -25,10 +25,10 @@ m[,1] = c("Diatoms","Greens","Bluegreens","Cyclops","Daphnia","Diaptomus","Non-d
 colnames(m) = "Species"
 kable(m)
 
-## ------------------------------------------------------------------------
+## ---- results="hide"-----------------------------------------------------
 for(i in 1:ncol(lakeWAplankton)) {
   zeros = which(lakeWAplankton[,i]==0)
-  lakeWAplankton[zeros,i] = runif(n = length(zeros), min = 0, max = 0.5 * min(lakeWAplankton[,i], na.rm=T))
+  if(length(zeros)>0) lakeWAplankton[zeros,i] = NA
 }
 
 # log transform
@@ -43,15 +43,30 @@ B[5,c(1,3)] = "cf"
 B[6,c(1,5,7)] = "cf"
 B[7,c(1,5)] = "cf"
 
+## ----fitmodel------------------------------------------------------------
+# If model hasn't been run
+if(file.exists("vignettes/lakewa.rds")) {
+stanmod = tvvarss(y = lakeWAplankton_log, include_trend = FALSE, de_mean = TRUE, B = B, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3)
+
+saveRDS(stanmod, "vignettes/lakewa.rds")
+}
+
 ## ---- eval = FALSE-------------------------------------------------------
-#  stanmod = tvvarss(y = lakeWAplankton_log, include_trend = FALSE, de_mean = TRUE, B = B, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 200, mcmc_warmup = 100, mcmc_thin = 1, mcmc_chain = 1)
+#  Best = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), mean)
+#  
+#  par(mfrow = c(7,7), mgp=c(2,1,0), mai=c(0.1,0.1,0.1,0.1))
+#  for(i in 1:7) {
+#    for(j in 1:7) {
+#    plot(Best[,i,j], type="l")
+#    }
+#  }
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  pred = apply(extract(stanmod, c("pred"))$pred, c(3,4), mean)
 #  
-#  par(mfrow = c(2,2), mgp=c(2,1,0), mai=c(0.3,0.3,0.1,0.1))
-#  for(i in 1:4) {
-#    plot(pred[,i], type="l", ylim=range(c(dat_obs[,i], pred[,i])))
-#    points(dat_obs[,i], col="red")
+#  par(mfrow = c(4,2), mgp=c(2,1,0), mai=c(0.3,0.3,0.1,0.1))
+#  for(i in 1:7) {
+#    plot(pred[,i], type="l", ylim=range(c(lakeWAplankton_log[,i], pred[,i]), na.rm=T))
+#    points(lakeWAplankton_log[,i], col="red", cex=0.1)
 #  }
 

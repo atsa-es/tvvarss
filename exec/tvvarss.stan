@@ -122,13 +122,14 @@ model {
   }
 
 }
-generated quantities {
-  vector[n_pos] log_lik;
-  # for use in loo() package
-  if(family==1) for (n in 1:n_pos) log_lik[n] = normal_lpdf(y[n] | x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]], obs_mat[spp_indices_pos[n],site_indices_pos[n]]);
-  if(family==2) for (n in 1:n_pos) log_lik[n] = bernoulli_lpmf(y_int[n] | inv_logit(x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]]) );
-  if(family==3) for (n in 1:n_pos) log_lik[n] = poisson_lpmf(y_int[n] | exp(x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]]) );
-  if(family==4) for (n in 1:n_pos) log_lik[n] = gamma_lpdf(y[n] | obs_mat[spp_indices_pos[n],site_indices_pos[n]], obs_mat[spp_indices_pos[n],site_indices_pos[n]] ./ x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]]);
-  if(family==5) for (n in 1:n_pos) log_lik[n] = lognormal_lpdf(y[n] | x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]], obs_mat[spp_indices_pos[n],site_indices_pos[n]]);
-}
+#generated quantities {
+#  vector[n_pos] log_lik;
+#  # for use in loo() package
+#  if(family==1) for (n in 1:n_pos) log_lik[n] = normal_lpdf(y[n] | x[site_in#dices_pos[n],year_indices_pos[n],spp_indices_pos[n]], obs_mat[spp_indices_po#s[n],site_indices_pos[n]]);
+#  if(family==2) for (n in 1:n_pos) log_lik[n] = bernoulli_lpmf(y_int[n] | #inv_logit(x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]]) );
+#  if(family==3) for (n in 1:n_pos) log_lik[n] = poisson_lpmf(y_int[n] | exp#
+#(x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]]) );
+#  if(family==4) for (n in 1:n_pos) log_lik[n] = gamma_lpdf(y[n] | obs_mat[sp#p_indices_pos[n],site_indices_pos[n]], obs_mat[spp_indices_pos[n],site_indic#es_pos[n]] ./ x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]]##);
+#  if(family==5) for (n in 1:n_pos) log_lik[n] = lognormal_lpdf(y[n] | #x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]], obs_mat[spp_i#ndices_pos[n],site_indices_pos[n]]);
+#}
 
