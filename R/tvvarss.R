@@ -50,7 +50,8 @@ tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL
   # zero = 1, td = 2, bu = 3, cf = 4
   if("zero"%in%B) B[which(B=="zero")] = 1
   if("td"%in%B) B[which(B=="td")] = 2
-  if("bu"%in%B) B[which(B%in% c("bu", "dd"))] = 3
+  if("bu"%in%B) B[which(B%in% c("bu"))] = 3
+  if("dd"%in%B) B[which(B%in% c("dd"))] = 3
   if("cf"%in%B) B[which(B=="cf")] = 4
   class(B) = "numeric"
 
