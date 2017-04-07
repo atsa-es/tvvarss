@@ -64,7 +64,7 @@ transformed parameters {
     # estimated interactions
     for(i in 1:(n_spp*n_spp)) {
       # top down (td) interactions
-      B[t-1,row_indices[i],col_indices[i]] = (b_limits[b_indices[i],2] - b_limits[b_indices[i],1]) * exp(vecB[t-1,i])/(1+exp(vecB[t-1,i])) - b_limits[b_indices[i],1];
+      B[t-1,row_indices[i],col_indices[i]] = (b_limits[b_indices[i],2] - b_limits[b_indices[i],1]) * exp(vecB[t-1,i])/(1+exp(vecB[t-1,i])) + b_limits[b_indices[i],1];
       vecB[t,i] = vecB[t-1,i] + vecBdev[t-1,i]; # random walk in b elements
     }
 
