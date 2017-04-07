@@ -64,7 +64,7 @@ B[1,2] = "td"
 B[2,c(3,4)] = "td"
 B[4,2] = "bu"
 if(file.exists("vignettes/ives.rds")) {
-stanmod = tvvarss(y = dat, B = B, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3)
+stanmod = tvvarss(y = training_data, B = B, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3)
 saveRDS(stanmod, "vignettes/ives.rds")
 }
 ```
