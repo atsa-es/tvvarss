@@ -3,7 +3,7 @@
 #' @param y The data (array, with dimensions = site, year, species)
 #' @param include_trend Whether to include time trends. Defaults to TRUE
 #' @param de_mean Whether or not to de_mean the process model, defaults to TRUE. For example, X_t+1 = B * (X_t - pred[X_t]) versus X_t+1 = B * (X_t)
-#' @param B The list matrix describing optionally whether elements are 'zero', top-down ('td'), bottom up ('bu'), competitive-facilitative ('cf')
+#' @param B The list matrix describing optionally whether elements are 'zero', top-down ('td'), bottom up ('bu'), competitive-facilitative ('cf'), or density dependent ('dd)
 #' @param x0 The location matrix (mean) of priors on initial states. Defaults to centered on observed data
 #' @param shared_q Optional matrix (number of species x number of sites) with integers indicating which process variance parameters are shared. Defaults to shared process variances across sites, but unique to each species
 #' @param shared_r Optional matrix (number of species x number of sites) with integers indicating which observation variance parameters are shared. Defaults to shared observation variances across sites, but unique to each species
@@ -43,14 +43,15 @@ tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL
   if(is.null(B)) {
     # matrix constrained 0-1 on diagonal, and no constraints elsewhere
     B = matrix("cf", n_spp, n_spp)
-    diag(B) = "bu"
+    diag(B) = "dd"
   }
 
   # convert the character matrix to integers
   # zero = 1, td = 2, bu = 3, cf = 4
   if("zero"%in%B) B[which(B=="zero")] = 1
   if("td"%in%B) B[which(B=="td")] = 2
-  if("bu"%in%B) B[which(B=="bu")] = 3
+  if("bu"%in%B) B[which(B%in% c("bu"))] = 3
+  if("dd"%in%B) B[which(B%in% c("dd"))] = 3
   if("cf"%in%B) B[which(B=="cf")] = 4
   class(B) = "numeric"
 
@@ -142,7 +143,7 @@ tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL
     b_indices,
     b_limits)
 
-  pars = c("sigma_rw_pars", "resid_process_sd", "obs_sd", "B", "pred", "log_lik")
+  pars = c("sigma_rw_pars", "resid_process_sd", "obs_sd", "B", "pred")
   if(include_trend) pars = c(pars, "u")
 
   mod = rstan::stan(data = datalist, pars = pars,
