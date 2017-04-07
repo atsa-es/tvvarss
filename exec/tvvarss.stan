@@ -25,7 +25,7 @@ data {
   matrix[4,2] b_limits;
 }
 parameters {
-  vector[(n_spp*n_spp)] vecB[n_year]; # elements accessed [n_year,n_spp]
+  vector[(n_spp*n_spp)] vecBdev[n_year]; # elements accessed [n_year,n_spp]
   real<lower=0> sigma_rw_pars[2]; # sds for random walk
   matrix[n_year,n_spp] x[n_site]; # unobserved states
   real<lower=0> resid_process_sd[n_q]; # residual sds
@@ -36,6 +36,7 @@ transformed parameters {
   vector<lower=0>[(n_spp*n_spp)] sigma_rw;
   matrix<lower=0>[n_spp, n_site] resid_process_mat;
   matrix<lower=0>[n_spp, n_site] obs_mat;
+  vector[(n_spp*n_spp)] vecB[n_year];
   matrix[n_spp, n_site] u_mat;
   matrix[n_spp,n_spp] B[(n_year-1)]; # B matrix, accessed as n_year, n_spp, n_spp
   matrix[n_year,n_spp] pred[n_site]; # predicted unobserved states
@@ -54,6 +55,9 @@ transformed parameters {
   for(s in 1:n_site) {
     pred[s,1,] = x[s,1,]; # states for first year
   }
+  for(i in 1:(n_spp*n_spp)) {
+    vecB[1,i] = vecBdev[1,i]; # first time step, prior in model {}
+  }
   for(t in 2:n_year) {
     # fill in B matrix, shared across sites
 
@@ -61,6 +65,7 @@ transformed parameters {
     for(i in 1:(n_spp*n_spp)) {
       # top down (td) interactions
       B[t-1,row_indices[i],col_indices[i]] = (b_limits[b_indices[i],2] - b_limits[b_indices[i],1]) * exp(vecB[t-1,i])/(1+exp(vecB[t-1,i])) - b_limits[b_indices[i],1];
+      vecB[t,i] = vecB[t-1,i] + vecBdev[t-1,i]; # random walk in b elements
     }
 
     #for(i in 1:(n_spp*n_spp)) {
@@ -84,9 +89,10 @@ transformed parameters {
 model {
   sigma_rw_pars[1] ~ cauchy(0,5);
   sigma_rw_pars[2] ~ cauchy(0,5);
-  vecB[1] ~ normal(0, 3); # prior for first state
-  for(t in 2:n_year) {
-    vecB[t] ~ normal(vecB[t-1], sigma_rw); # vectorized random in B
+  #vecB[1] ~ normal(0, 3); # prior for first state
+  for(t in 1:n_year) {
+    #vecB[t] ~ normal(vecB[t-1], sigma_rw); # vectorized random in B
+    vecBdev[t] ~ normal(0, sigma_rw); # vectorized random in B
   }
   # prior on first time step
   for(site in 1:n_site) {
