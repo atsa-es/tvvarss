@@ -39,10 +39,26 @@ dat = ivesDataByWeek[,c("Large Phyto", "Small Phyto", "Daphnia", "Non-daphnia")]
 dat = log(dat)
 ```
 
+
+```{r}
+vecY = c(dat)
+set.seed(100)
+test_ind = sample(1:length(vecY), 
+  size=round(0.1*length(vecY)), replace=F)
+
+training_data = vecY
+training_data[test_ind] = NA
+training_data = matrix(training_data, ncol=ncol(dat))
+
+test_data = vecY
+test_data[-test_ind] = NA
+test_data = matrix(test_data, ncol=ncol(dat))
+```
+
 ## Fitting
 
 ```{r, eval = FALSE}
-B = matrix("zero",nn,nn)
+B = matrix("zero",ncol(dat),ncol(dat))
 diag(B) = "dd"
 B[1,2] = "td"
 B[2,c(3,4)] = "td"
