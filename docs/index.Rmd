@@ -42,11 +42,7 @@ if(!require("tvvarss")) {
 
 # Step 1: Simulate data
 
-The `tvvarss` package has a function `simTVVAR` to simulate the process component of a TVVARSS model (_i.e._, it does not add observation error). We use that to simulate multiple realizations of a given process and then see how well the true parameters can be estimated.
-
-## Food web topologies
-
-The food web topology in a TVVARSS model is expressed via the matrix $\mathbf{B}_t$. Specifically, interactions are expressed as the effect of column on row; the diagonals indicate the strength of density-dependence. All elements of the matrix corresponding to no interaction are set to 0.
+We use the function `simTVVAR` from the `tvvarss` package to simulate the process component of a TVVARSS model (_i.e._, it does not add observation error). To do so, we must express the food web topology via the matrix $\mathbf{B}_t$. Specifically, interactions are expressed as the effect of column on row; the diagonals indicate the strength of density-dependence. All elements of the matrix corresponding to no interaction are set to 0.
 
 `tvvarss` is designed to work with symbolic representations within $\mathbf{B}_t$, based on the following codes:
 
@@ -55,10 +51,9 @@ The food web topology in a TVVARSS model is expressed via the matrix $\mathbf{B}
 * `"bu"`: bottom-up
 * `"cf"`: competitive/facilitative
 
-
 We show four different examples of simulated food web topologies. 
 
-### Ex 1: Linear food chain
+## Ex 1: Linear food chain
 
 Here there are 4 tropic levels stacked in a linear food chain from primary producers `PP` at the bottom to tertiay consumers `TC` at the top.
 
@@ -67,7 +62,7 @@ lvls <- c("TC","SC","PC","PP")
 cat(paste0(paste0(lvls[1:3],"\n|\n",collapse = ""),lvls[4]))
 ```
 
-Here is how to express that topology in a matrix form that `tvvarss` will understand.
+Here is the topology in a matrix form that `tvvarss` will understand.
 
 ```{r ex_1_B0}
 nn <- length(lvls)
@@ -99,7 +94,7 @@ lfc <- simTVVAR(B0 = B0_lfc, TT = TT,
 
 And we can plot the states over time.
 
-```{r ex_1_plot_state, fig.height=4, fig.width=8}
+```{r ex_1_plot_state, fig.height=3, fig.width=7}
 par(mai=c(0.9,0.9,0,0), omi=c(0.1,0.1,0.1,1.5))
 clr <- c("purple","darkred","blue","darkgreen")
 matplot(t(lfc$states), type="l", lty="solid", lwd=2, xpd=NA,
@@ -108,17 +103,17 @@ legend("right", legend=lvls, lty="solid", lwd=2,
        col=clr, inset=-0.2, xpd=NA)
 ```
 
-Let's fit a bunch and inspect them.
+Let's simulate many TVVAR models of this form and inspect them.
 
-```{r ex_1_lots, fig.height=4, fig.width=8}
+```{r ex_1_lots, fig.height=3, fig.width=7}
 ee <- 10
 ex1 <- vector("list",ee)
+clr <- c("purple","darkred","blue","darkgreen")
 for(i in 1:ee) {
   ex1[[i]] <- simTVVAR(B0 = B0_lfc, TT = TT,
                        var_QX = seq(4)/40, cov_QX = 0,
                        var_QB = 0.05, cov_QB = 0)
   par(mai=c(0.6,0.9,0.3,0), omi=c(0.1,0.1,0.1,1.5))
-  clr <- c("purple","darkred","blue","darkgreen")
   matplot(t(ex1[[i]]$states), type="l", lty="solid", lwd=2, xpd=NA,
           col=clr, main=paste0("Sim ",i), ylab="Log density")
   legend("right", legend=lvls, lty="solid", lwd=2,
@@ -126,9 +121,10 @@ for(i in 1:ee) {
 }
 ```
 
-OK, clearly some of them exhibit unrealistic, explosive population dynamics. Let's develop a screen to toss those out.
+OK, clearly some of them exhibit unrealistic, explosive population dynamics. Let's develop a screening process to toss those out.
 
-```{r ex_1_screening, fig.height=4, fig.width=8}
+```{r ex_1_screening, fig.height=3, fig.width=7}
+clr <- c("purple","darkred","blue","darkgreen")
 ## number of simulations
 ee <- 10
 ## min log-density threshold
@@ -145,11 +141,10 @@ for(i in 1:ee) {
   }
   ex1[[i]] <- tmp
   par(mai=c(0.6,0.9,0.3,0), omi=c(0.1,0.1,0.1,1.5))
-  clr <- c("purple","darkred","blue","darkgreen")
   matplot(t(ex1[[i]]$states), type="l", lty="solid", lwd=2, xpd=NA,
-          col=clr, main=paste0("Sim ",i), ylab="Log density")
+          col=clr, main=paste0("Simulation ",i), ylab="Log density")
   legend("right", legend=lvls, lty="solid", lwd=2,
-         col=clr, inset=-0.2, xpd=NA)
+         col=clr, inset=-0.2, xpd=NA, cex=0.9)
 }
 ```
 
