@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r install, eval=FALSE}
 library(rstan)
 library(devtools)
-devtools::install_github("eric-ward/tvvarss")
+devtools:::install_github("eric-ward/tvvarss")
 library(tvvarss)
 # for optimizing stan on your machine,
 rstan_options(auto_write = TRUE)
@@ -40,7 +40,7 @@ for(i in 1:(nn-1)) {
   B0_lfc[i+1,i] <- "bu"
 }
 for(i in 1:nn) {
-  B0_lfc[i,i] = "bu"
+  B0_lfc[i,i] = "dd"
 }
 
 ## simulate & plot states
@@ -57,9 +57,17 @@ dat_obs = lfc$states + matrix(rnorm(dim(lfc$states)[1]*dim(lfc$states)[2], 0, 0.
 ## Fitting
 
 ```{r, eval = FALSE}
-B = B0_lfc
+B = matrix("zero",nn,nn)
+for(i in 1:(nn-1)) {
+  B[i,i+1] <- "td"
+  B[i+1,i] <- "bu"
+}
+for(i in 1:nn) {
+  B[i,i] = "dd"
+}
 
-stanmod = tvvarss(y = dat_obs, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3)
+stanmod = tvvarss(y = t(dat_obs), B = B, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 200, mcmc_warmup = 100, mcmc_thin = 1, mcmc_chain = 1)
+
 ```
 
 ## Validation
