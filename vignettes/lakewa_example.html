@@ -159,19 +159,25 @@ test_data[-test_ind] =<span class="st"> </span><span class="ot">NA</span>
 test_data =<span class="st"> </span><span class="kw">matrix</span>(test_data, <span class="dt">ncol=</span><span class="kw">ncol</span>(lakeWAplankton_log))</code></pre></div>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># If model hasn't been run</span>
 if(<span class="kw">file.exists</span>(<span class="st">&quot;vignettes/lakewa.rds&quot;</span>)) {
-stanmod =<span class="st"> </span><span class="kw">tvvarss</span>(<span class="dt">y =</span> training_data, <span class="dt">include_trend =</span> <span class="ot">FALSE</span>, <span class="dt">de_mean =</span> <span class="ot">TRUE</span>, <span class="dt">B =</span> B, <span class="dt">x0 =</span> <span class="ot">NULL</span>, <span class="dt">shared_q =</span> <span class="ot">NULL</span>, <span class="dt">shared_r =</span> <span class="ot">NULL</span>, <span class="dt">shared_u =</span> <span class="ot">NULL</span>, <span class="dt">mcmc_iter =</span> <span class="dv">3000</span>, <span class="dt">mcmc_warmup =</span> <span class="dv">2000</span>, <span class="dt">mcmc_thin =</span> <span class="dv">1</span>, <span class="dt">mcmc_chain =</span> <span class="dv">3</span>)
+stanmod =<span class="st"> </span><span class="kw">tvvarss</span>(<span class="dt">y =</span> training_data, <span class="dt">include_trend =</span> <span class="ot">FALSE</span>, <span class="dt">de_mean =</span> <span class="ot">TRUE</span>, <span class="dt">B =</span> B, <span class="dt">x0 =</span> <span class="ot">NULL</span>, <span class="dt">shared_q =</span> <span class="ot">NULL</span>, <span class="dt">shared_r =</span> <span class="ot">NULL</span>, <span class="dt">shared_u =</span> <span class="ot">NULL</span>, <span class="dt">mcmc_iter =</span> <span class="dv">300</span>, <span class="dt">mcmc_warmup =</span> <span class="dv">200</span>, <span class="dt">mcmc_thin =</span> <span class="dv">1</span>, <span class="dt">mcmc_chain =</span> <span class="dv">3</span>)
 
 <span class="kw">saveRDS</span>(stanmod, <span class="st">&quot;vignettes/lakewa.rds&quot;</span>)
 }</code></pre></div>
 </div>
 <div id="plotting" class="section level2">
 <h2>Plotting</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">Best =<span class="st"> </span><span class="kw">apply</span>(<span class="kw">extract</span>(stanmod, <span class="kw">c</span>(<span class="st">&quot;B&quot;</span>))$B, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>), mean)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">stanmod =<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;vignettes/lakewa.rds&quot;</span>)
+
+Best =<span class="st"> </span><span class="kw">apply</span>(<span class="kw">extract</span>(stanmod, <span class="kw">c</span>(<span class="st">&quot;B&quot;</span>))$B, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>), mean)
+Blow =<span class="st"> </span><span class="kw">apply</span>(<span class="kw">extract</span>(stanmod, <span class="kw">c</span>(<span class="st">&quot;B&quot;</span>))$B, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>), quantile,<span class="fl">0.025</span>)
+Bhigh =<span class="st"> </span><span class="kw">apply</span>(<span class="kw">extract</span>(stanmod, <span class="kw">c</span>(<span class="st">&quot;B&quot;</span>))$B, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>), quantile, <span class="fl">0.975</span>)
 
 <span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">7</span>,<span class="dv">7</span>), <span class="dt">mgp=</span><span class="kw">c</span>(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">0</span>), <span class="dt">mai=</span><span class="kw">c</span>(<span class="fl">0.1</span>,<span class="fl">0.1</span>,<span class="fl">0.1</span>,<span class="fl">0.1</span>))
 for(i in <span class="dv">1</span>:<span class="dv">7</span>) {
   for(j in <span class="dv">1</span>:<span class="dv">7</span>) {
-  <span class="kw">plot</span>(Best[,i,j], <span class="dt">type=</span><span class="st">&quot;l&quot;</span>)
+  <span class="kw">plot</span>(Best[,i,j], <span class="dt">type=</span><span class="st">&quot;l&quot;</span>, <span class="dt">ylim=</span><span class="kw">range</span>(<span class="kw">c</span>(Blow[,i,j], Bhigh[,i,j])), <span class="dt">lwd=</span><span class="dv">3</span>)
+    <span class="kw">lines</span>(Blow[,i,j])
+    <span class="kw">lines</span>(Bhigh[,i,j])
   }
 }</code></pre></div>
 </div>

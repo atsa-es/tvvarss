@@ -60,18 +60,24 @@ test_data = matrix(test_data, ncol=ncol(lakeWAplankton_log))
 ## ----fitmodel------------------------------------------------------------
 # If model hasn't been run
 if(file.exists("vignettes/lakewa.rds")) {
-stanmod = tvvarss(y = training_data, include_trend = FALSE, de_mean = TRUE, B = B, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3)
+stanmod = tvvarss(y = training_data, include_trend = FALSE, de_mean = TRUE, B = B, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 300, mcmc_warmup = 200, mcmc_thin = 1, mcmc_chain = 3)
 
 saveRDS(stanmod, "vignettes/lakewa.rds")
 }
 
 ## ---- eval = FALSE-------------------------------------------------------
+#  stanmod = readRDS("vignettes/lakewa.rds")
+#  
 #  Best = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), mean)
+#  Blow = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), quantile,0.025)
+#  Bhigh = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), quantile, 0.975)
 #  
 #  par(mfrow = c(7,7), mgp=c(2,1,0), mai=c(0.1,0.1,0.1,0.1))
 #  for(i in 1:7) {
 #    for(j in 1:7) {
-#    plot(Best[,i,j], type="l")
+#    plot(Best[,i,j], type="l", ylim=range(c(Blow[,i,j], Bhigh[,i,j])), lwd=3)
+#      lines(Blow[,i,j])
+#      lines(Bhigh[,i,j])
 #    }
 #  }
 
