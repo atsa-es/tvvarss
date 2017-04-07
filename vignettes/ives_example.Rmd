@@ -1,0 +1,84 @@
+---
+title: "Simulated data in package tvvarss"
+author: "Eric Ward, Mark Scheuerell, Steve Katz"
+date: "Apr 3, 2017"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tvvarss}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Installation
+
+```{r, eval=FALSE}
+library(devtools)
+devtools:::install_github("eric-ward/tvvarss")
+```
+
+```{r install}
+library(rstan)
+library(tvvarss)
+# for optimizing stan on your machine,
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+```
+
+## Data
+
+```{r}
+library(MARSS)
+data(ivesDataByWeek)
+# data from west long lake (low planktivory)
+dat = ivesDataByWeek[,c("Large Phyto", "Small Phyto", "Daphnia", "Non-daphnia")]
+# log transform
+dat = log(dat)
+```
+
+## Fitting
+
+```{r, eval = FALSE}
+B = matrix("zero",nn,nn)
+diag(B) = "dd"
+B[1,2] = "td"
+B[2,c(3,4)] = "td"
+B[4,2] = "bu"
+if(file.exists("vignettes/ives.rds")) {
+stanmod = tvvarss(y = dat, B = B, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 200, mcmc_warmup = 100, mcmc_thin = 1, mcmc_chain = 3)
+saveRDS(stanmod, "vignettes/ives.rds")
+}
+```
+
+## Validation
+
+```{r, eval = FALSE}
+stanmod = readRDS("vignettes/ives.rds")
+Best = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), mean)
+Blow = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), quantile,0.025)
+Bhigh = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), quantile, 0.975)
+
+par(mfrow = c(ncol(dat),ncol(dat)), mgp=c(2,1,0), mai=c(0.1,0.1,0.1,0.1))
+for(i in 1:ncol(dat)) {
+  for(j in 1:ncol(dat)) {
+  plot(Best[,i,j], type="l", ylim=range(c(Blow[,i,j], Bhigh[,i,j])), lwd=3)
+    lines(Blow[,i,j])
+    lines(Bhigh[,i,j])
+  }
+}
+```
+
+```{r, eval = FALSE}
+pred = apply(extract(stanmod, c("pred"))$pred, c(3,4), mean)
+
+par(mfrow = c(2,2), mgp=c(2,1,0), mai=c(0.3,0.3,0.1,0.1))
+for(i in 1:4) {
+  plot(pred[,i], type="l", ylim=range(c(dat_obs[,i], pred[,i])))
+  points(dat[,i], col="red")
+}
+```
+
+
