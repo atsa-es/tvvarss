@@ -43,10 +43,24 @@ B[5,c(1,3)] = "cf"
 B[6,c(1,5,7)] = "cf"
 B[7,c(1,5)] = "cf"
 
+## ------------------------------------------------------------------------
+vecY = c(lakeWAplankton_log)
+set.seed(100)
+test_ind = sample(1:length(vecY), 
+  size=round(0.1*length(vecY)), replace=F)
+
+training_data = vecY
+training_data[test_ind] = NA
+training_data = matrix(training_data, ncol=ncol(lakeWAplankton_log))
+
+test_data = vecY
+test_data[-test_ind] = NA
+test_data = matrix(test_data, ncol=ncol(lakeWAplankton_log))
+
 ## ----fitmodel------------------------------------------------------------
 # If model hasn't been run
 if(file.exists("vignettes/lakewa.rds")) {
-stanmod = tvvarss(y = lakeWAplankton_log, include_trend = FALSE, de_mean = TRUE, B = B, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3)
+stanmod = tvvarss(y = training_data, include_trend = FALSE, de_mean = TRUE, B = B, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3)
 
 saveRDS(stanmod, "vignettes/lakewa.rds")
 }

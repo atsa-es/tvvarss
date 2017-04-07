@@ -144,9 +144,22 @@ B[<span class="dv">7</span>,<span class="kw">c</span>(<span class="dv">1</span>,
 </div>
 <div id="fitting" class="section level2">
 <h2>Fitting</h2>
+<p>We’ll hold out a randomly sampled subset (10%) of the data for validation, and fit the model to remaining data as the training set.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vecY =<span class="st"> </span><span class="kw">c</span>(lakeWAplankton_log)
+<span class="kw">set.seed</span>(<span class="dv">100</span>)
+test_ind =<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span>:<span class="kw">length</span>(vecY), 
+  <span class="dt">size=</span><span class="kw">round</span>(<span class="fl">0.1</span>*<span class="kw">length</span>(vecY)), <span class="dt">replace=</span>F)
+
+training_data =<span class="st"> </span>vecY
+training_data[test_ind] =<span class="st"> </span><span class="ot">NA</span>
+training_data =<span class="st"> </span><span class="kw">matrix</span>(training_data, <span class="dt">ncol=</span><span class="kw">ncol</span>(lakeWAplankton_log))
+
+test_data =<span class="st"> </span>vecY
+test_data[-test_ind] =<span class="st"> </span><span class="ot">NA</span>
+test_data =<span class="st"> </span><span class="kw">matrix</span>(test_data, <span class="dt">ncol=</span><span class="kw">ncol</span>(lakeWAplankton_log))</code></pre></div>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># If model hasn't been run</span>
 if(<span class="kw">file.exists</span>(<span class="st">&quot;vignettes/lakewa.rds&quot;</span>)) {
-stanmod =<span class="st"> </span><span class="kw">tvvarss</span>(<span class="dt">y =</span> lakeWAplankton_log, <span class="dt">include_trend =</span> <span class="ot">FALSE</span>, <span class="dt">de_mean =</span> <span class="ot">TRUE</span>, <span class="dt">B =</span> B, <span class="dt">x0 =</span> <span class="ot">NULL</span>, <span class="dt">shared_q =</span> <span class="ot">NULL</span>, <span class="dt">shared_r =</span> <span class="ot">NULL</span>, <span class="dt">shared_u =</span> <span class="ot">NULL</span>, <span class="dt">mcmc_iter =</span> <span class="dv">3000</span>, <span class="dt">mcmc_warmup =</span> <span class="dv">2000</span>, <span class="dt">mcmc_thin =</span> <span class="dv">1</span>, <span class="dt">mcmc_chain =</span> <span class="dv">3</span>)
+stanmod =<span class="st"> </span><span class="kw">tvvarss</span>(<span class="dt">y =</span> training_data, <span class="dt">include_trend =</span> <span class="ot">FALSE</span>, <span class="dt">de_mean =</span> <span class="ot">TRUE</span>, <span class="dt">B =</span> B, <span class="dt">x0 =</span> <span class="ot">NULL</span>, <span class="dt">shared_q =</span> <span class="ot">NULL</span>, <span class="dt">shared_r =</span> <span class="ot">NULL</span>, <span class="dt">shared_u =</span> <span class="ot">NULL</span>, <span class="dt">mcmc_iter =</span> <span class="dv">3000</span>, <span class="dt">mcmc_warmup =</span> <span class="dv">2000</span>, <span class="dt">mcmc_thin =</span> <span class="dv">1</span>, <span class="dt">mcmc_chain =</span> <span class="dv">3</span>)
 
 <span class="kw">saveRDS</span>(stanmod, <span class="st">&quot;vignettes/lakewa.rds&quot;</span>)
 }</code></pre></div>
