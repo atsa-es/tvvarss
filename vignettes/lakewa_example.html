@@ -121,8 +121,8 @@ Non-daphnid cladocerans</p>
 (1) We use a state - space model, in place of the MAR model used by Hampton<br />
 (2) Missing values in our analysis are treated as NAs rather than interpolated<br />
 (3) For simplicity, we’re not including the effects of external covariates<br />
-(4) We allow interactions to be time - varying, while in the MAR model used by Hampton et al. (2006) these are static</p>
-<p>Like Hampton et al. 2006, we used monthly samples 1962-1994, and we replaced zeros in this data with small random values between zero and half the smallest value observed per taxa. Resulting values were log-transformed to achieve approximate normality.</p>
+(4) We allow interactions to be time - varying, while in the MAR model used by Hampton et al. (2006) these are static<br />
+(5) Hampton et al. 2006 replaced zeros in this data with small random values between zero and half the smallest value observed per taxa. Here, we replace zeros with NAs.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">for(i in <span class="dv">1</span>:<span class="kw">ncol</span>(lakeWAplankton)) {
   zeros =<span class="st"> </span><span class="kw">which</span>(lakeWAplankton[,i]==<span class="dv">0</span>)
   if(<span class="kw">length</span>(zeros)&gt;<span class="dv">0</span>) lakeWAplankton[zeros,i] =<span class="st"> </span><span class="ot">NA</span>

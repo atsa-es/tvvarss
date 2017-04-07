@@ -55,8 +55,7 @@ Several differences between our analysis of this food web and those presented by
 (2) Missing values in our analysis are treated as NAs rather than interpolated  
 (3) For simplicity, we're not including the effects of external covariates  
 (4) We allow interactions to be time - varying, while in the MAR model used by Hampton et al. (2006) these are static  
-
-Like Hampton et al. 2006, we used monthly samples 1962-1994, and we replaced zeros in this data with small random values between zero and half the smallest value observed per taxa. Resulting values were log-transformed to achieve approximate normality.
+(5) Hampton et al. 2006 replaced zeros in this data with small random values between zero and half the smallest value observed per taxa. Here, we replace zeros with NAs.
 
 ```{r, results="hide"}
 for(i in 1:ncol(lakeWAplankton)) {
