@@ -4,6 +4,7 @@ author: ''
 date: "Apr 3, 2017"
 output:
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -71,16 +72,19 @@ diag(B) = "dd"
 B[1,2] = "td"
 B[2,c(3,4)] = "td"
 B[4,2] = "bu"
-if(file.exists("vignettes/ives.rds")) {
+```
+
+```{r eval=FALSE, echo=FALSE}
+if(file.exists("ives.rds")) {
 stanmod = tvvarss(y = training_data, B = B, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3)
-saveRDS(stanmod, "vignettes/ives.rds")
+saveRDS(stanmod, "ives.rds")
 }
 ```
 
 ## Estimates
 
 ```{r, echo=FALSE, fig.pos="placeHere", fig.cap="Estimated B matrix of Ives et al. 2003"}
-stanmod = readRDS(file="../vignettes/ives.rds")
+stanmod = readRDS(file="ives.rds")
 
 Best = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), mean)
 Blow = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), quantile,0.025)
