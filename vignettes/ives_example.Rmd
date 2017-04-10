@@ -1,12 +1,9 @@
 ---
-title: "Simulated data in package tvvarss"
-author: "Eric Ward, Mark Scheuerell, Steve Katz"
+title: "Running 4-species food web in Ives et al. 2003 in package tvvarss"
+author: ''
 date: "Apr 3, 2017"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{tvvarss}
-  %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
+output:
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -15,12 +12,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Installation
 
-```{r, eval=FALSE}
+```{r, eval=FALSE, warning=FALSE, message=FALSE, results="hide"}
 library(devtools)
 devtools:::install_github("eric-ward/tvvarss")
 ```
 
-```{r install}
+```{r install, warning=FALSE, message=FALSE, results="hide" }
 library(rstan)
 library(tvvarss)
 # for optimizing stan on your machine,
@@ -33,18 +30,28 @@ options(mc.cores = parallel::detectCores())
 ```{r}
 library(MARSS)
 data(ivesDataByWeek)
+ivesDataByWeek = as.data.frame(ivesDataByWeek)
+# filter months 17 - 38
+ivesDataByWeek = ivesDataByWeek[which(ivesDataByWeek$`Year week` %in% seq(17,37)),]
 # data from west long lake (low planktivory)
-dat = ivesDataByWeek[,c("Large Phyto", "Small Phyto", "Daphnia", "Non-daphnia")]
-# log transform
-dat = log(dat)
-```
+spp = c("Large Phyto", "Small Phyto", "Daphnia", "Non-daphnia")
+dat = ivesDataByWeek[,spp]
 
+# log transform
+dat = as.matrix(log(dat))
+```
 
 ```{r}
 vecY = c(dat)
 set.seed(100)
-test_ind = sample(1:length(vecY), 
-  size=round(0.1*length(vecY)), replace=F)
+
+test_ind = matrix(0, nrow(dat), ncol(dat))
+# sample observations for each spp separately
+for(i in 1:ncol(dat)) {
+  pos = as.numeric(which(!is.na(dat[,i])))
+  test_ind[sample(pos, size=round(0.1*length(pos)), replace=F),i] = 1
+}
+test_ind = seq(1,ncol(dat)*nrow(dat))[which(test_ind==1)]
 
 training_data = vecY
 training_data[test_ind] = NA
@@ -55,9 +62,10 @@ test_data[-test_ind] = NA
 test_data = matrix(test_data, ncol=ncol(dat))
 ```
 
+
+```{r, eval = TRUE, echo=FALSE}
 ## Fitting
 
-```{r, eval = FALSE}
 B = matrix("zero",ncol(dat),ncol(dat))
 diag(B) = "dd"
 B[1,2] = "td"
@@ -69,10 +77,11 @@ saveRDS(stanmod, "vignettes/ives.rds")
 }
 ```
 
-## Validation
+## Estimates
 
-```{r, eval = FALSE}
-stanmod = readRDS("vignettes/ives.rds")
+```{r, echo=FALSE, fig.pos="placeHere", fig.cap="Estimated B matrix of Ives et al. 2003"}
+stanmod = readRDS(file="../vignettes/ives.rds")
+
 Best = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), mean)
 Blow = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), quantile,0.025)
 Bhigh = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), quantile, 0.975)
@@ -86,15 +95,51 @@ for(i in 1:ncol(dat)) {
   }
 }
 ```
+ 
+\break
 
-```{r, eval = FALSE}
+```{r, echo=FALSE, fig.pos="placeHere", fig.cap = "Model fitted values (line) and training (red) and test (blue) data sets."}
 pred = apply(extract(stanmod, c("pred"))$pred, c(3,4), mean)
 
-par(mfrow = c(2,2), mgp=c(2,1,0), mai=c(0.3,0.3,0.1,0.1))
+predlow = apply(extract(stanmod, c("pred"))$pred, c(3,4), quantile, 0.025)
+predhi = apply(extract(stanmod, c("pred"))$pred, c(3,4), quantile, 0.975)
+
+par(mfrow = c(2,2), mgp=c(2,1,0), mai=c(0.3,0.3,0.2,0.1))
 for(i in 1:4) {
-  plot(pred[,i], type="l", ylim=range(c(dat_obs[,i], pred[,i])))
-  points(dat[,i], col="red")
+  plot(pred[,i], type="l", ylim=range(c(dat[,i], pred[,i], predlow[,i], predhi[,i]), na.rm=T), lwd=2, main = spp[i])
+  lines(predlow[,i])
+  lines(predhi[,i])  
+  points(training_data[,i], col="red")
+  points(test_data[,i], col="blue")
+}
+```
+
+\break  
+
+## Validation
+
+```{r, echo=FALSE, fig.pos="placeHere", fig.cap="Observed (training data) vs. Predicted"}
+par(mfrow = c(2,2), mgp=c(2,1,0), mai=c(0.5,0.5,0.3,0.1))
+for(i in 1:4) {
+  plot(training_data[,i], pred[,i], type="p", ylim=range(c(predlow[,i], pred[,i], predhi[,i]), na.rm=T), ylab="Predicted", xlab="Observed",col="white", main=spp[i])
+  for(j in 1:nrow(training_data)) {
+  lines(c(training_data[j,i], training_data[j,i]), c(predlow[j,i], predhi[j,i]), col="grey")
+  }
+  points(training_data[,i], pred[,i], col="red")
+  abline(0,1)
 }
 ```
 
 
+```{r, echo=FALSE, fig.pos="placeHere", fig.cap="Predicted vs Observed (test data)"}
+
+par(mfrow = c(2,2), mgp=c(2,1,0), mai=c(0.5,0.5,0.3,0.1))
+for(i in 1:4) {
+  plot(test_data[,i], pred[,i], type="p", ylim=range(c(predlow[,i], pred[,i], predhi[,i]), na.rm=T), ylab="Predicted", xlab="Observed",col="white", main=spp[i])
+  for(j in 1:nrow(training_data)) {
+  lines(c(test_data[j,i], test_data[j,i]), c(predlow[j,i], predhi[j,i]), col="grey")
+  }
+  points(test_data[,i], pred[,i], col="blue")
+  abline(0,1)
+}
+```
