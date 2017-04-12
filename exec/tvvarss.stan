@@ -23,6 +23,7 @@ data {
   int family;
   int<lower=0> b_indices[(n_spp*n_spp)];
   matrix[4,2] b_limits;
+  int<lower=0> fit_dynamicB;
 }
 parameters {
   vector[(n_spp*n_spp)] vecBdev[n_year]; # elements accessed [n_year,n_spp]
@@ -65,7 +66,8 @@ transformed parameters {
     for(i in 1:(n_spp*n_spp)) {
       # top down (td) interactions
       B[t-1,row_indices[i],col_indices[i]] = (b_limits[b_indices[i],2] - b_limits[b_indices[i],1]) * exp(vecB[t-1,i])/(1+exp(vecB[t-1,i])) + b_limits[b_indices[i],1];
-      vecB[t,i] = vecB[t-1,i] + vecBdev[t-1,i]; # random walk in b elements
+      # if user wants constant b matrix, vecB[t] = vecB[t-1]
+      vecB[t,i] = vecB[t-1,i] + (fit_dynamicB)*vecBdev[t-1,i]; # random walk in b elements
     }
 
     #for(i in 1:(n_spp*n_spp)) {
@@ -128,14 +130,13 @@ model {
   }
 
 }
-#generated quantities {
-#  vector[n_pos] log_lik;
-#  # for use in loo() package
-#  if(family==1) for (n in 1:n_pos) log_lik[n] = normal_lpdf(y[n] | x[site_in#dices_pos[n],year_indices_pos[n],spp_indices_pos[n]], obs_mat[spp_indices_po#s[n],site_indices_pos[n]]);
-#  if(family==2) for (n in 1:n_pos) log_lik[n] = bernoulli_lpmf(y_int[n] | #inv_logit(x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]]) );
-#  if(family==3) for (n in 1:n_pos) log_lik[n] = poisson_lpmf(y_int[n] | exp#
-#(x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]]) );
-#  if(family==4) for (n in 1:n_pos) log_lik[n] = gamma_lpdf(y[n] | obs_mat[sp#p_indices_pos[n],site_indices_pos[n]], obs_mat[spp_indices_pos[n],site_indic#es_pos[n]] ./ x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]]##);
-#  if(family==5) for (n in 1:n_pos) log_lik[n] = lognormal_lpdf(y[n] | #x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]], obs_mat[spp_i#ndices_pos[n],site_indices_pos[n]]);
-#}
+generated quantities {
+  vector[n_pos] log_lik;
+  # for use in loo() package
+  if(family==1) for (n in 1:n_pos) log_lik[n] = normal_lpdf(y[n] | x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]], obs_mat[spp_indices_pos[n],site_indices_pos[n]]);
+  if(family==2) for (n in 1:n_pos) log_lik[n] = bernoulli_lpmf(y_int[n] | inv_logit(x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]]) );
+  if(family==3) for (n in 1:n_pos) log_lik[n] = poisson_lpmf(y_int[n] | exp(x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]]) );
+  if(family==4) for (n in 1:n_pos) log_lik[n] = gamma_lpdf(y[n] | obs_mat[spp_indices_pos[n],site_indices_pos[n]], obs_mat[spp_indices_pos[n],site_indices_pos[n]] ./ x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]]);
+  if(family==5) for (n in 1:n_pos) log_lik[n] = lognormal_lpdf(y[n] | x[site_indices_pos[n],year_indices_pos[n],spp_indices_pos[n]], obs_mat[spp_indices_pos[n],site_indices_pos[n]]);
+}
 
