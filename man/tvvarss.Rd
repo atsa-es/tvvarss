@@ -6,7 +6,8 @@
 \usage{
 tvvarss(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL,
   shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000,
-  mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3, family = "gaussian")
+  mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3, family = "gaussian",
+  dynamicB = TRUE)
 }
 \arguments{
 \item{y}{The data (array, with dimensions = site, year, species)}
@@ -34,6 +35,8 @@ tvvarss(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL,
 \item{mcmc_chain}{MCMC chains, defaults to 3}
 
 \item{family}{observation model, defaults to 'gaussian'}
+
+\item{dynamicB}{boolean, whether to fit a dynamic B matrix that varies through time (or a static B matrix that doesn't), defaults to TRUE}
 }
 \value{
 an object of class 'stanfit'

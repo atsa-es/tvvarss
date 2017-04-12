@@ -13,12 +13,12 @@
 #' @param mcmc_thin MCMC thin, defaults to 1
 #' @param mcmc_chain MCMC chains, defaults to 3
 #' @param family observation model, defaults to 'gaussian'
-
+#' @param dynamicB boolean, whether to fit a dynamic B matrix that varies through time (or a static B matrix that doesn't), defaults to TRUE
 #'
 #' @return an object of class 'stanfit'
 #' @export
 #'
-tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3, family="gaussian") {
+tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3, family="gaussian", dynamicB=TRUE) {
 
   dist = c("gaussian", "binomial", "poisson", "gamma", "lognormal")
   family = which(dist==family)
@@ -118,6 +118,8 @@ tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL
   stan_dir = find.package("tvvarss")
   model = paste0(stan_dir, "/exec/tvvarss.stan")
 
+  fit_dynamicB = as.integer(dynamicB) # convert 0 or 1
+
   datalist = list(n_year,
     n_spp,
     n_site,
@@ -141,7 +143,8 @@ tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL
     y_int,
     family,
     b_indices,
-    b_limits)
+    b_limits,
+    fit_dynamicB)
 
   pars = c("sigma_rw_pars", "resid_process_sd", "obs_sd", "B", "pred")
   if(include_trend) pars = c(pars, "u")
