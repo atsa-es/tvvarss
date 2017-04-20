@@ -14,13 +14,10 @@ Description: The tvvarss package uses Stan (mc-stan.org) to fit multi-site
 License: GPL (>=3)
 Encoding: UTF-8
 LazyData: true
+Depends: R (>= 3.0.2), Rcpp (>= 0.12.10), methods
+Imports: rstan (>= 2.14.2), rstantools (>= 1.2.0), MASS
+LinkingTo: StanHeaders (>= 2.14.0.1), rstan (>= 2.14.2), BH (>= 1.62.0.1), Rcpp (>= 0.12.10), RcppEigen (>= 0.3.2.9.1)
 RoxygenNote: 6.0.1
-Depends:
-    Rcpp,
-    rstan,
-    MASS
-Imports:
-    rstan (>= 2.12.0)
 Suggests:
     knitr,
     rmarkdown

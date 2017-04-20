@@ -3,5 +3,7 @@
 export(sim2fit)
 export(simTVVAR)
 export(tvvarss)
-importFrom(MASS,mvrnorm)
+import(Rcpp)
+import(methods)
+import(rstan)
 importFrom(stats,rnorm)

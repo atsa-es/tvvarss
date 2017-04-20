@@ -77,7 +77,6 @@
 #' matplot(t(cp2$states),type="l")
 #'
 #' @importFrom stats rnorm
-#' @importFrom MASS mvrnorm
 #'
 #' @export
 simTVVAR <- function(B0, TT, var_QX, cov_QX, var_QB, cov_QB = 0,
@@ -128,7 +127,7 @@ simTVVAR <- function(B0, TT, var_QX, cov_QX, var_QB, cov_QB = 0,
     XX[,1] <- X0
   }
   ## proc errors for states
-  WW_XX <- t(mvrnorm(TT, matrix(0, nn, 1), QQ_XX))
+  WW_XX <- t(MASS::mvrnorm(TT, matrix(0, nn, 1), QQ_XX))
   ## BB
   if (length(dim(B0)) == 2) {
     ## then B0 is food web topology
@@ -153,7 +152,7 @@ simTVVAR <- function(B0, TT, var_QX, cov_QX, var_QB, cov_QB = 0,
     })
     BB[, , 1][i_cf] <- plogis(rnorm(sum(i_cf), 0, 1)) * 2 - 1
     ## proc errors for BB
-    WW_BB <- t(mvrnorm(TT, matrix(0, nn*nn, 1), QQ_BB))
+    WW_BB <- t(MASS::mvrnorm(TT, matrix(0, nn*nn, 1), QQ_BB))
     WW_BB[which(BB[,,1] == 0), ] <- 0
   } else {
     ## B0 is a passed [n x n x T] array of interaction strengths

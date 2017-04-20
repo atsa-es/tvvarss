@@ -4,15 +4,15 @@
 \alias{sim2fit}
 \title{Simulate TVVAR model and add observation error}
 \usage{
-sim2fit(obj, n_sim, sd = 0.1)
+sim2fit(obj, n_sims, sd = 0.1)
 }
 \arguments{
 \item{obj}{A fitted \code{simTVVAR} object.}
 
-\item{n_sim}{The number of realizations of the TVVAR process.}
-
 \item{sd}{The standard deviation of the Gaussian observation errors.
 Can be set to 0 for no observation error.}
+
+\item{n_sims}{The number of realizations of the TVVAR process.}
 }
 \value{
 An array with dimensions \code{c(n_sim, TT, n_spp)}.

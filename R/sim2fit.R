@@ -8,7 +8,7 @@
 #' obsveration errors.
 #'
 #' @param obj A fitted \code{simTVVAR} object.
-#' @param n_sim The number of realizations of the TVVAR process.
+#' @param n_sims The number of realizations of the TVVAR process.
 #' @param sd The standard deviation of the Gaussian observation errors.
 #'   Can be set to 0 for no observation error.
 #'
@@ -34,8 +34,8 @@
 #' @importFrom stats rnorm
 #'
 #' @export
-sim2fit <- function(obj, n_sim, sd=0.1) {
-  if(n_sim < 1 | round(n_sims) - n_sims != 0) {
+sim2fit <- function(obj, n_sims, sd=0.1) {
+  if(n_sims < 1 | round(n_sims) - n_sims != 0) {
     stop("'n_sims' must be a positive integer.")
   }
   if(sd < 0) {
@@ -43,8 +43,8 @@ sim2fit <- function(obj, n_sim, sd=0.1) {
   }
   nC <- ncol(obj$states)-1
   nR <- nrow(obj$states)
-  yy <- array(NA,c(n_sim,nC,nR))
-  for(i in 1:n_sim) {
+  yy <- array(NA,c(n_sims,nC,nR))
+  for(i in 1:n_sims) {
     yy[i,,] <- t(eval(as.expression(obj$call))$states[,-1]) + matrix(rnorm(nC*nR,0,sd),nC,nR)
   }
   return(yy)
