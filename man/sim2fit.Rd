@@ -9,10 +9,10 @@ sim2fit(obj, n_sims, sd = 0.1)
 \arguments{
 \item{obj}{A fitted \code{simTVVAR} object.}
 
+\item{n_sims}{The number of realizations of the TVVAR process.}
+
 \item{sd}{The standard deviation of the Gaussian observation errors.
 Can be set to 0 for no observation error.}
-
-\item{n_sims}{The number of realizations of the TVVAR process.}
 }
 \value{
 An array with dimensions \code{c(n_sim, TT, n_spp)}.

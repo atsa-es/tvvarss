@@ -22,7 +22,7 @@
 #' @import Rcpp
 #'
 tvvarss <- function(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3, family="gaussian", dynamicB=TRUE) {
-
+  #@useDynLib tvvarss, .registration = TRUE
   dist = c("gaussian", "binomial", "poisson", "gamma", "lognormal")
   family = which(dist==family)
 
