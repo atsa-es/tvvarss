@@ -158,15 +158,15 @@ test_data =<span class="st"> </span>vecY
 test_data[-test_ind] =<span class="st"> </span><span class="ot">NA</span>
 test_data =<span class="st"> </span><span class="kw">matrix</span>(test_data, <span class="dt">ncol=</span><span class="kw">ncol</span>(lakeWAplankton_log))</code></pre></div>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># If model hasn't been run</span>
-if(<span class="kw">file.exists</span>(<span class="st">&quot;vignettes/lakewa.rds&quot;</span>)) {
+if(!<span class="kw">file.exists</span>(<span class="st">&quot;../vignettes/lakewa.rds&quot;</span>)) {
 stanmod =<span class="st"> </span><span class="kw">tvvarss</span>(<span class="dt">y =</span> training_data, <span class="dt">include_trend =</span> <span class="ot">FALSE</span>, <span class="dt">de_mean =</span> <span class="ot">TRUE</span>, <span class="dt">B =</span> B, <span class="dt">x0 =</span> <span class="ot">NULL</span>, <span class="dt">shared_q =</span> <span class="ot">NULL</span>, <span class="dt">shared_r =</span> <span class="ot">NULL</span>, <span class="dt">shared_u =</span> <span class="ot">NULL</span>, <span class="dt">mcmc_iter =</span> <span class="dv">300</span>, <span class="dt">mcmc_warmup =</span> <span class="dv">200</span>, <span class="dt">mcmc_thin =</span> <span class="dv">1</span>, <span class="dt">mcmc_chain =</span> <span class="dv">3</span>)
 
-<span class="kw">saveRDS</span>(stanmod, <span class="st">&quot;vignettes/lakewa.rds&quot;</span>)
+<span class="kw">saveRDS</span>(stanmod, <span class="st">&quot;../vignettes/lakewa.rds&quot;</span>)
 }</code></pre></div>
 </div>
 <div id="plotting" class="section level2">
 <h2>Plotting</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">stanmod =<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;vignettes/lakewa.rds&quot;</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">stanmod =<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;../vignettes/lakewa.rds&quot;</span>)
 
 Best =<span class="st"> </span><span class="kw">apply</span>(<span class="kw">extract</span>(stanmod, <span class="kw">c</span>(<span class="st">&quot;B&quot;</span>))$B, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>), mean)
 Blow =<span class="st"> </span><span class="kw">apply</span>(<span class="kw">extract</span>(stanmod, <span class="kw">c</span>(<span class="st">&quot;B&quot;</span>))$B, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>), quantile,<span class="fl">0.025</span>)

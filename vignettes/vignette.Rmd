@@ -115,6 +115,5 @@ We'll use the `loo` package for model selection. The Leave One Out Information C
 ```{r, eval=FALSE}
 library(loo)
 loo(extract_log_lik(fitted_model))$looic
-
 ```
 

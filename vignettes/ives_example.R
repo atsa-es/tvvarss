@@ -55,19 +55,19 @@ B[2,c(3,4)] = "td"
 B[4,2] = "bu"
 
 ## ----eval=FALSE, echo=FALSE----------------------------------------------
-#  if(file.exists("ives_constantB.rds")) {
+#  if(!file.exists("../vignettes/ives_constantB.rds")) {
 #  stanmod = tvvarss(y = training_data, B = B, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3, dynamicB=FALSE)
-#  saveRDS(stanmod, "ives_constantB.rds")
+#  saveRDS(stanmod, "../vignettes/ives_constantB.rds")
 #  }
 #  
-#  if(file.exists("ives.rds")) {
+#  if(!file.exists("../vignettes/ives.rds")) {
 #  stanmod = tvvarss(y = training_data, B = B, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3)
-#  saveRDS(stanmod, "ives.rds")
+#  saveRDS(stanmod, "../vignettes/ives.rds")
 #  }
 
 ## ---- echo=FALSE, fig.pos="placeHere", fig.cap="Estimated B matrix of Ives et al. 2003. Black lines represent mean estimates, and 95% CIs; purple dashed lines represent the mean estimates from a model with static B."----
-stanmod = readRDS(file="ives.rds")
-stanmod_constant = readRDS(file="ives_constantB.rds")
+stanmod = readRDS(file="../vignettes/ives.rds")
+stanmod_constant = readRDS(file="../vignettes/ives_constantB.rds")
 Best = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), mean)
 Blow = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), quantile,0.025)
 Bhigh = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), quantile, 0.975)

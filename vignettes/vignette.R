@@ -45,5 +45,4 @@ matrix(seq(1,7*3), 7, 3)
 ## ---- eval=FALSE---------------------------------------------------------
 #  library(loo)
 #  loo(extract_log_lik(fitted_model))$looic
-#  
 
