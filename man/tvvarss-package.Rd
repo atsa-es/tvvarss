@@ -1,6 +1,6 @@
 \name{tvvarss-package}
 \alias{tvvarss-package}
-\alias{tvvarss}
+\alias{tvvarss-package}
 \docType{package}
 \title{
 \packageTitle{tvvarss}

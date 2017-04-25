@@ -1,32 +1,18 @@
----
-title: "ives_examples"
-author: ""
-date: "April 19, 2017"
-output: pdf_document
----
-
-```{r setup, include=FALSE}
+## ----setup, include=FALSE------------------------------------------------
 knitr::opts_chunk$set(echo = TRUE)
-```
 
-## Installation
+## ---- eval=FALSE, warning=FALSE, message=FALSE, results="hide"-----------
+#  library(devtools)
+#  devtools:::install_github("eric-ward/tvvarss")
 
-```{r, eval=FALSE, warning=FALSE, message=FALSE, results="hide"}
-library(devtools)
-devtools:::install_github("eric-ward/tvvarss")
-```
-
-```{r install, warning=FALSE, message=FALSE, results="hide" }
+## ----install, warning=FALSE, message=FALSE, results="hide"---------------
 library(rstan)
 library(tvvarss)
 # for optimizing stan on your machine,
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
-```
 
-## Data
-
-```{r}
+## ------------------------------------------------------------------------
 library(MARSS)
 data(ivesDataByWeek)
 ivesDataByWeek = as.data.frame(ivesDataByWeek)
@@ -38,9 +24,8 @@ dat = ivesDataByWeek[,spp]
 
 # log transform
 dat = as.matrix(log(dat))
-```
 
-```{r}
+## ------------------------------------------------------------------------
 vecY = c(dat)
 set.seed(100)
 
@@ -59,10 +44,8 @@ training_data = matrix(training_data, ncol=ncol(dat))
 test_data = vecY
 test_data[-test_ind] = NA
 test_data = matrix(test_data, ncol=ncol(dat))
-```
 
-
-```{r, eval = TRUE, echo=FALSE}
+## ---- eval = TRUE, echo=FALSE--------------------------------------------
 ## Fitting
 
 B = matrix("zero",ncol(dat),ncol(dat))
@@ -70,25 +53,21 @@ diag(B) = "dd"
 B[1,2] = "td"
 B[2,c(3,4)] = "td"
 B[4,2] = "bu"
-```
 
-```{r eval=FALSE, echo=FALSE}
-if(file.exists("vignettes/ives_constantB.rds")) {
-stanmod = tvvarss(y = training_data, B = B, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3, dynamicB=FALSE)
-saveRDS(stanmod, "vignettes/ives_constantB.rds")
-}
+## ----eval=FALSE, echo=FALSE----------------------------------------------
+#  if(file.exists("ives_constantB.rds")) {
+#  stanmod = tvvarss(y = training_data, B = B, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3, dynamicB=FALSE)
+#  saveRDS(stanmod, "ives_constantB.rds")
+#  }
+#  
+#  if(file.exists("ives.rds")) {
+#  stanmod = tvvarss(y = training_data, B = B, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3)
+#  saveRDS(stanmod, "ives.rds")
+#  }
 
-if(file.exists("vignettes/ives.rds")) {
-stanmod = tvvarss(y = training_data, B = B, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3)
-saveRDS(stanmod, "vignettes/ives.rds")
-}
-```
-
-## Estimates
-
-```{r, echo=FALSE, fig.pos="placeHere", fig.cap="Estimated B matrix of Ives et al. 2003. Black lines represent mean estimates, and 95% CIs; purple dashed lines represent the mean estimates from a model with static B."}
-stanmod = readRDS(file="vignettes/ives.rds")
-stanmod_constant = readRDS(file="vignettes/ives_constantB.rds")
+## ---- echo=FALSE, fig.pos="placeHere", fig.cap="Estimated B matrix of Ives et al. 2003. Black lines represent mean estimates, and 95% CIs; purple dashed lines represent the mean estimates from a model with static B."----
+stanmod = readRDS(file="ives.rds")
+stanmod_constant = readRDS(file="ives_constantB.rds")
 Best = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), mean)
 Blow = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), quantile,0.025)
 Bhigh = apply(extract(stanmod, c("B"))$B, c(2, 3, 4), quantile, 0.975)
@@ -104,11 +83,8 @@ for(i in 1:ncol(dat)) {
     lines(Best_constant[,i,j], col="purple", lwd=2, lty=3)
   }
 }
-```
- 
-\break
 
-```{r, echo=FALSE, fig.pos="placeHere", fig.cap = "Model fitted values (line) and training (red) and test (blue) data sets. Grey lines represent the estimates from a model with static B."}
+## ---- echo=FALSE, fig.pos="placeHere", fig.cap = "Model fitted values (line) and training (red) and test (blue) data sets. Grey lines represent the estimates from a model with static B."----
 pred = apply(extract(stanmod, c("pred"))$pred, c(3,4), mean)
 predlow = apply(extract(stanmod, c("pred"))$pred, c(3,4), quantile, 0.025)
 predhi = apply(extract(stanmod, c("pred"))$pred, c(3,4), quantile, 0.975)
@@ -129,13 +105,8 @@ for(i in 1:4) {
   points(training_data[,i], col="red")
   points(test_data[,i], col="blue")
 }
-```
 
-\break  
-
-## Validation
-
-```{r, echo=FALSE, fig.pos="placeHere", fig.cap="Observed (training data) vs. Predicted. Red points represent predictions for dynamic B model; purple points represent predictions for static B model."}
+## ---- echo=FALSE, fig.pos="placeHere", fig.cap="Observed (training data) vs. Predicted. Red points represent predictions for dynamic B model; purple points represent predictions for static B model."----
 par(mfrow = c(2,2), mgp=c(2,1,0), mai=c(0.5,0.5,0.3,0.1))
 for(i in 1:4) {
   plot(training_data[,i], pred[,i], type="p", ylim=range(c(predlow[,i], pred[,i], predhi[,i]), na.rm=T), ylab="Predicted", xlab="Observed",col="white", main=spp[i])
@@ -148,10 +119,8 @@ for(i in 1:4) {
   points(training_data[,i], pred_constant[,i], col="purple")
   abline(0,1)
 }
-```
 
-
-```{r, echo=FALSE, fig.pos="placeHere", fig.cap="Predicted vs Observed (test data). Purple points represent estimates for static B model."}
+## ---- echo=FALSE, fig.pos="placeHere", fig.cap="Predicted vs Observed (test data). Purple points represent estimates for static B model."----
 
 par(mfrow = c(2,2), mgp=c(2,1,0), mai=c(0.5,0.5,0.3,0.1))
 for(i in 1:4) {
@@ -163,10 +132,8 @@ for(i in 1:4) {
   points(test_data[,i], pred_constant[,i], col="purple")
   abline(0,1)
 }
-```
 
-
-```{r, echo=FALSE, fig.pos="placeHere", fig.cap="Comparison of CIs (test data) from static vs dynamic B model"}
+## ---- echo=FALSE, fig.pos="placeHere", fig.cap="Comparison of CIs (test data) from static vs dynamic B model"----
 
 par(mfrow = c(2,2), mgp=c(2,1,0), mai=c(0.5,0.5,0.3,0.1))
 for(i in 1:4) {
@@ -174,4 +141,4 @@ for(i in 1:4) {
   
   abline(0,1)
 }
-```
+

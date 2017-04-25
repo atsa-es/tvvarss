@@ -2,9 +2,11 @@
 title: "Running 4-species food web in Ives et al. 2003 in package tvvarss"
 author: ''
 date: "Apr 3, 2017"
-output:
-  pdf_document: default
-  html_document: default
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tvvarss}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include=FALSE}
