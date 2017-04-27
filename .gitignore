@@ -16,3 +16,7 @@
 exec/.Rapp.history
 
 vignettes/lakewa.rds
+
+vignettes/ives.rds
+
+vignettes/ives_constantB.rds
