@@ -1,2 +1,5 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^paper_ex$
+^vignettes\/.*\.rds
+^docs$

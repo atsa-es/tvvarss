@@ -76,7 +76,7 @@
 #' cp2 <- simTVVAR(cp$B_mat,TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
 #' matplot(t(cp2$states),type="l")
 #'
-#' @importFrom stats rnorm
+#' @importFrom stats plogis qlogis rnorm runif
 #'
 #' @export
 simTVVAR <- function(B0, TT, var_QX, cov_QX, var_QB, cov_QB = 0,

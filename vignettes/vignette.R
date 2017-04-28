@@ -3,10 +3,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## ----install, eval=FALSE-------------------------------------------------
 #  library(rstan)
-#  library(devtools)
-#  devtools::install_github("eric-ward/tvvarss")
 #  library(tvvarss)
-#  # for optimizing stan on your machine,
+#  ## for optimizing stan on your machine,
 #  rstan_options(auto_write = TRUE)
 #  options(mc.cores = parallel::detectCores())
 
