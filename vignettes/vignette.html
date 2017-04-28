@@ -4,7 +4,7 @@
 
 <head>
 
-<meta charset="utf-8">
+<meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 
@@ -77,10 +77,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="installation" class="section level2">
 <h2>Installation</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(rstan)
-<span class="kw">library</span>(devtools)
-devtools::<span class="kw">install_github</span>(<span class="st">&quot;eric-ward/tvvarss&quot;</span>)
 <span class="kw">library</span>(tvvarss)
-<span class="co"># for optimizing stan on your machine,</span>
+## for optimizing stan on your machine,
 <span class="kw">rstan_options</span>(<span class="dt">auto_write =</span> <span class="ot">TRUE</span>)
 <span class="kw">options</span>(<span class="dt">mc.cores =</span> parallel::<span class="kw">detectCores</span>())</code></pre></div>
 </div>
