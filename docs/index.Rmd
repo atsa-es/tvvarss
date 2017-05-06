@@ -1,5 +1,5 @@
 ---
-title: "TVVARSS simulation and fitting"
+title: "Simulating and fitting TVVARSS models"
 output:
   html_document:
     theme: cerulean
@@ -25,7 +25,7 @@ Fill in some background info.
 
 # Requirements
 
-All analyses require the [R software](https://cran.r-project.org/) (v3.3) for data simulation, processing, and summarizing model results, and the [Stan software](http://mc-stan.org/) for Hamiltonian Monte Carlo (HMC) simulation. Please note that some of the R code below may not work with older versions of JAGS due to some changes in the ways that arrays are handled.
+All analyses require the [R software](https://cran.r-project.org/) (v3.3) for data simulation, processing, and summarizing model results, and the [Stan software](http://mc-stan.org/) (v2.14.2) for Hamiltonian Monte Carlo (HMC) simulation. Please note that some of the R code below may not work with older versions of JAGS due to some changes in the ways that arrays are handled.
 
 We also need a few packages that are not included with the base installation of R, so we begin by installing them (if necessary) and then loading them.
 
