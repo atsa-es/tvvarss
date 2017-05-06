@@ -1,7 +1,7 @@
 ---
-title: "Package tvvarss"
+title: "Using the `tvvarss` package"
 author: "Eric Ward, Mark Scheuerell, Steve Katz"
-date: "February 14, 2017"
+date: "Apr 3, 2017"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{tvvarss}
@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Installation
 
-```{r install, eval=FALSE}
+```{r install}
 library(rstan)
 library(tvvarss)
 ## for optimizing stan on your machine,
@@ -23,17 +23,9 @@ rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 ```
 
-## Data
-
-The `tvvarss` package takes data as a 3 dimensional array (sites, years, species). Missing values can be included as `NA`.
-
-```{r data}
-y = array(rnorm(240), dim=c(3, 20, 4))
-```
-
 ## Model Fitting
 
-The single function to run the `tvvarss` Stan models is 
+There is a single function to fit TVVARSS models: `tvvarss`. At a minimum, the user needs to specify the time series data as an array `y` where `dim(y) = c(n_sites, n_year, n_species)`.
 
 ```{r function, echo=TRUE, eval=FALSE}
 tvvarss(y = y)
@@ -42,76 +34,100 @@ tvvarss(y = y)
 The full set of function options is
 
 ```{r function2, echo=TRUE, eval=FALSE}
-tvvarss(y = y, include_trend = TRUE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3)
+tvvarss(y = y, include_trend = TRUE, de_mean = TRUE, x0 = NULL,
+        shared_q = NULL, shared_r = NULL, shared_u = NULL,
+        mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3)
 ```
 
-The MCMC parameters are straightforward (and need to be set to much smaller models than the same models in JAGS). However, the remaining parameters are useful for changing the model structure. 
+The sampling parameters with the `mcmc_` prefix are straightforward (and need to be set to much smaller models than the same models in JAGS). However, the remaining parameters are useful for changing the model structure. 
 
-### Initial states
-The location or mean of the prior on initial states defaults to being centered on the observed data, but can be modified with the `x0` argument (or 0s if any NAs are present in the first time step). This can be modified by passing in a matrix (dimensioned sites by species). For a 4 site / 3 species model, where the initial log abundance for the 2nd species was thought to be near 10, and the initial log abundance for the 3rd species was thought to be near 5, this could be something like: 
+## Data (1 site)
 
-```{r, echo=FALSE}
-matrix(c(rep(0,4), rep(10,4), rep(5,4)), 4, 3)
+```{r sim_proc}
+set.seed(123)
+## number of time steps
+TT <- 30
+## number of spp/guilds
+nn <- 4
+## CASE 1: linear food chain
+B0_lfc <- matrix(list(0),nn,nn)
+for(i in 1:(nn-1)) {
+  B0_lfc[i,i+1] <- "td"
+  B0_lfc[i+1,i] <- "bu"
+}
+for(i in 1:nn) {
+  B0_lfc[i,i] = "dd"
+}
+## simulate & plot states
+lfc <- simTVVAR(B0_lfc,TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
+matplot(t(lfc$states),type="l")
 ```
 
+## Observation Error
 
-### Trends
-Including linear trends in the process equation is optional, and can be turned off by setting 
-`include_trend = FALSE`. By default, they're estimated. Second, trends may be shared across species or sites. By default, they're shared across sites but unique to each species. To change this, alternative forms may be specified by changing the structure of `shared_u`, dimensioned as a species x site matrix. As an example, with 3 sites and 7 species, the matrix defaults to 
+We can use the `sim2fit` function to add observation error to the simulated process. It requires a `simTVVAR` object and the number of desired realizations of the process.
 
-```{r, echo=FALSE}
-matrix(rep(1:7,3), 7, 3)
+```{r add_obs_err}
+dat_obs = sim2fit(lfc, n_sims = 1)
 ```
 
-Each species in each site could have a unique trend, and to do this the `shared_u` matrix could be input as 
+## Fitting
 
-```{r, echo=FALSE}
-matrix(seq(1,7*3), 7, 3)
+Now we can use `tvvarss` to estimate the parameters in the model.
+
+```{r, eval = FALSE}
+mod_fit = tvvarss(y = dat_obs, B = B, include_trend = FALSE, de_mean = TRUE, x0 = NULL,
+                  shared_q = NULL, shared_r = NULL, shared_u = NULL,
+                  mcmc_iter = 200, mcmc_warmup = 100, mcmc_thin = 1, mcmc_chain = 1)
 ```
 
-Each unique integer is treated as a unique parameter to be estimated. 
+## Validation
 
-For the process model, we also use `de_mean=TRUE` to specify whether the states are de-meaned or not before multiplication via the **B** matrix. When this option is used, the model can be written as ${ X }_{ t+1 }=B\cdot { \left( { X }_{ t }-E[{ X }_{ t }] \right) }$, and when the states are de-meaned, the model becomes ${ X }_{ t+1 }=B\cdot { X }_{ t }$.
-
-### Variances
-
-Both process and observation variances may be specied similarly to how we specify trends. The process variance matrix has the same dimension as `shared_u` but is called `shared_q`. It also defaults to unique species trends, shared across sites. Similarly, the observation variance can be altered by inputting `shared_r`, which has the same dimension as the matrices for the process variance and trend. 
-
-Putting it all together, we could run a model with a single process variance, observation error, and trend parameter (shared across sites and species) for a dataset with 4 species and 3 sites as 
-
-```{r, eval=FALSE}
-tvvarss(y, shared_q = matrix(1, 4, 3), shared_r = matrix(1, 4, 3), shared_u = matrix(1, 4, 3))
+```{r, eval = FALSE}
+## extract fitted values
+pred = apply(extract(mod_fit, c("pred"))$pred, c(3,4), mean)
+## plot observations and estimated states
+par(mfrow = c(2,2), mgp=c(2,1,0), mai=c(0.3,0.3,0.1,0.1))
+for(i in 1:4) {
+  plot(pred[,i], type="l", ylim=range(c(dat_obs[,i], pred[,i])))
+  points(dat_obs[,i], col="red")
+}
 ```
-
 
 ## Working with parameters
 
 The function `tvvarss` returns a `stanfit` object. This can be plotted directly, using 
 
 ```{r, eval=FALSE}
-plot(fitted_model, pars = c("B[3,2,2]", "u[1]"))
-traceplot(fitted_model, pars = c("B[3,2,2]", "u[1]"))
+plot(mod_fit, pars = c("B[3,2,2]"))
+traceplot(mod_fit, pars = c("B[3,2,2]"))
 ```
 
 Or the parameters may be stored in a new object, 
 
 ```{r, eval=FALSE}
-pars = extract(fitted_model, permuted = TRUE)
+pars = extract(mod_fit, permuted = TRUE)
 ```
+
 To retain the original samples by MCMC chain, set `permuted=FALSE`
 
 Parameters may also be extracted via the `broom` package, into a data frame that just contains the estimate and standard error (where they can be passed to ggplot, etc). 
 
 ```{r, eval=FALSE}
 library(broom)
-tidy_pars = tidy(fitted_model)
+tidy_pars = tidy(mod_fit)
 ```
 
 ## Model Selection
-We'll use the `loo` package for model selection. The Leave One Out Information Criterion (LOOIC) is similar to AIC (lower is better). LOOIC can be extracted from `tvvarss` models with
+
+Fitted `tvvarss` objects can be compared to one another using the `loo` package for model selection, which can compute either the Leave One Out Information Criterion (LOOIC) or Watanabe's Akaike Information Criterion (WAIC). For example,
 
 ```{r, eval=FALSE}
 library(loo)
-loo(extract_log_lik(fitted_model))$looic
+LL <- loo(extract_log_lik(mod_fit))
+## LOOIC
+looic <- LL$looic
+## WAIC
+waic <- LL$waic
 ```
 
