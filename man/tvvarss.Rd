@@ -4,15 +4,12 @@
 \alias{tvvarss}
 \title{tvvarss is the primary function for fitting tvvarss models to time series data.}
 \usage{
-tvvarss(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL,
-  shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 1000,
-  mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3, family = "gaussian",
-  dynamicB = TRUE)
+tvvarss(y, de_mean = TRUE, B = NULL, x0 = NULL, shared_q = NULL,
+  shared_r = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1,
+  mcmc_chain = 3, family = "gaussian", dynamicB = TRUE)
 }
 \arguments{
 \item{y}{The data (array, with dimensions = site, year, species)}
-
-\item{include_trend}{Whether to include time trends. Defaults to TRUE}
 
 \item{de_mean}{Whether or not to de_mean the process model, defaults to TRUE. For example, X_t+1 = B * (X_t - pred[X_t]) versus X_t+1 = B * (X_t)}
 
@@ -23,8 +20,6 @@ tvvarss(y, include_trend = TRUE, de_mean = TRUE, B = NULL, x0 = NULL,
 \item{shared_q}{Optional matrix (number of species x number of sites) with integers indicating which process variance parameters are shared. Defaults to shared process variances across sites, but unique to each species}
 
 \item{shared_r}{Optional matrix (number of species x number of sites) with integers indicating which observation variance parameters are shared. Defaults to shared observation variances across sites, but unique to each species}
-
-\item{shared_u}{Optional matrix (number of species x number of sites) with integers indicating which trend parameters are shared. Defaults to shared trends across sites, but unique to each species}
 
 \item{mcmc_iter}{Number of MCMC iterations, defaults to 1000}
 
