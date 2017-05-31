@@ -77,13 +77,15 @@ B[4,2] = "bu"
 ```
 
 ```{r eval=FALSE, echo=FALSE}
-if(file.exists("../vignettes/ives_constantB.rds")==FALSE) {
-stanmod = tvvarss(y = training_data, B = B, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3, dynamicB=FALSE)
+if(!file.exists("../vignettes/ives_constantB.rds")) {
+stanmod = tvvarss(y = training_data, B = B, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL,
+                  mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3, dynamicB=FALSE)
 saveRDS(stanmod, "../vignettes/ives_constantB.rds")
 }
 
-if(file.exists("../vignettes/ives.rds")==FALSE) {
-stanmod = tvvarss(y = training_data, B = B, include_trend = FALSE, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL, shared_u = NULL, mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3)
+if(!file.exists("../vignettes/ives.rds")) {
+stanmod = tvvarss(y = training_data, B = B, de_mean = TRUE, x0 = NULL, shared_q = NULL, shared_r = NULL,
+                  mcmc_iter = 3000, mcmc_warmup = 2000, mcmc_thin = 1, mcmc_chain = 3)
 saveRDS(stanmod, "../vignettes/ives.rds")
 }
 ```
