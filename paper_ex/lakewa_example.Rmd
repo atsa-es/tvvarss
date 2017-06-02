@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 
 ```{r, eval=FALSE}
 library(devtools)
-devtools::install_github("eric-ward/tvvarss")
+devtools::install_github("nwfsc-timeseries/tvvarss")
 ```
 
 ```{r install, results="hide"}
