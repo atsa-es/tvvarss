@@ -21,13 +21,13 @@
 #' ## number of spp/guilds
 #' nn <- 4
 #' ## CASE 1: linear food chain
-#' B0_lfc <- matrix(list(0),nn,nn)
+#' topo <- matrix(list(0),nn,nn)
 #' for(i in 1:(nn-1)) {
-#'   B0_lfc[i,i+1] <- "td"
-#'   B0_lfc[i+1,i] <- "bu"
+#'   topo[i,i+1] <- "td"
+#'   topo[i+1,i] <- "bu"
 #' }
 #' ## simulate process
-#' lfc <- simTVVAR(B0_lfc, TT, var_QX=rev(seq(1,4)/40), cov_QX=0, var_QB=0.05, cov_QB=0)
+#' lfc <- simTVVAR(topo, TT, var_QX=rev(seq(1,4)/40), cov_QX=0, var_QB=0.05, cov_QB=0)
 #' ## create data array with 3 realizations of the process
 #' dat <- sim2fit(lfc, 3)
 #'

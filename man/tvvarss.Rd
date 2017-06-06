@@ -2,24 +2,40 @@
 % Please edit documentation in R/tvvarss.R
 \name{tvvarss}
 \alias{tvvarss}
-\title{tvvarss is the primary function for fitting tvvarss models to time series data.}
+\title{Fit a TVVARSS model to multivariate time series data}
 \usage{
-tvvarss(y, de_mean = TRUE, B = NULL, x0 = NULL, shared_q = NULL,
-  shared_r = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1,
-  mcmc_chain = 3, family = "gaussian", dynamicB = TRUE)
+tvvarss(y, de_mean = TRUE, topo = NULL, dynamicB = TRUE,
+  family = "gaussian", x0 = NULL, shared_q = NULL, shared_r = NULL,
+  mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3)
 }
 \arguments{
 \item{y}{The data (array, with dimensions = site, year, species)}
 
-\item{de_mean}{Whether or not to de_mean the process model, defaults to TRUE. For example, X_t+1 = B * (X_t - pred[X_t]) versus X_t+1 = B * (X_t)}
+\item{de_mean}{Whether or not to de_mean the process model; defaults to TRUE.
+For example, X_t+1 = B_t * (X_t - pred[X_t]) versus X_t+1 = B_t * (X_t).}
 
-\item{B}{The list matrix describing optionally whether elements are 'zero', top-down ('td'), bottom up ('bu'), competitive-facilitative ('cf'), or density dependent ('dd)}
+\item{topo}{Optional list matrix describing the presumed topology of the
+community. Pairwise interactions are specified as density-dependent ("dd"),
+top-down ("td"), bottom-up ("bu"), competitive/facilitative ("cf"), or
+absent ("zero").}
 
-\item{x0}{The location matrix (mean) of priors on initial states. Defaults to centered on observed data}
+\item{dynamicB}{Logical indicator of whether to fit a dynamic B matrix that
+varies through time (or a static B matrix that does not); defaults to TRUE.}
 
-\item{shared_q}{Optional matrix (number of species x number of sites) with integers indicating which process variance parameters are shared. Defaults to shared process variances across sites, but unique to each species}
+\item{family}{Statistical distribution for the observation model, defaults to
+"gaussian".}
 
-\item{shared_r}{Optional matrix (number of species x number of sites) with integers indicating which observation variance parameters are shared. Defaults to shared observation variances across sites, but unique to each species}
+\item{x0}{The location matrix (mean) of priors on initial states; defaults to
+centered on observed data.}
+
+\item{shared_q}{Optional matrix (number of species x number of sites) with
+integers indicating which process variance parameters are shared; defaults
+to unique process variances for each species that are shared across sites.}
+
+\item{shared_r}{Optional matrix (number of species x number of sites) with
+integers indicating which observation variance parameters are shared;
+defaults to unique observation variances for each species that are shared
+across sites.}
 
 \item{mcmc_iter}{Number of MCMC iterations, defaults to 1000}
 
@@ -28,14 +44,10 @@ tvvarss(y, de_mean = TRUE, B = NULL, x0 = NULL, shared_q = NULL,
 \item{mcmc_thin}{MCMC thin, defaults to 1}
 
 \item{mcmc_chain}{MCMC chains, defaults to 3}
-
-\item{family}{observation model, defaults to 'gaussian'}
-
-\item{dynamicB}{boolean, whether to fit a dynamic B matrix that varies through time (or a static B matrix that doesn't), defaults to TRUE}
 }
 \value{
 an object of class 'stanfit'
 }
 \description{
-tvvarss is the primary function for fitting tvvarss models to time series data.
+\code{tvvarss} is the primary function for fitting TVVARSS models data.
 }

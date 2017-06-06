@@ -1,25 +1,42 @@
-#' tvvarss is the primary function for fitting tvvarss models to time series data.
+#' Fit a TVVARSS model to multivariate time series data
+#'
+#' \code{tvvarss} is the primary function for fitting TVVARSS models data.
 #'
 #' @param y The data (array, with dimensions = site, year, species)
-#' @param de_mean Whether or not to de_mean the process model, defaults to TRUE. For example, X_t+1 = B * (X_t - pred[X_t]) versus X_t+1 = B * (X_t)
-#' @param B The list matrix describing optionally whether elements are 'zero', top-down ('td'), bottom up ('bu'), competitive-facilitative ('cf'), or density dependent ('dd)
-#' @param x0 The location matrix (mean) of priors on initial states. Defaults to centered on observed data
-#' @param shared_q Optional matrix (number of species x number of sites) with integers indicating which process variance parameters are shared. Defaults to shared process variances across sites, but unique to each species
-#' @param shared_r Optional matrix (number of species x number of sites) with integers indicating which observation variance parameters are shared. Defaults to shared observation variances across sites, but unique to each species
+#' @param de_mean Whether or not to de_mean the process model; defaults to TRUE.
+#'   For example, X_t+1 = B_t * (X_t - pred[X_t]) versus X_t+1 = B_t * (X_t).
+#' @param topo Optional list matrix describing the presumed topology of the
+#'   community. Pairwise interactions are specified as density-dependent ("dd"),
+#'   top-down ("td"), bottom-up ("bu"), competitive/facilitative ("cf"), or
+#'   absent ("zero").
+#' @param dynamicB Logical indicator of whether to fit a dynamic B matrix that
+#'   varies through time (or a static B matrix that does not); defaults to TRUE.
+#' @param family Statistical distribution for the observation model, defaults to
+#'  "gaussian".
+#' @param x0 The location matrix (mean) of priors on initial states; defaults to
+#'   centered on observed data.
+#' @param shared_q Optional matrix (number of species x number of sites) with
+#'   integers indicating which process variance parameters are shared; defaults
+#'   to unique process variances for each species that are shared across sites.
+#' @param shared_r Optional matrix (number of species x number of sites) with
+#'   integers indicating which observation variance parameters are shared;
+#'   defaults to unique observation variances for each species that are shared
+#'   across sites.
 #' @param mcmc_iter Number of MCMC iterations, defaults to 1000
 #' @param mcmc_warmup Warmup / burn in phase, defaults to 500
 #' @param mcmc_thin MCMC thin, defaults to 1
 #' @param mcmc_chain MCMC chains, defaults to 3
-#' @param family observation model, defaults to 'gaussian'
-#' @param dynamicB boolean, whether to fit a dynamic B matrix that varies through time (or a static B matrix that doesn't), defaults to TRUE
 #'
 #' @return an object of class 'stanfit'
-#' @export
+#'
 #' @import rstan
 #' @import methods
 #' @import Rcpp
 #'
-tvvarss <- function(y, de_mean = TRUE, B = NULL, x0 = NULL, shared_q = NULL, shared_r = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3, family="gaussian", dynamicB=TRUE) {
+#' @export
+tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gaussian",
+                    x0 = NULL, shared_q = NULL, shared_r = NULL,
+                    mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3) {
   #@useDynLib tvvarss, .registration = TRUE
   include_trend = FALSE # not used as argument, but passed to STAN
   shared_u = NULL # not used as argument
@@ -42,21 +59,20 @@ tvvarss <- function(y, de_mean = TRUE, B = NULL, x0 = NULL, shared_q = NULL, sha
     y = y_new
   }
 
-  #
-  if(is.null(B)) {
+  if(is.null(topo)) {
     # matrix constrained 0-1 on diagonal, and no constraints elsewhere
-    B = matrix("cf", n_spp, n_spp)
-    diag(B) = "dd"
+    topo = matrix("cf", n_spp, n_spp)
+    diag(topo) = "dd"
   }
 
   # convert the character matrix to integers
   # zero = 1, td = 2, bu = 3, cf = 4
-  if("zero"%in%B) B[which(B=="zero")] = 1
-  if("td"%in%B) B[which(B=="td")] = 2
-  if("bu"%in%B) B[which(B%in% c("bu"))] = 3
-  if("dd"%in%B) B[which(B%in% c("dd"))] = 3
-  if("cf"%in%B) B[which(B=="cf")] = 4
-  class(B) = "numeric"
+  B = matrix(1, n_spp, n_spp)
+  if("zero"%in%topo) B[which(topo=="zero")] = 1
+  if("td"%in%topo) B[which(topo=="td")] = 2
+  if("bu"%in%topo) B[which(topo%in% c("bu"))] = 3
+  if("dd"%in%topo) B[which(topo%in% c("dd"))] = 3
+  if("cf"%in%topo) B[which(topo=="cf")] = 4
 
   b_limits = matrix(0, 4, 2)
   b_limits[1,] = c(0,0)
