@@ -181,7 +181,7 @@ simTVVAR <- function(Bt, topo=NULL, TT, var_QX, cov_QX, var_QB, cov_QB = 0,
   ## evolutions
   for (t in 1:TT + 1) {
     ## BB
-    if (length(dim(Bt)) == 2) {
+    if (length(dim(Bt)) != 2) {
       ## constrain diagonals to [0,1]
       diag(BB[,,t]) <- plogis(qlogis(diag(BB[,,t-1])) + diag(matrix(WW_BB[,t-1],nn,nn)))
       ## constrain top-down effects to [-1,0]

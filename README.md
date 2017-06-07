@@ -4,4 +4,4 @@
 ## Installation
 After installing `devtools`, run 
 
-devtools::install_github("nwfsc-timeseries/tvvarss")
+`devtools::install_github("nwfsc-timeseries/tvvarss")`
