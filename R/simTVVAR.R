@@ -143,6 +143,7 @@ simTVVAR <- function(Bt, topo=NULL, TT, var_QX, cov_QX, var_QB, cov_QB = 0,
   }
   ## proc errors for states
   WW_XX <- t(MASS::mvrnorm(TT, matrix(0, nn, 1), QQ_XX))
+
   ## BB
   BB <- array(0, c(nn, nn, TT + 1))
   if (length(dim(Bt)) == 2) { ## then Bt is an [n x n] init matrix
@@ -173,6 +174,7 @@ simTVVAR <- function(Bt, topo=NULL, TT, var_QX, cov_QX, var_QB, cov_QB = 0,
     BB <- Bt
     WW_BB <- NULL
   }
+
   ## covariates, if missing
   if (is.null(CC)) {
     CC <- matrix(0, nn, 1)
@@ -181,7 +183,7 @@ simTVVAR <- function(Bt, topo=NULL, TT, var_QX, cov_QX, var_QB, cov_QB = 0,
   ## evolutions
   for (t in 1:TT + 1) {
     ## BB
-    if (length(dim(Bt)) == 2) {
+    if (length(dim(Bt)) != 2) {
       ## constrain diagonals to [0,1]
       diag(BB[,,t]) <- plogis(qlogis(diag(BB[,,t-1])) + diag(matrix(WW_BB[,t-1],nn,nn)))
       ## constrain top-down effects to [-1,0]
