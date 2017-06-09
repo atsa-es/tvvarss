@@ -2,6 +2,10 @@ devtools::install_github("nwfsc-timeseries/tvvarss")
 library(tvvarss)
 library(tseries)
 library(broom)
+library(rstan)
+
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
 
 n_species <- 4
 n_year <- 100
@@ -59,7 +63,7 @@ if(trend_test == 0) stationary=TRUE
 
 # data has been generated -- now fit the model using tvvarss()
 fitted_model = tvvarss(y = Y, topo = B0_lfc,
-  shared_r = matrix(1, n_species, n_site))
+  shared_r = matrix(1, n_species, n_site), mcmc_iter = 3000, mcmc_warmup = 2000)
 # tidy the stanfit object to save space -- don't save every mcmc draw
 coef = tidy(fitted_model, intervals = TRUE, prob = 0.9)
 
