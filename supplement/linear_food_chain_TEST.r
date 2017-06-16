@@ -6,9 +6,9 @@ if(!require("broom")) {
   install.packages("broom")
   library("broom")
 }
-if(!require("stan")) {
-  install.packages("stan")
-  library("stan")
+if(!require("rstan")) {
+  install.packages("rstan")
+  library("rstan")
 }
 
 rstan_options(auto_write = TRUE)
@@ -17,7 +17,7 @@ options(mc.cores = parallel::detectCores())
 n_species <- 4
 n_year <- 60
 n_site <- 1
-n_simulations = 10
+n_simulations = 100
 ## min log-density threshold
 dens_min <- -3
 ## max log-density threshold
@@ -47,8 +47,10 @@ saved_output = vector("list", n_simulations)
 ## function for fitting/extracting
 get_coefs <- function(y, topo, shared_r, mcmc_chain, mcmc_iter, mcmc_warmup,
                       intervals = TRUE, prob = 0.9) {
-  fitted_model <- tvvarss(y, topo, shared_r, mcmc_chain, mcmc_iter, mcmc_warmup)
+  fitted_model <- tvvarss(y=y, topo=topo, shared_r=shared_r,
+                          mcmc_chain=mcmc_chain, mcmc_iter=mcmc_iter, mcmc_warmup=mcmc_warmup)
   coef <- tidy(fitted_model, intervals, prob)
+  return(coef)
 }
 
 for(ns in 1:n_simulations) {
