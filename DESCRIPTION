@@ -10,11 +10,11 @@ Authors@R: as.person(c(
 Maintainer: Eric Ward <eric.ward@noaa.gov>
 Description: The tvvarss package uses Stan (mc-stan.org) to fit multi-site
     multivariate autoregressive (aka vector autoregressive) state space models
-    with time varying interaction matrix.
+    with a time varying interaction matrix.
 License: GPL (>=3)
 Encoding: UTF-8
 LazyData: true
-Depends: R (>= 3.0.2), Rcpp (>= 0.12.10), methods
+Depends: R (>= 3.3), Rcpp (>= 0.12.10), methods
 Imports: rstan (>= 2.14.2), rstantools (>= 1.2.0), MASS
 LinkingTo: StanHeaders (>= 2.14.0.1), rstan (>= 2.14.2), BH (>= 1.62.0.1), Rcpp (>= 0.12.10), RcppEigen (>= 0.3.2.9.1)
 RoxygenNote: 6.0.1
@@ -22,4 +22,4 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
-URL: https://github.com/eric-ward/tvvarss
+URL: https://github.com/nwfsc-timeseries/tvvarss
