@@ -16,7 +16,7 @@ if(!require("foreach")) {
 }
 
 rstan_options(auto_write = TRUE)
-options(mc.cores = parallel::detectCores())
+options(mc.cores = (parallel::detectCores())/3)
 
 ## number of species/guilds
 n_species <- 4
@@ -26,10 +26,6 @@ nY <- 60
 nS <- 1
 ## number of MC simulations
 n_sims <- 4
-## min log-density threshold
-dens_min <- -3
-## max log-density threshold
-dens_max <- 3
 
 ## topo matrix for linear food chain
 B0_lfc <- matrix(list(0),n_species,n_species)
@@ -49,9 +45,6 @@ B0_init[3,2] <- 0.1
 B0_init[3,4] <- -0.3
 B0_init[4,3] <- 0.1
 
-## empty list for results
-saved_output <- vector("list", n_sims)
-
 ## define list of inputs for simulation
 sim_list <- list(B0_init = B0_init,
                  B0_lfc = B0_lfc,
@@ -61,8 +54,8 @@ sim_list <- list(B0_init = B0_init,
                  cov_QX = 0,
                  var_QB = 0.01,
                  cov_QB = 0,
-                 dens_max = dens_max,
-                 dens_min = dens_min)
+                 dens_max = 3,
+                 dens_min = -3)
 
 ## define list of inputs for simulations
 fit_list <- list(topo = B0_lfc,
@@ -72,6 +65,9 @@ fit_list <- list(topo = B0_lfc,
                  mcmc_warmup = 2000,
                  intervals = TRUE,
                  prob = 0.9)
+
+## empty list for results
+saved_output <- vector("list", n_sims)
 
 ## define function for simulating/fitting
 simfit <- function(sim, fit) {
