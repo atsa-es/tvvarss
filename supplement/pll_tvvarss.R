@@ -10,18 +10,24 @@ if(!require("rstan")) {
   install.packages("rstan")
   library("rstan")
 }
+if(!require("doParallel")) {
+  install.packages("doParallel")
+  library("doParallel")
+}
 if(!require("foreach")) {
   install.packages("foreach")
   library("foreach")
 }
 
 rstan_options(auto_write = TRUE)
-options(mc.cores = (parallel::detectCores())/3)
+n_cores <- parallel::detectCores()
+#registerDoParallel(4)
+#options(mc.cores = n_cores)
 
 ## number of species/guilds
 n_species <- 4
 ## number of years to simulate
-nY <- 60
+n_year <- 60
 ## number of sites
 nS <- 1
 ## number of MC simulations
@@ -48,7 +54,7 @@ B0_init[4,3] <- 0.1
 ## define list of inputs for simulation
 sim_list <- list(B0_init = B0_init,
                  B0_lfc = B0_lfc,
-                 n_year = nY,
+                 n_year = n_year,
                  n_site = nS,
                  var_QX = rev(seq(1, 4) / 40),
                  cov_QX = 0,
@@ -59,7 +65,7 @@ sim_list <- list(B0_init = B0_init,
 
 ## define list of inputs for simulations
 fit_list <- list(topo = B0_lfc,
-                 shared_r = matrix(1, n_species, n_site),
+                 shared_r = matrix(1, n_species, nS),
                  mcmc_chain = 3,
                  mcmc_iter = 3000,
                  mcmc_warmup = 2000,
@@ -75,7 +81,6 @@ simfit <- function(sim, fit) {
   for(i in 1:length(sim)) {
     assign(names(sim[i]), sim[[i]], inherits = TRUE)
   }
-  print(var_QX)
   for(i in 1:length(fit)) {
     assign(names(fit[i]), fit[[i]], inherits = TRUE)
   }
@@ -93,10 +98,15 @@ simfit <- function(sim, fit) {
   ## fit the model to first half of data
   fitted_model <- tvvarss(y=Y[,-c(1:(n_year/2)),], topo=topo, shared_r=shared_r,
                           mcmc_chain=mcmc_chain, mcmc_iter=mcmc_iter, mcmc_warmup=mcmc_warmup)
-  coef <- tidy(fitted_model, intervals, prob)
+#  coef <- tidy(fitted_model, TRUE, 0.9)
   ## save data (Y), simulation output (lfc), model coefficients
-  return(list('data' = Y, 'sim_output' = lfc, 'estimate' = coef))
+  return(list('data' = Y, 'sim_output' = lfc)) #, 'estimate' = coef))
+#  return(list('data' = Y, 'sim_output' = lfc, 'estimate' = coef))
 }
 
-saved_output <- times(n_sims) %dopar% simfit(sim_list, fit_list)
+#saved_output <- times(n_sims) %dopar% simfit(sim_list, fit_list)
+saved_output <- foreach(i=1:n_sims,
+                        .packages = c("tvvarss","rstan","broom"),
+#                        .export=ls(.GlobalEnv),
+                        .inorder=FALSE) %dopar% simfit(sim_list, fit_list)
 
