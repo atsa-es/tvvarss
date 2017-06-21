@@ -21,7 +21,7 @@ if(!require("foreach")) {
 
 rstan_options(auto_write = TRUE)
 n_cores <- parallel::detectCores()
-#registerDoParallel(4)
+#registerDoParallel(n_cores)
 #options(mc.cores = n_cores)
 
 ## number of species/guilds
@@ -31,7 +31,7 @@ n_year <- 60
 ## number of sites
 nS <- 1
 ## number of MC simulations
-n_sims <- 4
+n_sims <- 1
 
 ## topo matrix for linear food chain
 B0_lfc <- matrix(list(0),n_species,n_species)
@@ -67,8 +67,8 @@ sim_list <- list(B0_init = B0_init,
 fit_list <- list(topo = B0_lfc,
                  shared_r = matrix(1, n_species, nS),
                  mcmc_chain = 3,
-                 mcmc_iter = 3000,
-                 mcmc_warmup = 2000,
+                 mcmc_iter = 300,
+                 mcmc_warmup = 200,
                  intervals = TRUE,
                  prob = 0.9)
 
@@ -98,15 +98,13 @@ simfit <- function(sim, fit) {
   ## fit the model to first half of data
   fitted_model <- tvvarss(y=Y[,-c(1:(n_year/2)),], topo=topo, shared_r=shared_r,
                           mcmc_chain=mcmc_chain, mcmc_iter=mcmc_iter, mcmc_warmup=mcmc_warmup)
-#  coef <- tidy(fitted_model, TRUE, 0.9)
+  coef <- tidy(fitted_model, conf.int = TRUE, conf.level = 0.9, conf.method = "HPDinterval")
   ## save data (Y), simulation output (lfc), model coefficients
-  return(list('data' = Y, 'sim_output' = lfc)) #, 'estimate' = coef))
-#  return(list('data' = Y, 'sim_output' = lfc, 'estimate' = coef))
+  return(list('data' = Y, 'sim_output' = lfc, 'estimate' = coef))
 }
 
 #saved_output <- times(n_sims) %dopar% simfit(sim_list, fit_list)
 saved_output <- foreach(i=1:n_sims,
                         .packages = c("tvvarss","rstan","broom"),
-#                        .export=ls(.GlobalEnv),
                         .inorder=FALSE) %dopar% simfit(sim_list, fit_list)
 
