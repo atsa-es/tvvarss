@@ -1,6 +1,5 @@
 devtools::install_github("nwfsc-timeseries/tvvarss")
 library(tvvarss)
-library(tseries)
 library(broom)
 library(rstan)
 
@@ -37,9 +36,26 @@ B0_init[4,3] <- 0.1
 ## empty list for results
 saved_output = vector("list", n_simulations)
 
+## function for fitting/extracting
+get_pars <- function(y, topo, shared_r = matrix(1, n_species, n_site),
+                     mcmc_chain = 3, mcmc_iter = 3000, mcmc_warmup = 2000,
+                     intervals = TRUE, prob = 0.9) {
+  ## data has been generated -- now fit the model using tvvarss()
+  fitted_model = tvvarss(y, topo, shared_r, mcmc_chain, mcmc_iter, mcmc_warmup)
+  ## tidy the stanfit object to save space -- don't save every mcmc draw
+  coef = tidy(fitted_model, intervals, prob)
+  return(coef)
+}
+
 for(ns in 1:n_simulations) {
   ## simulate process
-  lfc <- list(states=2*rep(dens_max,2))
+  lfc <- simTVVAR(Bt = B0_init,
+                  topo = B0_lfc,
+                  TT = n_year,
+                  var_QX = rev(seq(1, 4) / 40),
+                  cov_QX = 0,
+                  var_QB = 0.01,
+                  cov_QB = 0)
   while(max(lfc$states) > dens_max | min(lfc$states) < dens_min) {
     lfc <- simTVVAR(Bt = B0_init,
                     topo = B0_lfc,
@@ -50,18 +66,10 @@ for(ns in 1:n_simulations) {
                     cov_QB = 0)
   }
   ## add obs error
-  dat <- sim2fit(lfc, n_site, sd=0.1)
-  ## drop the burn in (1st half of the states/B matrix)
-  Bmat = lfc$B_mat[,,-c(1:(n_year/2 + 1))]
-  Y = array(0, dim = c(dim(dat)[1], dim(dat)[2]/2, dim(dat)[3]))
-  for(j in 1:n_site) {
-    Y[j,,] = dat[j,-c(1:(n_year/2)),]
-  }
-  ## data has been generated -- now fit the model using tvvarss()
-  fitted_model = tvvarss(y = Y, topo = B0_lfc, shared_r = matrix(1, n_species, n_site),
-                         mcmc_iter = 3000, mcmc_warmup = 2000)
-  ## tidy the stanfit object to save space -- don't save every mcmc draw
-  coef = tidy(fitted_model, intervals = TRUE, prob = 0.9)
+  Y <- sim2fit(lfc, n_site, sd=0.1)
+  ## fit model to only 2-nd half of data & save param summaries
+  coef <- get_pars(y = Y[,-c(1:(n_year/2)),], topo = B0_lfc,
+                  mcmc_chain = 8, mcmc_iter = 3000, mcmc_warmup = 2000)
   ## save data (Y), simulation output (lfc), model coefficients
   saved_output[[ns]] = list('data' = Y, 'sim_output' = lfc, 'estimate' = coef)
 }
