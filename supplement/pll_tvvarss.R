@@ -177,17 +177,19 @@ pp <- par(mfrow=c(n_species,n_species),
           mai=c(0.3,0.3,0.1,0.1),
           omi=c(0,0.3,0.3,0))
 cnt <- 0
+idx <- n_year/2-1
 for(i in 1:n_species) {
   for(j in 1:n_species) {
     if(B0_init[j,i]!=0) {
-      tmp <- props[1:(n_year/2-1)+cnt*(n_year/2-1)]
-      plot.ts(tmp, ylim=c(0,1), yaxt="n", cex.axis=0.9,
-              col=ifelse(i==j,"blue","darkgreen"))
+      tmp <- props[1:idx+cnt*idx]
+      plot.ts(tmp, ylim=c(0,1), xaxt="n", yaxt="n",
+              cex.axis=0.9, col=ifelse(i==j,"blue","darkgreen"))
+      axis(1,seq(0,Re2prec(idx,prec=10),by=10), las=1)
       axis(2,c(0,0.5,1), las=1)
       text(n_year/2-1, 0.05, round(mean(tmp),2), adj=c(1,0), cex=0.9)
       cnt <- cnt + 1
     } else {
-      plot.ts(1:(n_year/2-2), type="n", xaxt="n", yaxt="n", xlab="", ylab="", bty="n")
+      plot.ts(1:idx, type="n", xaxt="n", yaxt="n", xlab="", ylab="", bty="n")
     }
     if(i==1) { mtext(side=3,j, line=1) }
     if(j==1) { mtext(side=2,i, las=1, line=3) }
