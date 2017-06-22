@@ -1,3 +1,7 @@
+##-------
+## inits
+##-------
+
 if(!require("tvvarss")) {
   devtools::install_github("nwfsc-timeseries/tvvarss")
   library("tvvarss")
@@ -21,8 +25,73 @@ if(!require("foreach")) {
 
 rstan_options(auto_write = TRUE)
 n_cores <- parallel::detectCores()
-registerDoParallel(n_cores)
-#options(mc.cores = n_cores)
+registerDoParallel(n_cores-1)
+## options(mc.cores = n_cores)
+
+##----------------
+## function defns
+##----------------
+
+## define function for simulating/fitting
+simfit <- function(sim, fit) {
+  ## extract list elements
+  for(i in 1:length(sim)) {
+    assign(names(sim[i]), sim[[i]], inherits = TRUE)
+  }
+  for(i in 1:length(fit)) {
+    assign(names(fit[i]), fit[[i]], inherits = TRUE)
+  }
+  ## simulate process
+  lfc <- simTVVAR(Bt = B0_init, topo = B0_lfc, TT = n_year,
+                  var_QX = var_QX, cov_QX = cov_QX,
+                  var_QB = var_QB, cov_QB = cov_QB)
+  while(max(lfc$states) > dens_max | min(lfc$states) < dens_min) {
+    lfc <- simTVVAR(Bt = B0_init, topo = B0_lfc, TT = n_year,
+                    var_QX = var_QX, cov_QX = cov_QX,
+                    var_QB = var_QB, cov_QB = cov_QB)
+  }
+  ## add obs error
+  Y <- sim2fit(lfc, n_site, sd=0.1)
+  ## fit the model to first half of data
+  fitted_model <- tvvarss(y = Y[,-c(1:(n_year/2)),],
+                          topo = topo,
+                          shared_r = shared_r,
+                          mcmc_chain = mcmc_chain,
+                          mcmc_iter = mcmc_iter,
+                          mcmc_warmup = mcmc_warmup)
+  coef <- tidy(fitted_model,
+               conf.int = intervals,
+               conf.level = prob,
+               rhat = TRUE)
+  ## save data (Y), simulation output (lfc), model coefficients
+  return(list('data' = Y, 'sim_output' = lfc, 'estimate' = coef))
+}
+
+## define function of summary of B fits
+smry <- function(sf) {
+  ## estimated params
+  ee <- sf$estimate
+  ee <- ee[grepl("B",ee$term),]
+  ## true params
+  bb <- sf$sim_output$B_mat
+  ## convert B_i_j_t from array to vec to match ee
+  bvec <- NULL
+  for(j in 1:n_species) {
+    for(i in 1:n_species) {
+      bvec <- c(bvec,bb[i,j,-c(1:(n_year/2+1),n_year)])
+    }
+  }
+  ## drop intxns with 0's
+  ii <- bvec!=0
+  bvec <- bvec[ii]
+  ee <- ee[ii,]
+  ## chk for CI inclusion
+  return(ee$conf.low < bvec & bvec < ee$conf.high)
+}
+
+##-------------
+## user inputs
+##-------------
 
 ## number of species/guilds
 n_species <- 4
@@ -31,7 +100,7 @@ n_year <- 60
 ## number of sites
 nS <- 1
 ## number of MC simulations
-n_sims <- 2
+n_sims <- 5
 
 ## topo matrix for linear food chain
 B0_lfc <- matrix(list(0),n_species,n_species)
@@ -72,47 +141,40 @@ fit_list <- list(topo = B0_lfc,
                  intervals = TRUE,
                  prob = 0.9)
 
-## define function for simulating/fitting
-simfit <- function(sim, fit) {
-  ## extract list elements
-  for(i in 1:length(sim)) {
-    assign(names(sim[i]), sim[[i]], inherits = TRUE)
+##-----------
+## sim & fit
+##-----------
+saved_output <- foreach(i=1:n_sims,
+                        .export=c("sim_list", "fit_list"),
+                        .packages=c("tvvarss","rstan","broom"),
+                        .inorder=FALSE) %dopar% simfit(sim_list, fit_list)
+## shut down workers
+stopImplicitCluster()
+
+## proportion of experiments where truth inside CI
+props <- apply(sapply(saved_output, smry),1,sum)/n_sims
+
+## plot summary
+pp <- par(mfrow=c(n_species,n_species),
+          mai=c(0.4,0.4,0.1,0.1),
+          omi=c(0,0.3,0.3,0))
+cnt <- 0
+for(i in 1:n_species) {
+  for(j in 1:n_species) {
+    if(B0_init[j,i]!=0) {
+#      par(mfg=c(j,i))
+      tmp <- props[1:(n_year/2-1)+cnt*(n_year/2-1)]
+      plot.ts(tmp, ylim=c(0,1), yaxt="n",
+              col=ifelse(i==j,"blue","darkgreen"))
+      axis(2,c(0,0.5,1), las=1)
+      text(n_year/2-1, 0.1, round(mean(tmp),2), adj=c(1,0))
+      cnt <- cnt + 1
+    } else {
+      plot.ts(1:(n_year/2-2), type="n", xaxt="n", yaxt="n", xlab="", ylab="", bty="n")
+    }
+    if(i==1) { mtext(side=3,j, line=1) }
+    if(j==1) { mtext(side=2,i, las=1, line=3) }
   }
-  for(i in 1:length(fit)) {
-    assign(names(fit[i]), fit[[i]], inherits = TRUE)
-  }
-  ## simulate process
-  lfc <- simTVVAR(Bt = B0_init, topo = B0_lfc, TT = n_year,
-                  var_QX = var_QX, cov_QX = cov_QX,
-                  var_QB = var_QB, cov_QB = cov_QB)
-  while(max(lfc$states) > dens_max | min(lfc$states) < dens_min) {
-    lfc <- simTVVAR(Bt = B0_init, topo = B0_lfc, TT = n_year,
-                    var_QX = var_QX, cov_QX = cov_QX,
-                    var_QB = var_QB, cov_QB = cov_QB)
-  }
-  ## add obs error
-  Y <- sim2fit(lfc, n_site, sd=0.1)
-  ## fit the model to first half of data
-  fitted_model <- tvvarss(y = Y[,-c(1:(n_year/2)),],
-                          topo = topo,
-                          shared_r = shared_r,
-                          mcmc_chain = mcmc_chain,
-                          mcmc_iter = mcmc_iter,
-                          mcmc_warmup = mcmc_warmup)
-  coef <- tidy(fitted_model,
-               conf.int = intervals,
-               conf.level = prob,
-               conf.method = "HPDinterval",
-               rhat = TRUE)
-  ## save data (Y), simulation output (lfc), model coefficients
-  return(list('data' = Y, 'sim_output' = lfc, 'estimate' = coef))
 }
-
-saved_output <- foreach(i=1:n_sims, .inorder=FALSE) %dopar% simfit(sim_list, fit_list)
-
-ee <- saved_output[[1]]$estimate
-ee <- ee[grepl("B",ee$term),]
-
-bb <- saved_output[[1]]$sim_output$B_mat
 
 
