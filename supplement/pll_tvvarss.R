@@ -166,7 +166,7 @@ stopImplicitCluster()
 (run_time_in_hrs <- round(((proc.time()-timer_start)/3600)["elapsed"], 1))
 cat(run_time_in_hrs, file="run_time_in_hrs.txt")
 ## save output
-save("saved_output","lfc_sim_fit_saved_output.RData")
+save("saved_output",file="lfc_sim_fit_saved_output.RData")
 
 ## proportion of experiments where truth inside CI
 props <- apply(sapply(saved_output, smry),1,sum)/n_sims
