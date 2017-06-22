@@ -89,6 +89,14 @@ smry <- function(sf) {
   return(ee$conf.low < bvec & bvec < ee$conf.high)
 }
 
+## better rnd
+Re2prec <- function(x,map="round",prec=1) {
+  ## 'map' can be round, floor, or ceiling
+  ## 'prec' is nearest value (eg, 0.1 means to nearest tenth); default 1 gives normal behavior
+  if(prec<=0) { stop("\"prec\" cannot be less than or equal to 0") }
+  do.call(map,list(x/prec))*prec
+}
+
 ##-------------
 ## user inputs
 ##-------------
@@ -100,7 +108,7 @@ n_year <- 60
 ## number of sites
 nS <- 1
 ## number of MC simulations
-n_sims <- 5
+n_sims <- 100
 
 ## topo matrix for linear food chain
 B0_lfc <- matrix(list(0),n_species,n_species)
@@ -144,37 +152,48 @@ fit_list <- list(topo = B0_lfc,
 ##-----------
 ## sim & fit
 ##-----------
+
+## start timer
+timer_start <- proc.time()
+## fit and save all expts
 saved_output <- foreach(i=1:n_sims,
                         .export=c("sim_list", "fit_list"),
                         .packages=c("tvvarss","rstan","broom"),
                         .inorder=FALSE) %dopar% simfit(sim_list, fit_list)
 ## shut down workers
 stopImplicitCluster()
+## stop timer
+(run_time_in_hrs <- round(((proc.time()-timer_start)/3600)["elapsed"], 1))
+cat(run_time_in_hrs, file="run_time_in_hrs.txt")
+## save output
+save("saved_output",file="lfc_sim_fit_saved_output.RData")
 
 ## proportion of experiments where truth inside CI
 props <- apply(sapply(saved_output, smry),1,sum)/n_sims
 
 ## plot summary
+pdf("lfc_sim_fit_plots.pdf", height=6.5, width=6.5)
 pp <- par(mfrow=c(n_species,n_species),
-          mai=c(0.4,0.4,0.1,0.1),
+          mai=c(0.3,0.3,0.1,0.1),
           omi=c(0,0.3,0.3,0))
 cnt <- 0
+idx <- n_year/2-1
 for(i in 1:n_species) {
   for(j in 1:n_species) {
     if(B0_init[j,i]!=0) {
-#      par(mfg=c(j,i))
-      tmp <- props[1:(n_year/2-1)+cnt*(n_year/2-1)]
-      plot.ts(tmp, ylim=c(0,1), yaxt="n",
-              col=ifelse(i==j,"blue","darkgreen"))
+      tmp <- props[1:idx+cnt*idx]
+      plot.ts(tmp, ylim=c(0,1), xaxt="n", yaxt="n",
+              cex.axis=0.9, col=ifelse(i==j,"blue","darkgreen"))
+      axis(1,seq(0,Re2prec(idx,prec=10),by=10), las=1)
       axis(2,c(0,0.5,1), las=1)
-      text(n_year/2-1, 0.1, round(mean(tmp),2), adj=c(1,0))
+      text(n_year/2-1, 0.05, round(mean(tmp),2), adj=c(1,0), cex=0.9)
       cnt <- cnt + 1
     } else {
-      plot.ts(1:(n_year/2-2), type="n", xaxt="n", yaxt="n", xlab="", ylab="", bty="n")
+      plot.ts(1:idx, type="n", xaxt="n", yaxt="n", xlab="", ylab="", bty="n")
     }
     if(i==1) { mtext(side=3,j, line=1) }
     if(j==1) { mtext(side=2,i, las=1, line=3) }
   }
 }
-
+dev.off()
 
