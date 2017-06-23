@@ -89,6 +89,16 @@ smry <- function(sf) {
   return(ee$conf.low < bvec & bvec < ee$conf.high)
 }
 
+## function to estimate prop of non-converged params
+pRhat <- function(sf, thresh=1.1) {
+  ## estimated params
+  ee <- sf$estimate
+  ## Rhat values
+  rh <- ee[!is.nan(ee$rhat),"rhat"]
+  ## prop above threshold
+  return(round(sum(rh>1.1)/length(rh), 2))
+}
+
 ## better rnd
 Re2prec <- function(x,map="round",prec=1) {
   ## 'map' can be round, floor, or ceiling
@@ -172,10 +182,11 @@ save("saved_output",file="lfc_sim_fit_saved_output.RData")
 props <- apply(sapply(saved_output, smry),1,sum)/n_sims
 
 ## plot summary
-pdf("lfc_sim_fit_plots.pdf", height=6.5, width=6.5)
-pp <- par(mfrow=c(n_species,n_species),
-          mai=c(0.3,0.3,0.1,0.1),
-          omi=c(0,0.3,0.3,0))
+pdf("lfc_sim_fit_plots_2sites.pdf", height=6.5, width=6.5)
+
+par(mfrow=c(n_species,n_species),
+    mai=c(0.3,0.3,0.1,0.1),
+    omi=c(0,0.3,0.3,0))
 cnt <- 0
 idx <- n_year/2-1
 for(i in 1:n_species) {
@@ -195,5 +206,10 @@ for(i in 1:n_species) {
     if(j==1) { mtext(side=2,i, las=1, line=3) }
   }
 }
-dev.off()
 
+## proportion of params > Rhat by expt
+pbad <- sapply(saved_output, cc)
+par(mfrow=c(1,1), mai=c(0.9,0.9,0.1,0.1), omi=c(0,0,0,0))
+hist(pbad, breaks=seq(0,20)/20, main="", xlab="Prop. of non-converged parameters")
+
+dev.off()
