@@ -208,7 +208,7 @@ for(i in 1:n_species) {
 }
 
 ## proportion of params > Rhat by expt
-pbad <- sapply(saved_output, cc)
+pbad <- sapply(saved_output, pRhat)
 par(mfrow=c(1,1), mai=c(0.9,0.9,0.1,0.1), omi=c(0,0,0,0))
 hist(pbad, breaks=seq(0,20)/20, main="", xlab="Prop. of non-converged parameters")
 
