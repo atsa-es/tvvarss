@@ -51,7 +51,7 @@ simfit <- function(sim, fit) {
                     var_QB = var_QB, cov_QB = cov_QB)
   }
   ## add obs error
-  Y <- sim2fit(lfc, n_site, sd=0.1, new_real=FALSE)
+  Y <- sim2fit(lfc, n_site, sd=0.01, new_real=FALSE)
   ## fit the model to first half of data
   fitted_model <- tvvarss(y = Y[,-c(1:(n_year/2)),],
                           topo = topo,
@@ -89,27 +89,6 @@ smry <- function(sf) {
   return(ee$conf.low < bvec & bvec < ee$conf.high)
 }
 
-## mean absolute percentage error
-MASE <- function(sf) {
-  ## estimated params
-  ee <- sf$estimate
-  ee <- ee[grepl("B",ee$term),]
-  ## true params
-  bb <- sf$sim_output$B_mat
-  ## convert B_i_j_t from array to vec to match ee
-  bvec <- NULL
-  for(j in 1:n_species) {
-    for(i in 1:n_species) {
-      bvec <- c(bvec,bb[i,j,-c(1:(n_year/2+1),n_year)])
-    }
-  }
-  ## drop intxns with 0's
-  ii <- bvec!=0
-  bvec <- bvec[ii]
-  ee <- ee[ii,]
-  return((sum(abs(bvec-ee$estimate)/ee$estimate))/length(bvec))
-}
-
 ## function to estimate prop of non-converged params
 pRhat <- function(sf, thresh=1.1) {
   ## estimated params
@@ -133,31 +112,27 @@ Re2prec <- function(x,map="round",prec=1) {
 ##-------------
 
 ## number of species/guilds
-n_species <- 4
+n_species <- 2
 ## number of years to simulate
 n_year <- 60
 ## number of sites
-nS <- 1
+nS <- 4
 ## number of MC simulations
-n_sims <- 100
+n_sims <- 7
 
 ## topo matrix for linear food chain
 B0_lfc <- matrix(list(0),n_species,n_species)
 diag(B0_lfc) <- "dd"
-for(i in 1:(n_species-1)) {
-  B0_lfc[i,i+1] <- "td"
-  B0_lfc[i+1,i] <- "bu"
-}
+B0_lfc[1,2] <- "td"
+B0_lfc[2,1] <- "bu"
+
 
 ## initial B
 B0_init <- matrix(0,n_species,n_species)
-diag(B0_init) <- 0.6
-B0_init[1,2] <- -0.03
-B0_init[2,1] <- 0.1
-B0_init[2,3] <- -0.1
-B0_init[3,2] <- 0.1
-B0_init[3,4] <- -0.3
-B0_init[4,3] <- 0.1
+B0_init[1,1] <- 0.7
+B0_init[1,2] <- -0.1
+B0_init[2,1] <- 0.05
+B0_init[2,2] <- 0.3
 
 ## define list of inputs for simulation
 sim_list <- list(B0_init = B0_init,
@@ -195,15 +170,15 @@ saved_output <- foreach(i=1:n_sims,
 stopImplicitCluster()
 ## stop timer
 (run_time_in_hrs <- round(((proc.time()-timer_start)/3600)["elapsed"], 1))
-cat(run_time_in_hrs, file="run_time_in_hrs.txt")
+cat(run_time_in_hrs, file="lfc_run_time_in_hrs_2spp_4sites.txt")
 ## save output
-save("saved_output",file="lfc_sim_fit_saved_output.RData")
+save("saved_output",file="lfc_sim_fit_saved_output_2spp_4sites.RData")
 
 ## proportion of experiments where truth inside CI
 props <- apply(sapply(saved_output, smry),1,sum)/n_sims
 
 ## plot summary
-pdf("lfc_sim_fit_plots_2sites.pdf", height=6.5, width=6.5)
+pdf("lfc_sim_fit_plots_2spp_4sites.pdf", height=4, width=4)
 
 par(mfrow=c(n_species,n_species),
     mai=c(0.3,0.3,0.1,0.1),
@@ -234,3 +209,4 @@ par(mfrow=c(1,1), mai=c(0.9,0.9,0.1,0.1), omi=c(0,0,0,0))
 hist(pbad, breaks=seq(0,20)/20, main="", xlab="Prop. of non-converged parameters")
 
 dev.off()
+
