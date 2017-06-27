@@ -129,7 +129,7 @@ simTVVAR <- function(Bt, topo=NULL, TT, var_QX, cov_QX, var_QB, cov_QB = 0,
     QQ_BB <- matrix(cov_QB, nn * nn, nn * nn)
     diag(QQ_BB) <- var_QB
   } else {
-    if (!all(dim(QQ_BB) == nn)) {
+    if (!all(dim(QQ_BB) == nn * nn)) {
       stop("'QQ_BB' must be an [nn x nn] matrix.\n\n")
     }
   }
