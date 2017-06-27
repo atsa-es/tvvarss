@@ -51,7 +51,7 @@ simfit <- function(sim, fit) {
                     var_QB = var_QB, cov_QB = cov_QB)
   }
   ## add obs error
-  Y <- sim2fit(lfc, n_site, sd=0.1)
+  Y <- sim2fit(lfc, n_site, sd=0.1, new_real=FALSE)
   ## fit the model to first half of data
   fitted_model <- tvvarss(y = Y[,-c(1:(n_year/2)),],
                           topo = topo,
@@ -62,6 +62,7 @@ simfit <- function(sim, fit) {
   coef <- tidy(fitted_model,
                conf.int = intervals,
                conf.level = prob,
+               conf.method = "HPDinterval",
                rhat = TRUE)
   ## save data (Y), simulation output (lfc), model coefficients
   return(list('data' = Y, 'sim_output' = lfc, 'estimate' = coef))
@@ -89,6 +90,27 @@ smry <- function(sf) {
   return(ee$conf.low < bvec & bvec < ee$conf.high)
 }
 
+## mean absolute percentage error
+MASE <- function(sf) {
+  ## estimated params
+  ee <- sf$estimate
+  ee <- ee[grepl("B",ee$term),]
+  ## true params
+  bb <- sf$sim_output$B_mat
+  ## convert B_i_j_t from array to vec to match ee
+  bvec <- NULL
+  for(j in 1:n_species) {
+    for(i in 1:n_species) {
+      bvec <- c(bvec,bb[i,j,-c(1:(n_year/2+1),n_year)])
+    }
+  }
+  ## drop intxns with 0's
+  ii <- bvec!=0
+  bvec <- bvec[ii]
+  ee <- ee[ii,]
+  return((sum(abs(bvec-ee$estimate)/ee$estimate))/length(bvec))
+}
+
 ## function to estimate prop of non-converged params
 pRhat <- function(sf, thresh=1.1) {
   ## estimated params
@@ -96,7 +118,7 @@ pRhat <- function(sf, thresh=1.1) {
   ## Rhat values
   rh <- ee[!is.nan(ee$rhat),"rhat"]
   ## prop above threshold
-  return(round(sum(rh>1.1)/length(rh), 2))
+  return(round(sum(rh>1.1)/length(ee$rhat), 2))
 }
 
 ## better rnd

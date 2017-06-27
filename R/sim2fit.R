@@ -11,6 +11,8 @@
 #' @param n_sims The number of realizations of the TVVAR process.
 #' @param sd The standard deviation of the Gaussian observation errors.
 #'   Can be set to 0 for no observation error.
+#' @param new_real If n_sims > 1, logical indicator of whether to base the new
+#'   observations on a new realization of the TVVAR process.
 #'
 #' @return An array with dimensions \code{c(n_sim, TT, n_spp)}.
 #'
@@ -34,7 +36,7 @@
 #' @importFrom stats rnorm
 #'
 #' @export
-sim2fit <- function(obj, n_sims, sd=0.1) {
+sim2fit <- function(obj, n_sims, sd=0.1, new_real=TRUE) {
   if(n_sims < 1 | round(n_sims) - n_sims != 0) {
     stop("'n_sims' must be a positive integer.")
   }
@@ -45,7 +47,11 @@ sim2fit <- function(obj, n_sims, sd=0.1) {
   nR <- nrow(obj$states)
   yy <- array(NA,c(n_sims,nC,nR))
   for(i in 1:n_sims) {
-    yy[i,,] <- t(eval(as.expression(obj$call))$states[,-1]) + matrix(rnorm(nC*nR,0,sd),nC,nR)
+    if(new_real) {
+      yy[i,,] <- t(eval(as.expression(obj$call))$states[,-1]) + matrix(rnorm(nC*nR,0,sd),nC,nR)
+    } else {
+      yy[i,,] <- t(obj$states[,-1]) + matrix(rnorm(nC*nR,0,sd),nC,nR)
+    }
   }
   return(yy)
 }
