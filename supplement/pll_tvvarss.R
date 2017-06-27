@@ -62,6 +62,7 @@ simfit <- function(sim, fit) {
   coef <- tidy(fitted_model,
                conf.int = intervals,
                conf.level = prob,
+               conf.method = "HPDinterval",
                rhat = TRUE)
   ## save data (Y), simulation output (lfc), model coefficients
   return(list('data' = Y, 'sim_output' = lfc, 'estimate' = coef))
