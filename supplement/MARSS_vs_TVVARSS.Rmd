@@ -1,12 +1,11 @@
+@@ -1,141 +0,0 @@
 ---
 title: "MARSS vs TVVARSS comparison"
 output:
-  html_document:
-    fig_caption: yes
-    theme: cerulean
+  md_document:
+    variant: markdown_github
     toc: yes
     toc_depth: 3
-    toc_float: yes
 ---
 
 ### Version
