@@ -37,7 +37,7 @@ transformed parameters {
   vector<lower=0>[(n_spp*n_spp)] sigma_rw;
   matrix<lower=0>[n_spp, n_site] resid_process_mat;
   matrix<lower=0>[n_spp, n_site] obs_mat;
-  vector[(n_spp*n_spp)] vecB[n_year];
+  vector<lower=-20,upper=20>[(n_spp*n_spp)] vecB[n_year];
   matrix[n_spp, n_site] u_mat;
   matrix[n_spp,n_spp] B[(n_year-1)]; # B matrix, accessed as n_year, n_spp, n_spp
   matrix[n_year,n_spp] pred[n_site]; # predicted unobserved states
