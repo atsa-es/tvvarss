@@ -5,8 +5,9 @@
 \title{Fit a TVVARSS model to multivariate time series data}
 \usage{
 tvvarss(y, de_mean = TRUE, topo = NULL, dynamicB = TRUE,
-  family = "gaussian", x0 = NULL, shared_q = NULL, shared_r = NULL,
-  mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3)
+  site_indices = NULL, family = "gaussian", x0 = NULL, shared_q = NULL,
+  shared_r = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1,
+  mcmc_chain = 3)
 }
 \arguments{
 \item{y}{The data (array, with dimensions = site, year, species)}
@@ -21,6 +22,9 @@ absent ("zero").}
 
 \item{dynamicB}{Logical indicator of whether to fit a dynamic B matrix that
 varies through time (or a static B matrix that does not); defaults to TRUE.}
+
+\item{site_indices}{vector (length = dim(y)[1]) matching observations to underlying states.
+Defaults to each observation matched to a unique site.}
 
 \item{family}{Statistical distribution for the observation model, defaults to
 "gaussian".}
