@@ -11,6 +11,8 @@
 #'   absent ("zero").
 #' @param dynamicB Logical indicator of whether to fit a dynamic B matrix that
 #'   varies through time (or a static B matrix that does not); defaults to TRUE.
+#' @param site_indices vector (length = dim(y)[1]) matching observations to underlying states.
+#'   Defaults to each observation matched to a unique site.
 #' @param family Statistical distribution for the observation model, defaults to
 #'  "gaussian".
 #' @param x0 The location matrix (mean) of priors on initial states; defaults to
@@ -34,9 +36,9 @@
 #' @import Rcpp
 #'
 #' @export
-tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gaussian",
-  x0 = NULL, shared_q = NULL, shared_r = NULL,
-  mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3) {
+tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, site_indices = NULL, family="gaussian",
+                    x0 = NULL, shared_q = NULL, shared_r = NULL,
+                    mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3) {
   #@useDynLib tvvarss, .registration = TRUE
   include_trend = FALSE # not used as argument, but passed to STAN
   shared_u = NULL # not used as argument
@@ -47,16 +49,27 @@ tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gauss
     # multiple sites in array, site=1st d
     n_year = dim(y)[2]
     n_spp = dim(y)[3]
+
+    # if no site_indices are specificed, defaults to each observation
+    # being of a unique site / process
+    if(is.null(site_indices)) {
+      site_indices = seq(1, dim(y)[1])
+    }
+
     n_site = ifelse(is.na(dim(y)[1]), 1, dim(y)[1])
+#    n_site = ifelse(is.na(dim(y)[1]), 1, length(unique(site_indices)))
+    n_unique_obs = dim(y)[1]
   }
   if(length(dim(y)) == 2) {
     # matrix for 1 site, coerce to 3d
     n_year = dim(y)[1]
     n_site = 1
+#    site_indices = c(1)
     n_spp = dim(y)[2]
     y_new = array(0, dim = c(2, dim(y)[1], dim(y)[2]))
     y_new[1,,] = y # make the first array data, rest = NA
     y = y_new
+    n_unique_obs = 1
   }
 
   if(is.null(topo)) {
@@ -79,14 +92,14 @@ tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gauss
   b_limits[2,] = c(-1, 0)
   b_limits[3,] = c(0, 1)
   b_limits[4,] = c(-1, 1)
-  # vec B matrix, so we need to create a matrix of indices
+  #vec B matrix, so we need to create a matrix of indices
   n_spp2 = n_spp*n_spp
   row_indices = rep(seq(1,n_spp), n_spp)
   col_indices = sort(row_indices)
   b_indices = c(B)
   #Bindices = matrix(seq(1,n_spp2),n_spp,n_spp)
 
-  # vector of 0s and 1s indicating whether element of vecB is on diagonal
+  #vector of 0s and 1s indicating whether element of vecB is on diagonal
   b_diag = rep(0, n_spp2)
   b_diag[seq(1,n_spp2,by=(n_spp+1))] = 1
   b_diag = b_diag + 1 # plus 1 because this is index in stan, 1 or 2
@@ -103,7 +116,9 @@ tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gauss
   shared_q = cbind(shared_q, 0);
   n_q = max(shared_q);
 
-  if(is.null(shared_r)) shared_r = matrix(rep(1:n_spp,n_site), n_spp, n_site) # default to shared acros site,  unique by spp
+  # r defaults to being unique across obs
+#  if(is.null(shared_r)) shared_r = matrix(rep(1:n_spp,n_unique_obs), n_spp, n_unique_obs) # default to shared,  unique by spp
+  if(is.null(shared_r)) shared_r = matrix(rep(1:n_spp,n_site), n_spp, n_site) # default to shared,  unique by spp
   shared_r = cbind(shared_r, 0);
   n_r = max(shared_r);
 
@@ -117,12 +132,13 @@ tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gauss
   year_indices_pos = 0
   vec_y = 0
   count = 1
-  for(i in 1:n_site) {
+  for(i in 1:dim(y)[1]) {
     for(j in 1:n_year) {
       for(k in 1:n_spp) {
         if(!is.na(y[i,j,k])) {
           spp_indices_pos[count] = k
           site_indices_pos[count] = i
+#          site_indices_pos[count] = site_indices[i]
           year_indices_pos[count] = j
           vec_y[count] = y[i,j,k]
           count = count + 1
@@ -130,6 +146,7 @@ tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gauss
       }
     }
   }
+
   n_pos = length(spp_indices_pos)
   y = vec_y
   y_int = round(y)
@@ -150,6 +167,7 @@ tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gauss
     shared_q,
     n_q,
     shared_r,
+    n_unique_obs,
     n_r,
     shared_u,
     n_u,
@@ -173,7 +191,6 @@ tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gauss
     chains = mcmc_chain,
     iter = mcmc_iter,
     warmup = mcmc_warmup,
-    thin = mcmc_thin,
-    control=list(adapt_delta=0.99, max_treedepth=20))
+    thin = mcmc_thin)
   return(mod)
 }
