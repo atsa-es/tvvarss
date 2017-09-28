@@ -48,7 +48,8 @@ saved_output = vector("list", n_simulations)
 get_coefs <- function(y, topo, shared_r, mcmc_chain, mcmc_iter, mcmc_warmup,
                       intervals = TRUE, prob = 0.9) {
   fitted_model <- tvvarss(y=y, topo=topo, shared_r=shared_r,
-                          mcmc_chain=mcmc_chain, mcmc_iter=mcmc_iter, mcmc_warmup=mcmc_warmup)
+                          mcmc_chain=mcmc_chain, mcmc_iter=mcmc_iter, mcmc_warmup=mcmc_warmup,
+    dynamicB = FALSE)
   coef <- tidy(fitted_model, intervals, prob)
   return(coef)
 }
