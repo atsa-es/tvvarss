@@ -22,6 +22,7 @@
 #'   integers indicating which observation variance parameters are shared;
 #'   defaults to unique observation variances for each species that are shared
 #'   across sites.
+#' @param process Vector that optionally maps sites to states. Defaults to each site as its own state
 #' @param mcmc_iter Number of MCMC iterations, defaults to 1000
 #' @param mcmc_warmup Warmup / burn in phase, defaults to 500
 #' @param mcmc_thin MCMC thin, defaults to 1
@@ -35,7 +36,7 @@
 #'
 #' @export
 tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gaussian",
-  x0 = NULL, shared_q = NULL, shared_r = NULL,
+  x0 = NULL, shared_q = NULL, shared_r = NULL, process = NULL,
   mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3) {
   #@useDynLib tvvarss, .registration = TRUE
   include_trend = FALSE # not used as argument, but passed to STAN
@@ -58,6 +59,9 @@ tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gauss
     y_new[1,,] = y # make the first array data, rest = NA
     y = y_new
   }
+
+  if(is.null(process)) process = seq(1, dim(y)[1])
+  n_process = max(process)
 
   if(is.null(topo)) {
     # matrix constrained 0-1 on diagonal, and no constraints elsewhere
@@ -93,7 +97,7 @@ tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gauss
 
   if(is.null(x0)) x0 = y[,1,] # means on initial states,could also be set to 0
   if(length(is.na(x0)) > 0) {
-    x0 = matrix(0, n_site, n_spp)
+    x0 = matrix(0, n_process, n_spp)
   }
 
   est_trend = ifelse(include_trend,1,0); # estimate the trend
@@ -107,7 +111,7 @@ tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gauss
   shared_r = cbind(shared_r, 0);
   n_r = max(shared_r);
 
-  if(is.null(shared_u)) shared_u = matrix(rep(1:n_spp,n_site), n_spp, n_site) # default to shared acros site,  unique by spp
+  if(is.null(shared_u)) shared_u = matrix(rep(1:n_spp,n_process), n_spp, n_process) # default to shared acros site,  unique by spp
   shared_u = cbind(shared_u, 0);
   n_u = max(shared_u);
 
@@ -122,7 +126,7 @@ tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gauss
       for(k in 1:n_spp) {
         if(!is.na(y[i,j,k])) {
           spp_indices_pos[count] = k
-          site_indices_pos[count] = i
+          site_indices_pos[count] = process[i]#i
           year_indices_pos[count] = j
           vec_y[count] = y[i,j,k]
           count = count + 1
@@ -163,7 +167,9 @@ tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gauss
     family,
     b_indices,
     b_limits,
-    fit_dynamicB)
+    fit_dynamicB,
+    n_process = n_process,
+    process = process)
 
   pars = c("sigma_rw_pars", "resid_process_sd", "obs_sd", "B", "pred")
   if(include_trend) pars = c(pars, "u")

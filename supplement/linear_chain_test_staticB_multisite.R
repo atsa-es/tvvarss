@@ -1,22 +1,13 @@
-if(!require("tvvarss")) {
-  devtools::install_github("nwfsc-timeseries/tvvarss")
-  library("tvvarss")
-}
-if(!require("broom")) {
-  install.packages("broom")
-  library("broom")
-}
-if(!require("rstan")) {
-  install.packages("rstan")
-  library("rstan")
-}
+library("tvvarss")
+library("broom")
+library("rstan")
 
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 
 n_species <- 4
 n_year <- 60
-n_site <- 1
+n_site <- 3
 n_simulations = 100
 ## min log-density threshold
 dens_min <- -3
@@ -45,9 +36,10 @@ B0_init[4,3] <- 0.1
 saved_output = vector("list", n_simulations)
 
 ## function for fitting/extracting
-get_coefs <- function(y, topo, shared_r, shared_q, mcmc_chain, mcmc_iter, mcmc_warmup) {
+get_coefs <- function(y, topo, shared_r, shared_q, mcmc_chain, mcmc_iter, mcmc_warmup, process) {
   fitted_model <- tvvarss(y=y, topo=topo, shared_r=shared_r, shared_q=shared_q,
-    mcmc_chain=mcmc_chain, mcmc_iter=mcmc_iter, mcmc_warmup=mcmc_warmup, dynamicB = FALSE)
+    mcmc_chain=mcmc_chain, mcmc_iter=mcmc_iter, mcmc_warmup=mcmc_warmup,
+    dynamicB = FALSE, process = process)
   #coef <- tidy(fitted_model, intervals=TRUE, prob=0.9)
   return(fitted_model)
 }
@@ -71,30 +63,31 @@ for(ns in 1:n_simulations) {
                     cov_QB = 0)
   }
   ## add obs error
-  Y <- sim2fit(lfc, n_site, sd=0.1)
+  Y <- sim2fit(lfc, n_site, sd=0.01)
   ## fit model to only 2nd half of data & save param summaries
 
-  y_thin = array(0, dim=c(1, n_year/2, 4))
-  y_thin[1,,] = Y[,-c(1:(n_year/2)),]
+  y_thin = array(0, dim=c(dim(Y)[1], dim(Y)[2]/2, dim(Y)[3]))
+  y_thin = Y[,-c(1:dim(Y)[2]/2),]
   fitted <- get_coefs(y = y_thin, topo = B0_lfc,
-                    shared_r = matrix(1,4,1),
+                    shared_r = matrix(1,4,3),
                     shared_q = matrix(1,4,1),
-                    mcmc_chain = 3, mcmc_iter = 3000, mcmc_warmup = 2000)
+                    process = rep(1, dim(Y)[1]),
+                    mcmc_chain = 1,
+                    mcmc_iter = 2000,
+                    mcmc_warmup = 1000)
   coef = tidy(fitted, intervals=TRUE, prob=0.9)
   ## save data (Y), simulation output (lfc), model coefficients
   saved_output[[ns]] <- list('data' = Y, 'sim_output' = lfc, 'estimate' = coef)
+  print(ns)
 }
 ## save results
-save(saved_output, file = "output_linear_chain_staticB.Rdata")
+save(saved_output, file = "output_linear_chain_staticB_multisite.Rdata")
 
 
 # Plot output
 # B0_init contains true values
 
 load("supplement/output_linear_chain_staticB.Rdata")
-
-pdf("Means.pdf")
-
 par(mfrow=c(4,4), mgp=c(2,1,0), mai=c(0.1,0.01,0.1,0.01))
 for(i in 1:4) {
   for(j in 1:4) {
@@ -111,9 +104,7 @@ for(i in 1:4) {
     }
   }
 }
-dev.off()
 
-pdf("Coverage.pdf")
 # coverage
 par(mfrow=c(4,4), mgp=c(2,1,0), mai=c(0.1,0.01,0.1,0.01))
 for(i in 1:4) {
@@ -134,9 +125,7 @@ for(i in 1:4) {
     }
   }
 }
-dev.off()
 
-pdf("logscore.pdf")
 # distribution of log-score
 par(mfrow=c(4,4), mgp=c(2,1,0), mai=c(0.1,0.01,0.1,0.01))
 for(i in 1:4) {
@@ -157,7 +146,6 @@ for(i in 1:4) {
     }
   }
 }
-dev.off()
 
 ## NOT RUN
 ## plot states

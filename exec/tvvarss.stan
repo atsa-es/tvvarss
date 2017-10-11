@@ -2,13 +2,15 @@ data {
   int<lower=0> n_year;
   int<lower=0> n_site;
   int<lower=0> n_spp;
+  int<lower=0> n_process; // how many processes can the sites be grouped into
+  int<lower=0> process[n_site]; // vector assigning sites -> processes
   int<lower=0> b_diag[n_spp*n_spp]; // vector indicating whether elements are on diagonal
-  matrix[n_site,n_spp] x0; // data
-  int<lower=0> shared_q[n_spp,n_site+1]; // matrix indicating which sites/spp share residual process variances
+  matrix[n_process,n_spp] x0; // data
+  int<lower=0> shared_q[n_spp,n_process+1]; // matrix indicating which sites/spp share residual process variances
   int<lower=0> n_q; // number of variances being estimated, max(shared_q)
   int<lower=0> shared_r[n_spp,n_site+1]; // matrix indicating which sites/spp share obs variances
   int<lower=0> n_r; // number of obs variances being estimated, max(shared_q)
-  int<lower=0> shared_u[n_spp,n_site+1]; // matrix indicating which sites/spp share trends
+  int<lower=0> shared_u[n_spp,n_process+1]; // matrix indicating which sites/spp share trends
   int<lower=0> n_u; // number of trends being estimated, max(shared_u)
   int<lower=0> est_trend;
   int<lower=0> demean;
@@ -28,32 +30,34 @@ data {
 parameters {
   vector[(n_spp*n_spp)] vecBdev[n_year]; // elements accessed [n_year,n_spp]
   real<lower=0> sigma_rw_pars[2]; // sds for random walk
-  matrix[n_year,n_spp] x[n_site]; // unobserved states
+  matrix[n_year,n_spp] x[n_process]; // unobserved states
   real<lower=0> resid_process_sd[n_q]; // residual sds
   real<lower=0> obs_sd[n_r]; // residual sds
   real u[n_u]; // trends
 }
 transformed parameters {
   vector<lower=0>[(n_spp*n_spp)] sigma_rw;
-  matrix<lower=0>[n_spp, n_site] resid_process_mat;
+  matrix<lower=0>[n_spp, n_process] resid_process_mat;
   matrix<lower=0>[n_spp, n_site] obs_mat;
   vector<lower=-20,upper=20>[(n_spp*n_spp)] vecB[n_year];
-  matrix[n_spp, n_site] u_mat;
+  matrix[n_spp, n_process] u_mat;
   matrix[n_spp,n_spp] B[(n_year-1)]; // B matrix, accessed as n_year, n_spp, n_spp
-  matrix[n_year,n_spp] pred[n_site]; // predicted unobserved states
+  matrix[n_year,n_spp] pred[n_process]; // predicted unobserved states
 
   for(i in 1:(n_spp*n_spp)) {
     sigma_rw[i] = sigma_rw_pars[b_diag[i]];
   }
   for(i in 1:n_spp) {
-    for(j in 1:n_site) {
+    for(j in 1:n_process) {
       resid_process_mat[i,j] = resid_process_sd[shared_q[i,j]];
       u_mat[i,j] = u[shared_u[i,j]];
+    }
+    for(j in 1:n_site) {
       obs_mat[i,j] = obs_sd[shared_r[i,j]];
     }
   }
 
-  for(s in 1:n_site) {
+  for(s in 1:n_process) {
     pred[s,1,] = x[s,1,]; // states for first year
   }
   for(i in 1:(n_spp*n_spp)) {
@@ -76,7 +80,7 @@ transformed parameters {
 
     // do projection to calculate predicted values. modify code depending on whether
     // predictions should be demeaned before projected, and whether or not trend included.
-    for(s in 1:n_site) {
+    for(s in 1:n_process) {
      if(est_trend == 0) {
       if(demean==0) {pred[s,t,] = x[s,t-1,] * B[t-1,,];}
       if(demean==1) {pred[s,t,] = (x[s,t-1,]- u_mat[,s]') * B[t-1,,];}
@@ -97,14 +101,14 @@ model {
     vecBdev[t] ~ normal(0, sigma_rw); // vectorized random in B
   }
   // prior on first time step
-  for(site in 1:n_site) {
+  for(site in 1:n_process) {
     for(spp in 1:n_spp) {
       x[site,1,spp] ~ normal(x0[site,spp],1);
     }
   }
   // process model for remaining sites
   for(t in 2:n_year) {
-   for(site in 1:n_site) {
+   for(site in 1:n_process) {
     for(spp in 1:n_spp) {
       x[site,t,spp] ~ normal(pred[site,t,spp], resid_process_mat[spp,site]);
     }
