@@ -7,7 +7,7 @@ options(mc.cores = parallel::detectCores())
 
 n_species <- 4
 n_year <- 60
-n_site <- 3
+n_site <- 5
 n_simulations = 100
 ## min log-density threshold
 dens_min <- -3
@@ -69,7 +69,7 @@ for(ns in 1:n_simulations) {
   y_thin = array(0, dim=c(dim(Y)[1], dim(Y)[2]/2, dim(Y)[3]))
   y_thin = Y[,-c(1:dim(Y)[2]/2),]
   fitted <- get_coefs(y = y_thin, topo = B0_lfc,
-                    shared_r = matrix(1,4,3),
+                    shared_r = matrix(1,4,n_site),
                     shared_q = matrix(1,4,1),
                     process = rep(1, dim(Y)[1]),
                     mcmc_chain = 1,
@@ -81,7 +81,7 @@ for(ns in 1:n_simulations) {
   print(ns)
 }
 ## save results
-save(saved_output, file = "output_linear_chain_staticB_multisite.Rdata")
+save(saved_output, file = "output_linear_chain_staticB_multisite5.Rdata")
 
 
 # Plot output
