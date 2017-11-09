@@ -3,7 +3,7 @@ data {
   int<lower=0> n_site;
   int<lower=0> n_spp;
   int<lower=0> n_process; // how many processes can the sites be grouped into
-  int<lower=0> process[n_site]; // vector assigning sites -> processes
+  int<lower=0> process[n_site+1]; // vector assigning sites -> processes
   int<lower=0> b_diag[n_spp*n_spp]; // vector indicating whether elements are on diagonal
   matrix[n_process,n_spp] x0; // data
   int<lower=0> shared_q[n_spp,n_process+1]; // matrix indicating which sites/spp share residual process variances

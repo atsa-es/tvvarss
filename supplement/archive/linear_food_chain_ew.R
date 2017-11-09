@@ -62,7 +62,7 @@ set.seed(1)
   #apply(extract(marss_constrained, "B")$B, c(2,3,4), mean)[1,,]
 
   marss_constrained <- tvvarss(y=yy, topo=B0_lfc, shared_r = matrix(1, n_species, n_site),
-    mcmc_chain=3, mcmc_iter=1000, mcmc_warmup=500, dynamicB = TRUE)
+    mcmc_chain=1, mcmc_iter=2000, mcmc_warmup=1000, dynamicB = FALSE)
   apply(extract(marss_constrained, "B")$B, c(2,3,4), mean)[1,,]
 
 # Change up constraints on B matrix
