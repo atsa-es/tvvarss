@@ -37,7 +37,7 @@ get_coefs <- function(y, topo, shared_r, shared_q, mcmc_chain, mcmc_iter, mcmc_w
   return(fitted_model)
 }
 
-
+set.seed(123)
 for(ns in 1:n_simulations) {
 
   B0_init <- matrix(0,n_species,n_species)
@@ -57,7 +57,7 @@ for(ns in 1:n_simulations) {
                   TT = n_year,
                   var_QX = 0.02^2,
                   cov_QX = 0,
-                  var_QB = 0.01,
+                  var_QB = 0,
                   cov_QB = 0)
   while(max(lfc$states) > dens_max | min(lfc$states) < dens_min) {
     ## simulate process. var_QX is process error on states.
@@ -67,7 +67,7 @@ for(ns in 1:n_simulations) {
                     TT = n_year,
                     var_QX = 0.02^2,
                     cov_QX = 0,
-                    var_QB = 0.01,
+                    var_QB = 0,
                     cov_QB = 0)
   }
   ## add obs error
@@ -75,21 +75,24 @@ for(ns in 1:n_simulations) {
 
   # Burn-in the data, fitting model to 2nd half
   y_thin = array(0, dim=c(dim(Y)[1], dim(Y)[2]/2, dim(Y)[3]))
-  y_thin = Y[,-c(1:dim(Y)[2]/2),]
+  for(ii in 1:dim(y_thin)[1]) {y_thin[ii,,] = Y[ii,-c(1:dim(Y)[2]/2),]}
 
   fitted <- get_coefs(y = y_thin, topo = B0_lfc,
-    shared_r = matrix(1, n_species, dim(Y)[1]),
+    shared_r = matrix(1, n_species, dim(y_thin)[1]),
     shared_q = matrix(1, n_species, 1),
-    process = rep(1, dim(Y)[1]),
+    process = rep(1, dim(y_thin)[1]),
     mcmc_chain = 1,
     mcmc_iter = 2000,
     mcmc_warmup = 1000)
 
-  coef = tidy(fitted, intervals=TRUE, prob=0.9)
+  coef = tidy(fitted, conf.int = TRUE, conf.level=0.9,
+    rhat = TRUE, ess = TRUE)
+  coef = coef[which(startsWith(coef$term, "B[1,")),]
   ## save data (Y), simulation output (lfc), model coefficients
-  saved_output[[ns]] <- list('data' = Y, 'sim_output' = lfc, 'estimate' = coef)
+  saved_output[[ns]] <- list('data' = y_thin, 'sim_output' = lfc, 'estimate' = coef)
   print(ns)
+  save(saved_output, file = "output_linear_chain_staticB.Rdata")
 }
 ## save results
-save(saved_output, file = "output_linear_chain_staticB.Rdata")
+
 
