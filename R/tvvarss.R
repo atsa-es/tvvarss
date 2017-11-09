@@ -62,6 +62,7 @@ tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gauss
 
   if(is.null(process)) process = seq(1, dim(y)[1])
   n_process = max(process)
+  process = c(process, 0)
 
   if(is.null(topo)) {
     # matrix constrained 0-1 on diagonal, and no constraints elsewhere
