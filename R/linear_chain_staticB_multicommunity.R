@@ -43,19 +43,23 @@ for(ns in 1:nrow(sim_config)) {
   B0_init[4,3] <- runif(1, 0, 0.05)
 
   ## simulate process. var_QX is process error on states.
-  ## var_QB is process var on B -- ignored for static B models.
-  lfc <- simTVVAR(Bt = B0_init,
-    topo = B0_lfc,
-    TT = n_year,
-    var_QX = 0.02^2,
-    cov_QX = 0,
-    var_QB = 0,
-    cov_QB = 0)
+  YY = array(0, dim = c(sim_config$site[ns], n_year, n_species))
+  lfc = list()
+  for(yy in 1:sim_config$site[ns]) {
 
-  while(max(lfc$states) > dens_max | min(lfc$states) < dens_min) {
+  ## var_QB is process var on B -- ignored for static B models.
+  lfc[[yy]] <- simTVVAR(Bt = B0_init,
+      topo = B0_lfc,
+      TT = n_year,
+      var_QX = 0.02^2,
+      cov_QX = 0,
+      var_QB = 0,
+      cov_QB = 0)
+
+  while(max(lfc[[yy]]$states) > dens_max | min(lfc[[yy]]$states) < dens_min) {
     ## simulate process. var_QX is process error on states.
     ## var_QB is process var on B -- ignored for static B models.
-    lfc <- simTVVAR(Bt = B0_init,
+    lfc[[yy]] <- simTVVAR(Bt = B0_init,
       topo = B0_lfc,
       TT = n_year,
       var_QX = 0.02^2,
@@ -65,9 +69,12 @@ for(ns in 1:nrow(sim_config)) {
   }
 
   ## add obs error
-  Y <- sim2fit(lfc, n_sims = sim_config$site[ns],
+  Y <- sim2fit(lfc[[yy]], n_sims = sim_config$site[ns],
     sd=c(0.01,0.1)[as.numeric(sim_config$obs_error[ns])])
+  YY[yy,,] = Y
+  }
 
+  Y = YY
   # Burn-in the data, fitting model to 2nd half
   y_thin = array(0, dim=c(dim(Y)[1], dim(Y)[2]/2, dim(Y)[3]))
   for(ii in 1:dim(y_thin)[1]) {y_thin[ii,,] = Y[ii,-c(1:dim(Y)[2]/2),]}
@@ -90,7 +97,7 @@ for(ns in 1:nrow(sim_config)) {
   saved_output[[ns]] <- list('data' = y_thin, 'sim_output' = lfc, 'estimate' = coef,
     'converged' = ifelse(max(coef$rhat, na.rm=T) < 1.1, 1, 0))
   print(ns)
-  save(saved_output, file = "linear_chain_staticB_multisite.Rdata")
+  save(saved_output, file = "linear_chain_staticB_multicommunity.Rdata")
 }
 
 ## save results
