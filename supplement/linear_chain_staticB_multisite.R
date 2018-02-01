@@ -93,6 +93,7 @@ for(ns in 1:n_simulations) {
   print(ns)
   save(saved_output, file = "output_linear_chain_staticB.Rdata")
 }
+
 ## save results
 
 
