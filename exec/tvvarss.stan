@@ -28,7 +28,7 @@ data {
   int<lower=0> fit_dynamicB;
 }
 parameters {
-  vector[(n_spp*n_spp)] vecBdev[n_year]; // elements accessed [n_year,n_spp]
+  vector<lower=0,upper=1>[(n_spp*n_spp)] vecBdev[n_year]; // elements accessed [n_year,n_spp]
   real<lower=0> sigma_rw_pars[2]; // sds for random walk
   matrix[n_year,n_spp] x[n_process]; // unobserved states
   real<lower=0> resid_process_sd[n_q]; // residual sds
@@ -69,7 +69,7 @@ transformed parameters {
     // estimated interactions
     for(i in 1:(n_spp*n_spp)) {
       // top down (td) interactions
-      B[t-1,row_indices[i],col_indices[i]] = (b_limits[b_indices[i],2] - b_limits[b_indices[i],1]) * exp(vecB[t-1,i])/(1+exp(vecB[t-1,i])) + b_limits[b_indices[i],1];
+      B[t-1,row_indices[i],col_indices[i]] = (b_limits[b_indices[i],2] - b_limits[b_indices[i],1]) * vecB[t-1,i]) + b_limits[b_indices[i],1];
       // if user wants constant b matrix, vecB[t] = vecB[t-1]
       vecB[t,i] = vecB[t-1,i] + (fit_dynamicB)*vecBdev[t-1,i]; // random walk in b elements
     }
@@ -93,8 +93,8 @@ transformed parameters {
   }
 }
 model {
-  sigma_rw_pars[1] ~ cauchy(0,5);
-  sigma_rw_pars[2] ~ cauchy(0,5);
+  sigma_rw_pars[1] ~ student_t(5,0,1);
+  sigma_rw_pars[2] ~ student_t(5,0,1);
   //vecB[1] ~ normal(0, 3); // prior for first state
   for(t in 1:n_year) {
     //vecB[t] ~ normal(vecB[t-1], sigma_rw); // vectorized random in B
@@ -117,10 +117,10 @@ model {
 
   for(i in 1:n_q) {
     // prior on process standard deviations
-    resid_process_sd[i] ~ normal(0,3);
+    resid_process_sd[i] ~ student_t(5,0,1);
   }
   for(i in 1:n_r) {
-    obs_sd[i] ~ normal(0,3);
+    obs_sd[i] ~ student_t(5,0,1);
   }
   for(i in 1:n_u) {
     // prior on trends
