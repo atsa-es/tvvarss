@@ -98,7 +98,7 @@ model {
   //vecB[1] ~ normal(0, 3); // prior for first state
   for(t in 1:n_year) {
     //vecB[t] ~ normal(vecB[t-1], sigma_rw); // vectorized random in B
-    vecBdev[t] ~ normal(0, sigma_rw); // vectorized random in B
+    vecBdev[t] ~ normal(0, 10); // vectorized random in B
   }
   // prior on first time step
   for(site in 1:n_process) {
