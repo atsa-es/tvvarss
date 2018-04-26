@@ -127,13 +127,20 @@ model {
     u[i] ~ normal(0,1);
   }
 
-  // gaussian likelihood for now
-  for(i in 1:n_pos) {
-    if(family==1) y[i] ~ normal(x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]], obs_mat[spp_indices_pos[i],site_indices_pos[i]]);
-    if(family==2) y_int[i] ~ bernoulli_logit(x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]]);
-    if(family==3) y_int[i] ~ poisson_log(x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]]);
-    if(family==4) y[i] ~ gamma(obs_mat[spp_indices_pos[i],site_indices_pos[i]], obs_mat[spp_indices_pos[i],site_indices_pos[i]] ./ x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]]);
-    if(family==5) y[i] ~ lognormal(x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]], obs_mat[spp_indices_pos[i],site_indices_pos[i]]);
+  if(family==1) {
+    for(i in 1:n_pos) {y[i] ~ normal(x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]], obs_mat[spp_indices_pos[i],site_indices_pos[i]]);}
+  }
+  if(family==2) {
+    for(i in 1:n_pos) {y_int[i] ~ bernoulli_logit(x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]]);}
+  }
+  if(family==3) {
+    for(i in 1:n_pos) {y_int[i] ~ poisson_log(x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]]);}
+  }
+  if(family==4) {
+    for(i in 1:n_pos) {y[i] ~ gamma(obs_mat[spp_indices_pos[i],site_indices_pos[i]], obs_mat[spp_indices_pos[i],site_indices_pos[i]] ./ x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]]);}
+  }
+  if(family==5) {
+    for(i in 1:n_pos) {y[i] ~ lognormal(x[site_indices_pos[i],year_indices_pos[i],spp_indices_pos[i]], obs_mat[spp_indices_pos[i],site_indices_pos[i]]);}
   }
 
 }
