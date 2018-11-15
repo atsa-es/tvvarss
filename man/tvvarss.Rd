@@ -6,8 +6,8 @@
 \usage{
 tvvarss(y, de_mean = TRUE, topo = NULL, dynamicB = TRUE,
   family = "gaussian", x0 = NULL, shared_q = NULL, shared_r = NULL,
-  process = NULL, mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1,
-  mcmc_chain = 3)
+  process = NULL, mcmc_iter = 1000, mcmc_warmup = 500,
+  mcmc_thin = 1, mcmc_chain = 3)
 }
 \arguments{
 \item{y}{The data (array, with dimensions = site, year, species)}
