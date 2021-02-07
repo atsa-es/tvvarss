@@ -96,7 +96,7 @@ simTVVAR <- function(Bt, topo=NULL, TT, var_QX, cov_QX, var_QB, cov_QB = 0,
                      QQ_XX = NULL, QQ_BB = NULL, X0 = NULL,
                      CC = NULL, cc = NULL) {
   if(!is.null(Bt)) {
-    if(class(Bt) != "matrix" & class(Bt) != "array") {
+    if(class(Bt)[1] %in%c("matrix","array")==FALSE) {
       stop("'Bt' must be an [n x n] matrix or [n x n x T] array of interaction strengths. Otherwise, it must be set to NULL with 'topo' passed as well.\n\n")
     }
     if(length(dim(Bt)) < 2 | length(dim(Bt)) > 3 | dim(Bt)[1] != dim(Bt)[2]) {
