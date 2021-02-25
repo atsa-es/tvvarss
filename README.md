@@ -86,7 +86,7 @@ Or equal across species - sites
     rownames(m) = paste0("Species ", 1:5)
     knitr::kable(m)
 
-### Process
+### Processes
 
 In some situations, like the replicate observations described above, we
 may want to relate sites as measurements of the same underlying state.
@@ -125,3 +125,9 @@ tvvarss(y = y, family="gaussian")
 the family can be any of the following: “gaussian”, “binomial”,
 “poisson”, “gamma”, “lognormal”. We assumea logit link for modeling
 the binomial, and a log link for the Gamma, poisson, and lognormal.
+
+### CITATION
+
+Ward, E.J., M.D. Scheuerell, and S.L. Katz. 2021. ‘tvvarss’: Time
+varying vector autoregressive models in Stan.
+[![DOI](https://zenodo.org/badge/47343421.svg)](https://zenodo.org/badge/latestdoi/47343421)

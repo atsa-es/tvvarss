@@ -36,13 +36,13 @@ A short vignette for the package is:
 vignette("intro_tvvarss", package = "tvvarss")
 ```
 
-### Data 
+### Data {#data}
 
 `tvvarss` takes data as an array, with dimensions (site, year, species). Using multiple sites or multiple species is completely optional, and we assume 1 measurement per site-year-species combination (for multiple measurements, these may be created as replicate sites).
 
 Simulated data may be generated with our built in simulation function `simTVVAR`, which is demonstrate in the vignette
 
-### Model structure
+### Model structure {#models}
 
 We allow the $\textbf{B}$ matrix in a conventional MAR model to be either static or time varying -- time varying models are assumed by default, but may changed to static matrices with the 
 
@@ -52,7 +52,7 @@ tvvarss(y, dynamicB = FALSE)
 
 Because the number of elements in $\textbf{B}$ may not be identifiable, we also allow constraints to be passed in, depending on the food web structure. This is done with the `topo` argument, which is detailed in the package vignette.
 
-### Variances
+### Variances {#variances}
 
 We allow process and observation variances to be shared across sites or species. These are set with the arguments is dimensioned (number of species x number of sites), and elements are passed in as integers.
 
@@ -88,7 +88,7 @@ rownames(m) = paste0("Species ", 1:5)
 knitr::kable(m)
 ```
 
-### Process
+### Processes {#processes}
 
 In some situations, like the replicate observations described above, we may want
 to relate sites as measurements of the same underlying state. This can be done
@@ -112,7 +112,7 @@ site 2, this could be expressed as
 process = c(1,2,1)
 ```
 
-### Families
+### Families {#families}
 
 We've implemented a few distribution families that may be useful for modeling 
 non-normal data. 
@@ -126,3 +126,6 @@ the family can be any of the following: "gaussian", "binomial", "poisson",
 "gamma", "lognormal". We assumea logit link for modeling the binomial, and a log
 link for the Gamma, poisson, and lognormal. 
 
+### CITATION {#cite}
+
+Ward, E.J., M.D. Scheuerell, and S.L. Katz. 2021. 'tvvarss': Time varying vector autoregressive models in Stan.  [![DOI](https://zenodo.org/badge/47343421.svg)](https://zenodo.org/badge/latestdoi/47343421)
