@@ -6,7 +6,53 @@
 [![DOI](https://zenodo.org/badge/47343421.svg)](https://zenodo.org/badge/latestdoi/47343421)
 <!-- badges: end -->
 
-## TVVARSS
+<ul class="nav">
+
+<li>
+
+<a href="#install">Install</a>
+
+</li>
+
+<li>
+
+<a href="#data">Data</a>
+
+</li>
+
+<li>
+
+<a href="#models">Model structure</a>
+
+</li>
+
+<li>
+
+<a href="#variances">Variances</a>
+
+</li>
+
+<li>
+
+<a href="#processes">Processes</a>
+
+</li>
+
+<li>
+
+<a href="#families">Families</a>
+
+</li>
+
+<li>
+
+<a href="#cite">Citation info</a>
+
+</li>
+
+</ul>
+
+## Installation
 
 `tvvarss` is an R package used to simulate and/or fit time-varying
 vector autoregressive state space models of community interactions.
