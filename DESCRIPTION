@@ -1,7 +1,7 @@
 Package: tvvarss
 Type: Package
 Title: Time Varying Vector Autoregressive State Space Models
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: as.person(c(
     "Eric Ward <eric.ward@noaa.gov> [aut, cre]", 
     "Mark Scheuerell <scheuerl@uw.edu> [aut]",
