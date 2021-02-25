@@ -4,7 +4,7 @@ Title: Time Varying Vector Autoregressive State Space Models
 Version: 0.1.0
 Authors@R: as.person(c(
     "Eric Ward <eric.ward@noaa.gov> [aut, cre]", 
-    "Mark Scheuerell <mark.scheuerell@noaa.gov> [aut]",
+    "Mark Scheuerell <scheuerl@uw.edu> [aut]",
     "Steve Katz <steve.katz@wsu.edu> [aut]"
   ))
 Maintainer: Eric Ward <eric.ward@noaa.gov>
@@ -12,14 +12,36 @@ Description: The tvvarss package uses Stan (mc-stan.org) to fit multi-site
     multivariate autoregressive (aka vector autoregressive) state space models
     with a time varying interaction matrix.
 License: GPL (>=3)
-Encoding: UTF-8
-LazyData: true
-Depends: R (>= 3.3), Rcpp (>= 0.12.10), methods
-Imports: rstan (>= 2.14.2), rstantools (>= 1.2.0), MASS
-LinkingTo: StanHeaders (>= 2.14.0.1), rstan (>= 2.14.2), BH (>= 1.62.0.1), Rcpp (>= 0.12.10), RcppEigen (>= 0.3.2.9.1)
-RoxygenNote: 6.1.1
+Depends:
+    R (>= 3.4.0)
+Imports:
+    MASS,
+    methods,
+    Rcpp (>= 0.12.0),
+    RcppParallel (>= 5.0.1),
+    rstan (>= 2.18.1),
+    rstantools (>= 2.1.1),
+    ggplot2,
+    viridisLite,
+    loo (>= 2.0.0),
+    rlang (>= 0.3.1)
+LinkingTo: BH (>= 1.66.0),
+    Rcpp (>= 0.12.0),
+    RcppEigen (>= 0.3.3.3.0),
+    RcppParallel (>= 5.0.1),
+    rstan (>= 2.18.1),
+    StanHeaders (>= 2.18.0)
 Suggests:
+    testthat,
     knitr,
     rmarkdown
-VignetteBuilder: knitr
+Encoding: UTF-8
+LazyData: true
 URL: https://github.com/nwfsc-timeseries/tvvarss
+BugReports: https://github.com/nwfsc-timeseries/atsar/issues
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+SystemRequirements: GNU make
+Biarch: true
+VignetteBuilder: knitr
+

@@ -1,0 +1,180 @@
+---
+title: "Introduction to using time varying vector autoregressive models (TVVARSS)"
+author: "Eric Ward, Mark Scheuerell, Steve Katz"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Intro to tvvarss}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Requirements
+
+All analyses require the [R software](https://cran.r-project.org/) (v3.4) for data simulation, processing, and summarizing model results; and the [Stan software](http://mc-stan.org/) for Hamiltonian Monte Carlo (HMC) simulation.
+
+We begin by installing the `tvvarss` package (if necessary) and then loading it.
+
+```{r load_pkgs, message=FALSE, warning=FALSE}
+#if (require(devtools)) {
+#    devtools::install_github("nwfsc-timeseries/tvvarss")
+    library("tvvarss")
+#}
+```
+
+# Simulating data
+
+The `tvvarss` package includes the the function `simTVVAR()` to simulate the process component of a TVVARSS model (_i.e._, it does not add observation error). The primary input to `simTVVAR()` is the [_n_ x _n_] matrix (or [_n_ x _n_ x 1] array) `Bt`, which specifies the intra- and inter-species interactions. If `Bt` is a matrix, then it is used to specify the initial conditions for $\mathbf{B}_t$. 
+
+the food web topology. Specifically, interactions are expressed as the effect of column on row; the diagonals indicate the strength of density-dependence. All elements of the matrix corresponding to no interaction are set to 0.
+
+`tvvarss` is designed to work with symbolic representations within `B0`, based on the following `character` codes:
+
+* `"dd"` for density-dependence (this is implied in TVVARSS models)
+* `"td"` for top-down
+* `"bu"` for bottom-up
+* `"cf"` for competitive/facilitative
+
+We show four different examples of simulated food web topologies. 
+
+## Ex 1: Linear food chain
+
+For the first example, we model 4 tropic levels stacked in a linear food chain from primary producers `PP` at the bottom to tertiary consumers `TC` at the top.
+
+```{r ex_1_graphic}
+lvls <- c("TC","SC","PC","PP")
+nn <- length(lvls)
+cat(paste0(paste0(lvls[1:(nn-1)],"\n|\n",collapse = ""),lvls[nn]))
+```
+
+Here is the topology in a matrix form that `simTVVAR()` will understand.
+
+```{r ex_1_B0}
+## initial conditions for B_t
+B0_ex1 <- matrix(list(0),nn,nn)
+dimnames(B0_ex1) <- list(lvls,lvls)
+## diagonal elements = density-dependence
+diag(B0_ex1) <- rep("dd",4)
+for(i in 1:(nn-1)) {
+  B0_ex1[i,i+1] <- "bu"
+  B0_ex1[i+1,i] <- "td"
+}
+## inspect B0
+B0_ex1
+```
+
+We can now simulate a TVVAR process based on this expression of the food web topology. In addition to the matrix specifying the topology, the simulator needs to know the length of time series and some information about the variances of the process errors for $\mathbf{B}_t$ and the states $\mathbf{x}_t$. For this example, we will assume IID errors.
+
+Here is a 30-unit, simulated TVVAR process.
+
+```{r ex_1_sim, fig.height=3, fig.width=7}
+TT <- 35
+## simulate
+set.seed(666)
+ex1 <- simTVVAR(Bt = NULL, topo = B0_ex1, TT = TT,
+                var_QX = seq(4)/20, cov_QX = 0,
+                var_QB = 0.10, cov_QB = 0)
+## plot states
+clr <- c("purple","darkred","blue","darkgreen")
+par(mai=c(0.9,0.9,0,0), omi=c(0.1,0.1,0.1,1.5))
+matplot(t(ex1$states), type="l", lty="solid", lwd=2, xpd=NA,
+        col=clr, ylab="Log density")
+legend("right", legend=lvls, lty="solid", lwd=2, bty="n",
+       col=clr, inset=-0.2, xpd=NA, cex=0.9)
+```
+
+Now we simulate many TVVAR processes of this form and inspect them.
+
+```{r ex_1_lots, fig.height=3, fig.width=7}
+## number of simulations
+ee <- 10
+## list for results
+ex1 <- vector("list",ee)
+for(i in 1:ee) {
+  ex1[[i]] <- simTVVAR(Bt = NULL, topo = B0_ex1, TT = TT,
+                       var_QX = seq(4)/20, cov_QX = 0,
+                       var_QB = 0.10, cov_QB = 0)
+  par(mai=c(0.6,0.9,0.3,0), omi=c(0.1,0.1,0.1,1.5))
+  matplot(t(ex1[[i]]$states), type="l", lty="solid", lwd=2, xpd=NA,
+          col=clr, main=paste0("Simulation ",i), ylab="Log density")
+  legend("right", legend=lvls, lty="solid", lwd=2, bty="n",
+         col=clr, inset=-0.2, xpd=NA, cex=0.9)
+}
+```
+
+Clearly some of the simulated processes must have diagonal values in __B__ are close to 1, which combine with some of the off-diagonal elements to create unrealistic, boom-bust population dynamics. Let's develop a screening process to toss those out.
+
+```{r ex_1_screening, fig.height=3, fig.width=7}
+## min log-density threshold
+dens_min <- -5
+## max log-density threshold
+dens_max <- 7
+ex1 <- vector("list",ee)
+for(i in 1:ee) {
+  tmp <- list(states=2*rep(dens_max,2))
+  while(max(tmp$states) > dens_max | min(tmp$states) < dens_min) {
+    tmp <- simTVVAR(Bt = NULL, topo = B0_ex1, TT = TT,
+                    var_QX = seq(4)/20, cov_QX = 0,
+                    var_QB = 0.10, cov_QB = 0)
+  }
+  ex1[[i]] <- tmp
+  par(mai=c(0.6,0.9,0.3,0), omi=c(0.1,0.1,0.1,1.5))
+  matplot(t(ex1[[i]]$states), type="l", lty="solid", lwd=2, xpd=NA,
+          col=clr, main=paste0("Simulation ",i), ylab="Log density")
+  legend("right", legend=lvls, lty="solid", lwd=2, bty="n",
+         col=clr, inset=-0.2, xpd=NA, cex=0.9)
+}
+```
+
+## Ex 2: Grazers & plants
+
+For the second example, we model 2 tropic levels with 2 different primary producers and 2 different consumers.
+
+```{r ex_2_graphic}
+lvls <- c("C1","C2","P1","P2")
+nn <- length(lvls)
+cat(c("C1-C2\n| X |\nP1-P2"))
+```
+
+Here is the topology in a matrix form that `simTVVAR()` will understand.
+
+```{r ex_2_B0}
+## initial conditions for B_t
+B0_ex2 <- matrix(list(0),nn,nn)
+dimnames(B0_ex2) <- list(lvls,lvls)
+## diagonal elements = density-dependence
+diag(B0_ex2) <- rep("dd",4)
+B0_ex2[1:2,3:4] <- "bu"
+B0_ex2[3:4,1:2] <- "td"
+B0_ex2[1,2] <- B0_ex2[2,1] <- B0_ex2[3,4] <- B0_ex2[4,3] <- "cf"
+## inspect B0
+B0_ex2
+```
+
+```{r ex_2_screening, fig.height=3, fig.width=7}
+ee <- 5
+## min log-density threshold
+dens_min <- -5
+## max log-density threshold
+dens_max <- 7
+ex2 <- vector("list",ee)
+clr <- c("darkblue","steelblue","darkgreen","darkolivegreen4")
+for(i in 1:ee) {
+  tmp <- list(states=2*rep(dens_max,2))
+  while(max(tmp$states) > dens_max | min(tmp$states) < dens_min) {
+    tmp <- simTVVAR(Bt = NULL, topo = B0_ex2, TT = TT,
+                    var_QX = seq(4)/20, cov_QX = 0,
+                    var_QB = 0.10, cov_QB = 0)
+  }
+  ex2[[i]] <- tmp
+  par(mai=c(0.6,0.9,0.3,0), omi=c(0.1,0.1,0.1,1.5))
+  matplot(t(ex2[[i]]$states), type="l", lty="solid", lwd=2, xpd=NA,
+          col=clr, main=paste0("Simulation ",i), ylab="Log density")
+  legend("right", legend=lvls, lty="solid", lwd=2, bty="n",
+         col=clr, inset=-0.2, xpd=NA, cex=0.9)
+}
+```

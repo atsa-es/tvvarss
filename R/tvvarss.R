@@ -4,7 +4,8 @@
 #'
 #' @param y The data (array, with dimensions = site, year, species)
 #' @param de_mean Whether or not to de_mean the process model; defaults to TRUE.
-#'   For example, X_t+1 = B_t * (X_t - pred[X_t]) versus X_t+1 = B_t * (X_t).
+#'   For example, \eqn{X_{t+1} = B_{t}  (X_{t} - pred[X_{t}])} versus
+#'   \eqn{X_{t+1} = B_{t} X_{t}}.
 #' @param topo Optional list matrix describing the presumed topology of the
 #'   community. Pairwise interactions are specified as density-dependent ("dd"),
 #'   top-down ("td"), bottom-up ("bu"), competitive/facilitative ("cf"), or
@@ -27,6 +28,7 @@
 #' @param mcmc_warmup Warmup / burn in phase, defaults to 500
 #' @param mcmc_thin MCMC thin, defaults to 1
 #' @param mcmc_chain MCMC chains, defaults to 3
+#' @param ... Extra arguments to pass to sampling
 #'
 #' @return an object of class 'stanfit'
 #'
@@ -37,7 +39,7 @@
 #' @export
 tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gaussian",
   x0 = NULL, shared_q = NULL, shared_r = NULL, process = NULL,
-  mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3) {
+  mcmc_iter = 1000, mcmc_warmup = 500, mcmc_thin = 1, mcmc_chain = 3, ...) {
   #@useDynLib tvvarss, .registration = TRUE
   include_trend = FALSE # not used as argument, but passed to STAN
   shared_u = NULL # not used as argument
@@ -139,9 +141,6 @@ tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gauss
   y = vec_y
   y_int = round(y)
 
-  stan_dir = find.package("tvvarss")
-  model = paste0(stan_dir, "/exec/tvvarss.stan")
-
   fit_dynamicB = as.integer(dynamicB) # convert 0 or 1
 
   datalist = list(n_year,
@@ -175,12 +174,14 @@ tvvarss <- function(y, de_mean = TRUE, topo = NULL, dynamicB=TRUE, family="gauss
   pars = c("sigma_rw_pars", "resid_process_sd", "obs_sd", "B", "pred")
   if(include_trend) pars = c(pars, "u")
 
-  mod = rstan::stan(data = datalist, pars = pars,
-    file = model,
-    chains = mcmc_chain,
-    iter = mcmc_iter,
+  mod <- rstan::sampling(
+    object = stanmodels$tvvarss,
+    data = datalist,
+    pars = pars,
+    control = list(adapt_delta = 0.8, max_treedepth = 20),
     warmup = mcmc_warmup,
+    iter = mcmc_iter,
     thin = mcmc_thin,
-    control=list(adapt_delta=0.99, max_treedepth=20))
+    chains = mcmc_chain,...)
   return(mod)
 }

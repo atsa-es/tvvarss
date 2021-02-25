@@ -4,15 +4,27 @@
 \alias{simTVVAR}
 \title{Simulate the process component of a TVVARSS model}
 \usage{
-simTVVAR(Bt, topo = NULL, TT, var_QX, cov_QX, var_QB, cov_QB = 0,
-  QQ_XX = NULL, QQ_BB = NULL, X0 = NULL, CC = NULL, cc = NULL)
+simTVVAR(
+  Bt = NULL,
+  topo = NULL,
+  TT,
+  var_QX,
+  cov_QX,
+  var_QB,
+  cov_QB = 0,
+  QQ_XX = NULL,
+  QQ_BB = NULL,
+  X0 = NULL,
+  CC = NULL,
+  cc = NULL
+)
 }
 \arguments{
 \item{Bt}{A matrix describing the topology of the food web (see 'Details').
 If \code{Bt == NULL}, then the food web topology must be specified and
 passed as \code{topo}. See 'Details'.}
 
-\item{topo}{[optional] list matrix describing the presumed topology of the
+\item{topo}{Optional list matrix describing the presumed topology of the
 community. Pairwise interactions are specified as density-dependent ("dd"),
 top-down ("td"), bottom-up ("bu"), competitive/facilitative ("cf"), or
 absent ("zero"). If specified, pairwise interactions will be constrained
@@ -28,15 +40,15 @@ in an approporiate manner (e.g., top-down effects are between -1 and 0).}
 
 \item{cov_QB}{Covariance, if any, of process errors of \strong{B}; if \code{cov_QB} > 0, then \code{var_QB} must be a scalar.}
 
-\item{QQ_XX}{[optional] Specify the explicit form for the var-cov matrix \strong{Q} of the process errors of the states.}
+\item{QQ_XX}{Optionally specify the explicit form for the var-cov matrix \strong{Q} of the process errors of the states.}
 
-\item{QQ_BB}{[optional] Specify the explicit form for the var-cov matrix \strong{Q} of the process errors of \strong{B}.}
+\item{QQ_BB}{Optionally specify the explicit form for the var-cov matrix \strong{Q} of the process errors of \strong{B}.}
 
-\item{X0}{[optional] Vector of initial states; \code{nrow(X0)} must equal \code{nrow(Bt)}.}
+\item{X0}{Optionally specify vector of initial states; \code{nrow(X0)} must equal \code{nrow(Bt)}.}
 
-\item{CC}{[optional] Matrix of covariate effects on states.}
+\item{CC}{Optionally specify matrix of covariate effects on states.}
 
-\item{cc}{[optional] Matrix of covariates.}
+\item{cc}{Optionally specify matrix of covariates.}
 }
 \value{
 A list with the following components:
@@ -56,58 +68,27 @@ A list with the following components:
 \details{
 \code{Bt} can be used in one of two ways when simulating a TVVAR model:
 \enumerate{
-  \item An [n x n] \code{matrix} with initial numeric values of B (i.e., B0).
-    If \code{QQ_BB = matrix(0, n, n)} then, a time-invariant (MARSS) model is
-    simulated based on these values.
-  \item An [n x n x (T+1)] \code{array} with actual values of B for each time
-    step, including B0. This is useful for simulating multiple realizations
-    of the same process.
+\item An \eqn{n x n} \code{matrix} with initial numeric values of B (i.e., B0).
+If \code{QQ_BB = matrix(0, n, n)} then, a time-invariant (MARSS) model is
+simulated based on these values.
+\item An \eqn{n x n x (T+1)} \code{array} with actual values of B for each time
+step, including B0. This is useful for simulating multiple realizations
+of the same process.
 }
 \code{topo} can be used to specify the food web topology by passing an
-[n x n] \code{matrix} with a combination of \code{character} and
+\eqn{n x n} \code{matrix} with a combination of \code{character} and
 \code{numeric} values in the off-diagonal elements; the diagonal should
 always contain \code{"dd"} as density-dependence is implicit in this
 model. Use 0 or "zero" to indicate no interaction and the following
 \code{character} codes for ecological interactions:
-    \itemize{
-      \item \code{"td"} to indicate a top-down interaction
-      \item \code{"bu"} to indicate a bottom-up interaction
-      \item \code{"cf"} to indicate a competitive/facilitative
-        interaction
-    }
+\itemize{
+\item \code{"td"} to indicate a top-down interaction
+\item \code{"bu"} to indicate a bottom-up interaction
+\item \code{"cf"} to indicate a competitive/facilitative
+interaction
+}
 See 'Examples' for details on formatting \code{B0}.
 }
 \examples{
-set.seed(123)
-## number of time steps
-TT <- 30
-## number of spp/guilds
-nn <- 4
-## CASE 1: linear food chain; starting values are random
-B0_lfc <- matrix(list(0),nn,nn)
-diag(B0_lfc) <- "dd"
-for(i in 1:(nn-1)) {
-  B0_lfc[i,i+1] <- "td"
-  B0_lfc[i+1,i] <- "bu"
-}
-## inspect B0
-B0_lfc
-## simulate & plot states
-lfc <- simTVVAR(Bt=NULL,topo=B0_lfc,TT=TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
-matplot(t(lfc$states),type="l")
-
-## CASE 2: 1 consumer & n-1 producers; starting values are random
-B0_cp <- matrix(list("cf"),nn,nn)
-B0_cp[1:(nn-1),nn] <- "td"
-B0_cp[nn,1:(nn-1)] <- "bu"
-diag(B0_cp) <- "dd"
-## inspect B0
-B0_cp
-## simulate & plot states
-cp <- simTVVAR(Bt=NULL,topo=B0_lfc,TT=TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
-matplot(t(cp$states),type="l")
-
-## simulate a second realization of CASE 2 using same B
-cp2 <- simTVVAR(Bt=cp$B_mat,topo=B0_lfc,TT=TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
 
 }

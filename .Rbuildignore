@@ -2,3 +2,6 @@
 ^\.Rproj\.user$
 ^paper_ex$
 ^docs$
+^\.github$
+^doc$
+^Meta$

@@ -22,7 +22,7 @@ An array with dimensions \code{c(n_sim, TT, n_spp)}.
 }
 \description{
 \code{sim2fit} adds observation error to a simulated TVVAR process and
-  converts it to a form suitable for fitting with \code{tvvarss}.
+converts it to a form suitable for fitting with \code{tvvarss}.
 }
 \details{
 This is a helper function that takes a fitted \code{simTVVAR} object and
@@ -42,7 +42,7 @@ for(i in 1:(nn-1)) {
   topo[i+1,i] <- "bu"
 }
 ## simulate process
-lfc <- simTVVAR(topo, TT, var_QX=rev(seq(1,4)/40), cov_QX=0, var_QB=0.05, cov_QB=0)
+lfc <- simTVVAR(Bt=NULL,topo=topo, TT=30, var_QX=rev(seq(1,4)/40), cov_QX=0, var_QB=0.05, cov_QB=0)
 ## create data array with 3 realizations of the process
 dat <- sim2fit(lfc, 3)
 

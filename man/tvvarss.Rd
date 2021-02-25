@@ -4,16 +4,29 @@
 \alias{tvvarss}
 \title{Fit a TVVARSS model to multivariate time series data}
 \usage{
-tvvarss(y, de_mean = TRUE, topo = NULL, dynamicB = TRUE,
-  family = "gaussian", x0 = NULL, shared_q = NULL, shared_r = NULL,
-  process = NULL, mcmc_iter = 1000, mcmc_warmup = 500,
-  mcmc_thin = 1, mcmc_chain = 3)
+tvvarss(
+  y,
+  de_mean = TRUE,
+  topo = NULL,
+  dynamicB = TRUE,
+  family = "gaussian",
+  x0 = NULL,
+  shared_q = NULL,
+  shared_r = NULL,
+  process = NULL,
+  mcmc_iter = 1000,
+  mcmc_warmup = 500,
+  mcmc_thin = 1,
+  mcmc_chain = 3,
+  ...
+)
 }
 \arguments{
 \item{y}{The data (array, with dimensions = site, year, species)}
 
 \item{de_mean}{Whether or not to de_mean the process model; defaults to TRUE.
-For example, X_t+1 = B_t * (X_t - pred[X_t]) versus X_t+1 = B_t * (X_t).}
+For example, \eqn{X_{t+1} = B_{t}  (X_{t} - pred[X_{t}])} versus
+\eqn{X_{t+1} = B_{t} X_{t}}.}
 
 \item{topo}{Optional list matrix describing the presumed topology of the
 community. Pairwise interactions are specified as density-dependent ("dd"),
@@ -47,6 +60,8 @@ across sites.}
 \item{mcmc_thin}{MCMC thin, defaults to 1}
 
 \item{mcmc_chain}{MCMC chains, defaults to 3}
+
+\item{...}{Extra arguments to pass to sampling}
 }
 \value{
 an object of class 'stanfit'

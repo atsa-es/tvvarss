@@ -4,3 +4,5 @@
 .DS_Store
 exec/.Rapp.history
 ^vignettes\/.*\.rds
+doc
+Meta
