@@ -37,7 +37,8 @@ absent ("zero").}
 varies through time (or a static B matrix that does not); defaults to TRUE.}
 
 \item{family}{Statistical distribution for the observation model, defaults to
-"gaussian".}
+"gaussian". But can be any of "gaussian", "binomial",
+"poisson", "gamma", "lognormal"}
 
 \item{x0}{The location matrix (mean) of priors on initial states; defaults to
 centered on observed data.}
