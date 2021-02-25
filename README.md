@@ -3,6 +3,7 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/eric-ward/TVVARSS/workflows/R-CMD-check/badge.svg)](https://github.com/eric-ward/TVVARSS/actions)
+[![DOI](https://zenodo.org/badge/47343421.svg)](https://zenodo.org/badge/latestdoi/47343421)
 <!-- badges: end -->
 
 ## TVVARSS
