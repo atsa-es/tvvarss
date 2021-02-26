@@ -57,53 +57,52 @@
 #' }
 #'
 #' @examples
-# set.seed(123)
-# ## number of time steps
-# TT <- 30
-# ## number of spp/guilds
-# nn <- 4
-# ## CASE 1: linear food chain; starting values are random
-# B0_lfc <- matrix(list(0),nn,nn)
-# diag(B0_lfc) <- "dd"
-# for(i in 1:(nn-1)) {
-#   B0_lfc[i,i+1] <- "td"
-#   B0_lfc[i+1,i] <- "bu"
-# }
-# ## inspect B0
-# B0_lfc
-# ## simulate & plot states
-# lfc <- simTVVAR(Bt=NULL,topo=B0_lfc,TT=TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
-# matplot(t(lfc$states),type="l")
-#
-# ## CASE 2: 1 consumer & n-1 producers; starting values are random
-# B0_cp <- matrix(list("cf"),nn,nn)
-# B0_cp[1:(nn-1),nn] <- "td"
-# B0_cp[nn,1:(nn-1)] <- "bu"
-# diag(B0_cp) <- "dd"
-# ## inspect B0
-# B0_cp
-# ## simulate & plot states
-# cp <- simTVVAR(Bt=NULL,topo=B0_lfc,TT=TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
-# matplot(t(cp$states),type="l")
-#
-# ## simulate a second realization of CASE 2 using same B
-# cp2 <- simTVVAR(Bt=cp$B_mat,topo=B0_lfc,TT=TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
-#'
+#' # set.seed(123)
+#' # ## number of time steps
+#' # TT <- 30
+#' # ## number of spp/guilds
+#' # nn <- 4
+#' # ## CASE 1: linear food chain; starting values are random
+#' # B0_lfc <- matrix(list(0),nn,nn)
+#' # diag(B0_lfc) <- "dd"
+#' # for(i in 1:(nn-1)) {
+#' #   B0_lfc[i,i+1] <- "td"
+#' #   B0_lfc[i+1,i] <- "bu"
+#' # }
+#' # ## inspect B0
+#' # B0_lfc
+#' # ## simulate & plot states
+#' # lfc <- simTVVAR(Bt=NULL,topo=B0_lfc,TT=TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
+#' # matplot(t(lfc$states),type="l")
+#' #
+#' # ## CASE 2: 1 consumer & n-1 producers; starting values are random
+#' # B0_cp <- matrix(list("cf"),nn,nn)
+#' # B0_cp[1:(nn-1),nn] <- "td"
+#' # B0_cp[nn,1:(nn-1)] <- "bu"
+#' # diag(B0_cp) <- "dd"
+#' # ## inspect B0
+#' # B0_cp
+#' # ## simulate & plot states
+#' # cp <- simTVVAR(Bt=NULL,topo=B0_lfc,TT=TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
+#' # matplot(t(cp$states),type="l")
+#' #
+#' # ## simulate a second realization of CASE 2 using same B
+#' # cp2 <- simTVVAR(Bt=cp$B_mat,topo=B0_lfc,TT=TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)
 #' @importFrom stats plogis qlogis rnorm runif
 #' @importFrom MASS mvrnorm
 #'
 #' @export
 #'
-simTVVAR <- function(Bt=NULL, topo=NULL, TT, var_QX, cov_QX, var_QB, cov_QB = 0,
+simTVVAR <- function(Bt = NULL, topo = NULL, TT, var_QX, cov_QX, var_QB, cov_QB = 0,
                      QQ_XX = NULL, QQ_BB = NULL, X0 = NULL,
                      CC = NULL, cc = NULL) {
-  if(!is.null(Bt)) {
-    if(class(Bt)[1] %in%c("matrix","array")==FALSE) {
+  if (!is.null(Bt)) {
+    if (class(Bt)[1] %in% c("matrix", "array") == FALSE) {
       stop("'Bt' must be an [n x n] matrix or [n x n x T] array of interaction strengths. Otherwise, it must be set to NULL with 'topo' passed as well.\n\n")
     }
-    if(length(dim(Bt)) < 2 | length(dim(Bt)) > 3 | dim(Bt)[1] != dim(Bt)[2]) {
-        stop("'Bt' must be an [n x n] matrix or [n x n x T] array of interaction strengths. Otherwise, it must be set to NULL with 'topo' passed as well.\n\n")
-      }
+    if (length(dim(Bt)) < 2 | length(dim(Bt)) > 3 | dim(Bt)[1] != dim(Bt)[2]) {
+      stop("'Bt' must be an [n x n] matrix or [n x n x T] array of interaction strengths. Otherwise, it must be set to NULL with 'topo' passed as well.\n\n")
+    }
     ## number of spp/guilds
     nn <- dim(Bt)[1]
   } else {
@@ -139,9 +138,9 @@ simTVVAR <- function(Bt=NULL, topo=NULL, TT, var_QX, cov_QX, var_QB, cov_QB = 0,
   XX <- matrix(NA, nn, TT + 1)
   ## initial states
   if (is.null(X0)) {
-    XX[,1] <- matrix(runif(nn, -1, 1), nn, 1)
+    XX[, 1] <- matrix(runif(nn, -1, 1), nn, 1)
   } else {
-    XX[,1] <- X0
+    XX[, 1] <- X0
   }
   ## proc errors for states
   WW_XX <- t(MASS::mvrnorm(TT, matrix(0, nn, 1), QQ_XX))
@@ -149,28 +148,34 @@ simTVVAR <- function(Bt=NULL, topo=NULL, TT, var_QX, cov_QX, var_QB, cov_QB = 0,
   BB <- array(0, c(nn, nn, TT + 1))
   if (length(dim(Bt)) == 2) { ## then Bt is an [n x n] init matrix
     ## initial BB
-    BB[,,1] <- Bt
+    BB[, , 1] <- Bt
   }
-  if(is.null(topo)) { ## matrix constrained 0:1 on diagonal, and -1:1 elsewhere
+  if (is.null(topo)) { ## matrix constrained 0:1 on diagonal, and -1:1 elsewhere
     topo <- matrix("cf", nn, nn)
     diag(topo) <- "dd"
   }
   ## find top-down interactions
-  i_td <- sapply(topo, function(x) { x == "td" })
+  i_td <- sapply(topo, function(x) {
+    x == "td"
+  })
   ## find bottom-up interactions
-  i_bu <- sapply(topo, function(x) { x == "bu" })
+  i_bu <- sapply(topo, function(x) {
+    x == "bu"
+  })
   ## find competitive/facilitative interactions
-  i_cf <- sapply(topo, function(x) { x == "cf" })
+  i_cf <- sapply(topo, function(x) {
+    x == "cf"
+  })
   ## if no Bt, make one
-  if(is.null(Bt)) {
+  if (is.null(Bt)) {
     diag(BB[, , 1]) <- plogis(rnorm(nn, 0, 1))
     BB[, , 1][i_td] <- -plogis(rnorm(sum(i_td), 0, 1))
     BB[, , 1][i_bu] <- plogis(rnorm(sum(i_bu), 0, 1))
     BB[, , 1][i_cf] <- plogis(rnorm(sum(i_cf), 0, 1)) * 2 - 1
   }
   ## proc errors for BB
-  WW_BB <- t(MASS::mvrnorm(TT, matrix(0, nn*nn, 1), QQ_BB))
-  WW_BB[which(BB[,,1] == 0), ] <- 0
+  WW_BB <- t(MASS::mvrnorm(TT, matrix(0, nn * nn, 1), QQ_BB))
+  WW_BB[which(BB[, , 1] == 0), ] <- 0
   if (length(dim(Bt)) == 3) { ## then Bt is [n x n x T] array of interactions
     BB <- Bt
     WW_BB <- NULL
@@ -185,16 +190,16 @@ simTVVAR <- function(Bt=NULL, topo=NULL, TT, var_QX, cov_QX, var_QB, cov_QB = 0,
     ## BB
     if (length(dim(Bt)) != 3) {
       ## constrain diagonals to [0,1]
-      diag(BB[,,t]) <- plogis(qlogis(diag(BB[,,t-1])) + diag(matrix(WW_BB[,t-1],nn,nn)))
+      diag(BB[, , t]) <- plogis(qlogis(diag(BB[, , t - 1])) + diag(matrix(WW_BB[, t - 1], nn, nn)))
       ## constrain top-down effects to [-1,0]
-      BB[,,t][i_td] <- -plogis(qlogis(-BB[,,t-1][i_td]) + WW_BB[i_td,t-1])
+      BB[, , t][i_td] <- -plogis(qlogis(-BB[, , t - 1][i_td]) + WW_BB[i_td, t - 1])
       ## constrain bottom-up effects to [0,1]
-      BB[,,t][i_bu] <- plogis(qlogis(BB[,,t-1][i_bu]) + WW_BB[i_bu,t-1])
+      BB[, , t][i_bu] <- plogis(qlogis(BB[, , t - 1][i_bu]) + WW_BB[i_bu, t - 1])
       ## constrain comp-facil effects to [-1,1]
-      BB[,,t][i_cf] <- plogis(qlogis((BB[,,t-1][i_cf] + 1) / 2) + WW_BB[i_cf,t-1]) * 2 - 1
+      BB[, , t][i_cf] <- plogis(qlogis((BB[, , t - 1][i_cf] + 1) / 2) + WW_BB[i_cf, t - 1]) * 2 - 1
     }
     ## state
-    XX[,t] <- BB[,,t] %*% (XX[,t-1,drop = FALSE] - CC %*% cc[,t-1]) + CC %*% cc[,t] + WW_XX[,t-1]
+    XX[, t] <- BB[, , t] %*% (XX[, t - 1, drop = FALSE] - CC %*% cc[, t - 1]) + CC %*% cc[, t] + WW_XX[, t - 1]
   }
   return(list(
     B_mat = BB,

@@ -23,34 +23,33 @@
 #' ## number of spp/guilds
 #' nn <- 4
 #' ## CASE 1: linear food chain
-#' topo <- matrix(list(0),nn,nn)
-#' for(i in 1:(nn-1)) {
-#'   topo[i,i+1] <- "td"
-#'   topo[i+1,i] <- "bu"
+#' topo <- matrix(list(0), nn, nn)
+#' for (i in 1:(nn - 1)) {
+#'   topo[i, i + 1] <- "td"
+#'   topo[i + 1, i] <- "bu"
 #' }
 #' ## simulate process
-#' lfc <- simTVVAR(Bt=NULL,topo=topo, TT=30, var_QX=rev(seq(1,4)/40), cov_QX=0, var_QB=0.05, cov_QB=0)
+#' lfc <- simTVVAR(Bt = NULL, topo = topo, TT = 30, var_QX = rev(seq(1, 4) / 40), cov_QX = 0, var_QB = 0.05, cov_QB = 0)
 #' ## create data array with 3 realizations of the process
 #' dat <- sim2fit(lfc, 3)
-#'
 #' @importFrom stats rnorm
 #'
 #' @export
-sim2fit <- function(obj, n_sims, sd=0.1, new_real=TRUE) {
-  if(n_sims < 1 | round(n_sims) - n_sims != 0) {
+sim2fit <- function(obj, n_sims, sd = 0.1, new_real = TRUE) {
+  if (n_sims < 1 | round(n_sims) - n_sims != 0) {
     stop("'n_sims' must be a positive integer.")
   }
-  if(sd < 0) {
+  if (sd < 0) {
     stop("'sd' must be non-negative.")
   }
-  nC <- ncol(obj$states)-1
+  nC <- ncol(obj$states) - 1
   nR <- nrow(obj$states)
-  yy <- array(NA,c(n_sims,nC,nR))
-  for(i in 1:n_sims) {
-    if(new_real) {
-      yy[i,,] <- t(eval(as.expression(obj$call))$states[,-1]) + matrix(rnorm(nC*nR,0,sd),nC,nR)
+  yy <- array(NA, c(n_sims, nC, nR))
+  for (i in 1:n_sims) {
+    if (new_real) {
+      yy[i, , ] <- t(eval(as.expression(obj$call))$states[, -1]) + matrix(rnorm(nC * nR, 0, sd), nC, nR)
     } else {
-      yy[i,,] <- t(obj$states[,-1]) + matrix(rnorm(nC*nR,0,sd),nC,nR)
+      yy[i, , ] <- t(obj$states[, -1]) + matrix(rnorm(nC * nR, 0, sd), nC, nR)
     }
   }
   return(yy)
