@@ -36,14 +36,13 @@ TT <- 30
 ## number of spp/guilds
 nn <- 4
 ## CASE 1: linear food chain
-topo <- matrix(list(0),nn,nn)
-for(i in 1:(nn-1)) {
-  topo[i,i+1] <- "td"
-  topo[i+1,i] <- "bu"
+topo <- matrix(list(0), nn, nn)
+for (i in 1:(nn - 1)) {
+  topo[i, i + 1] <- "td"
+  topo[i + 1, i] <- "bu"
 }
 ## simulate process
-lfc <- simTVVAR(Bt=NULL,topo=topo, TT=30, var_QX=rev(seq(1,4)/40), cov_QX=0, var_QB=0.05, cov_QB=0)
+lfc <- simTVVAR(Bt = NULL, topo = topo, TT = 30, var_QX = rev(seq(1, 4) / 40), cov_QX = 0, var_QB = 0.05, cov_QB = 0)
 ## create data array with 3 realizations of the process
 dat <- sim2fit(lfc, 3)
-
 }

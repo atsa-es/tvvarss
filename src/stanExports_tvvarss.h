@@ -985,7 +985,7 @@ public:
                 current_statement_begin__ = 140;
                 for (int i = 1; i <= n_pos; ++i) {
                     current_statement_begin__ = 140;
-                    lp_accum__.add(gamma_log<propto__>(get_base1(y, i, "y", 1), get_base1(obs_mat, get_base1(spp_indices_pos, i, "spp_indices_pos", 1), get_base1(site_indices_pos, i, "site_indices_pos", 1), "obs_mat", 1), (get_base1(obs_mat, get_base1(spp_indices_pos, i, "spp_indices_pos", 1), get_base1(site_indices_pos, i, "site_indices_pos", 1), "obs_mat", 1) / get_base1(get_base1(x, get_base1(site_indices_pos, i, "site_indices_pos", 1), "x", 1), get_base1(year_indices_pos, i, "year_indices_pos", 1), get_base1(spp_indices_pos, i, "spp_indices_pos", 1), "x", 2))));
+                    lp_accum__.add(gamma_log<propto__>(get_base1(y, i, "y", 1), get_base1(obs_mat, get_base1(spp_indices_pos, i, "spp_indices_pos", 1), get_base1(site_indices_pos, i, "site_indices_pos", 1), "obs_mat", 1), (get_base1(obs_mat, get_base1(spp_indices_pos, i, "spp_indices_pos", 1), get_base1(site_indices_pos, i, "site_indices_pos", 1), "obs_mat", 1) / stan::math::exp(get_base1(get_base1(x, get_base1(site_indices_pos, i, "site_indices_pos", 1), "x", 1), get_base1(year_indices_pos, i, "year_indices_pos", 1), get_base1(spp_indices_pos, i, "spp_indices_pos", 1), "x", 2)))));
                 }
             }
             current_statement_begin__ = 142;
@@ -1447,7 +1447,7 @@ public:
                     current_statement_begin__ = 153;
                     stan::model::assign(log_lik, 
                                 stan::model::cons_list(stan::model::index_uni(n), stan::model::nil_index_list()), 
-                                gamma_log(get_base1(y, n, "y", 1), get_base1(obs_mat, get_base1(spp_indices_pos, n, "spp_indices_pos", 1), get_base1(site_indices_pos, n, "site_indices_pos", 1), "obs_mat", 1), (get_base1(obs_mat, get_base1(spp_indices_pos, n, "spp_indices_pos", 1), get_base1(site_indices_pos, n, "site_indices_pos", 1), "obs_mat", 1) / get_base1(get_base1(x, get_base1(site_indices_pos, n, "site_indices_pos", 1), "x", 1), get_base1(year_indices_pos, n, "year_indices_pos", 1), get_base1(spp_indices_pos, n, "spp_indices_pos", 1), "x", 2))), 
+                                gamma_log(get_base1(y, n, "y", 1), get_base1(obs_mat, get_base1(spp_indices_pos, n, "spp_indices_pos", 1), get_base1(site_indices_pos, n, "site_indices_pos", 1), "obs_mat", 1), (get_base1(obs_mat, get_base1(spp_indices_pos, n, "spp_indices_pos", 1), get_base1(site_indices_pos, n, "site_indices_pos", 1), "obs_mat", 1) / stan::math::exp(get_base1(get_base1(x, get_base1(site_indices_pos, n, "site_indices_pos", 1), "x", 1), get_base1(year_indices_pos, n, "year_indices_pos", 1), get_base1(spp_indices_pos, n, "spp_indices_pos", 1), "x", 2)))), 
                                 "assigning variable log_lik");
                 }
             }
