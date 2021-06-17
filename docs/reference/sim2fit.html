@@ -38,6 +38,8 @@
 
 
 
+  <link href="../extra.css" rel="stylesheet">
+  
 
 <meta property="og:title" content="Simulate TVVAR model and add observation error — sim2fit" />
 <meta property="og:description" content="sim2fit adds observation error to a simulated TVVAR process and
@@ -172,17 +174,16 @@ obsveration errors.</p>
 <span class='co'>## number of spp/guilds</span>
 <span class='va'>nn</span> <span class='op'>&lt;-</span> <span class='fl'>4</span>
 <span class='co'>## CASE 1: linear food chain</span>
-<span class='va'>topo</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/matrix.html'>matrix</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>0</span><span class='op'>)</span>,<span class='va'>nn</span>,<span class='va'>nn</span><span class='op'>)</span>
-<span class='kw'>for</span><span class='op'>(</span><span class='va'>i</span> <span class='kw'>in</span> <span class='fl'>1</span><span class='op'>:</span><span class='op'>(</span><span class='va'>nn</span><span class='op'>-</span><span class='fl'>1</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
-  <span class='va'>topo</span><span class='op'>[</span><span class='va'>i</span>,<span class='va'>i</span><span class='op'>+</span><span class='fl'>1</span><span class='op'>]</span> <span class='op'>&lt;-</span> <span class='st'>"td"</span>
-  <span class='va'>topo</span><span class='op'>[</span><span class='va'>i</span><span class='op'>+</span><span class='fl'>1</span>,<span class='va'>i</span><span class='op'>]</span> <span class='op'>&lt;-</span> <span class='st'>"bu"</span>
+<span class='va'>topo</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/matrix.html'>matrix</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='fl'>0</span><span class='op'>)</span>, <span class='va'>nn</span>, <span class='va'>nn</span><span class='op'>)</span>
+<span class='kw'>for</span> <span class='op'>(</span><span class='va'>i</span> <span class='kw'>in</span> <span class='fl'>1</span><span class='op'>:</span><span class='op'>(</span><span class='va'>nn</span> <span class='op'>-</span> <span class='fl'>1</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
+  <span class='va'>topo</span><span class='op'>[</span><span class='va'>i</span>, <span class='va'>i</span> <span class='op'>+</span> <span class='fl'>1</span><span class='op'>]</span> <span class='op'>&lt;-</span> <span class='st'>"td"</span>
+  <span class='va'>topo</span><span class='op'>[</span><span class='va'>i</span> <span class='op'>+</span> <span class='fl'>1</span>, <span class='va'>i</span><span class='op'>]</span> <span class='op'>&lt;-</span> <span class='st'>"bu"</span>
 <span class='op'>}</span>
 <span class='co'>## simulate process</span>
-<span class='va'>lfc</span> <span class='op'>&lt;-</span> <span class='fu'><a href='simTVVAR.html'>simTVVAR</a></span><span class='op'>(</span>Bt<span class='op'>=</span><span class='cn'>NULL</span>,topo<span class='op'>=</span><span class='va'>topo</span>, TT<span class='op'>=</span><span class='fl'>30</span>, var_QX<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/base/rev.html'>rev</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span><span class='op'>(</span><span class='fl'>1</span>,<span class='fl'>4</span><span class='op'>)</span><span class='op'>/</span><span class='fl'>40</span><span class='op'>)</span>, cov_QX<span class='op'>=</span><span class='fl'>0</span>, var_QB<span class='op'>=</span><span class='fl'>0.05</span>, cov_QB<span class='op'>=</span><span class='fl'>0</span><span class='op'>)</span>
+<span class='va'>lfc</span> <span class='op'>&lt;-</span> <span class='fu'><a href='simTVVAR.html'>simTVVAR</a></span><span class='op'>(</span>Bt <span class='op'>=</span> <span class='cn'>NULL</span>, topo <span class='op'>=</span> <span class='va'>topo</span>, TT <span class='op'>=</span> <span class='fl'>30</span>, var_QX <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/rev.html'>rev</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>4</span><span class='op'>)</span> <span class='op'>/</span> <span class='fl'>40</span><span class='op'>)</span>, cov_QX <span class='op'>=</span> <span class='fl'>0</span>, var_QB <span class='op'>=</span> <span class='fl'>0.05</span>, cov_QB <span class='op'>=</span> <span class='fl'>0</span><span class='op'>)</span>
 <span class='co'>## create data array with 3 realizations of the process</span>
 <span class='va'>dat</span> <span class='op'>&lt;-</span> <span class='fu'>sim2fit</span><span class='op'>(</span><span class='va'>lfc</span>, <span class='fl'>3</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in simTVVAR(Bt = NULL, topo = topo, TT = 30, var_QX = rev(seq(1,     4)/40), cov_QX = 0, var_QB = 0.05, cov_QB = 0): object 'topo' not found</span></div><div class='input'>
-</div></pre>
+</div><div class='output co'>#&gt; <span class='error'>Error in simTVVAR(Bt = NULL, topo = topo, TT = 30, var_QX = rev(seq(1,     4)/40), cov_QX = 0, var_QB = 0.05, cov_QB = 0): object 'topo' not found</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

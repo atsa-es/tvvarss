@@ -38,6 +38,8 @@
 
 
 
+  <link href="../extra.css" rel="stylesheet">
+  
 
 <meta property="og:title" content="Simulate the process component of a TVVARSS model — simTVVAR" />
 <meta property="og:description" content="simTVVAR simulates the process (state) component of a TVVARSS model." />
@@ -238,7 +240,37 @@ interaction</p></li>
 </ul><p>See 'Examples' for details on formatting <code>B0</code>.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'>
+    <pre class="examples"><div class='input'><span class='co'># set.seed(123)</span>
+<span class='co'># ## number of time steps</span>
+<span class='co'># TT &lt;- 30</span>
+<span class='co'># ## number of spp/guilds</span>
+<span class='co'># nn &lt;- 4</span>
+<span class='co'># ## CASE 1: linear food chain; starting values are random</span>
+<span class='co'># B0_lfc &lt;- matrix(list(0),nn,nn)</span>
+<span class='co'># diag(B0_lfc) &lt;- "dd"</span>
+<span class='co'># for(i in 1:(nn-1)) {</span>
+<span class='co'>#   B0_lfc[i,i+1] &lt;- "td"</span>
+<span class='co'>#   B0_lfc[i+1,i] &lt;- "bu"</span>
+<span class='co'># }</span>
+<span class='co'># ## inspect B0</span>
+<span class='co'># B0_lfc</span>
+<span class='co'># ## simulate &amp; plot states</span>
+<span class='co'># lfc &lt;- simTVVAR(Bt=NULL,topo=B0_lfc,TT=TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)</span>
+<span class='co'># matplot(t(lfc$states),type="l")</span>
+<span class='co'>#</span>
+<span class='co'># ## CASE 2: 1 consumer &amp; n-1 producers; starting values are random</span>
+<span class='co'># B0_cp &lt;- matrix(list("cf"),nn,nn)</span>
+<span class='co'># B0_cp[1:(nn-1),nn] &lt;- "td"</span>
+<span class='co'># B0_cp[nn,1:(nn-1)] &lt;- "bu"</span>
+<span class='co'># diag(B0_cp) &lt;- "dd"</span>
+<span class='co'># ## inspect B0</span>
+<span class='co'># B0_cp</span>
+<span class='co'># ## simulate &amp; plot states</span>
+<span class='co'># cp &lt;- simTVVAR(Bt=NULL,topo=B0_lfc,TT=TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)</span>
+<span class='co'># matplot(t(cp$states),type="l")</span>
+<span class='co'>#</span>
+<span class='co'># ## simulate a second realization of CASE 2 using same B</span>
+<span class='co'># cp2 &lt;- simTVVAR(Bt=cp$B_mat,topo=B0_lfc,TT=TT,var_QX=rev(seq(1,4)/40),cov_QX=0,var_QB=0.05,cov_QB=0)</span>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
