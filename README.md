@@ -63,7 +63,7 @@ After installing `devtools` (and assuming you have a C++ compiler
 installed), you can install the package with
 
 ``` r
-devtools::install_github("nwfsc-timeseries/tvvarss")
+devtools::install_github("atsa-es/tvvarss")
 ```
 
 A short vignette for the package is:
