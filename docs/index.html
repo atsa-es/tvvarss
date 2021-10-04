@@ -64,7 +64,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/nwfsc-timeseries/atsar/">
+  <a href="https://github.com/atsa-es/tvvarss/">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -112,7 +112,7 @@
 <p><code>tvvarss</code> is an R package used to simulate and/or fit time-varying vector autoregressive state space models of community interactions. Models are fit via Hamiltonian Monte Carlo (HMC) using the <a href="http://mc-stan.org/">Stan</a> software</p>
 <p>After installing <code>devtools</code> (and assuming you have a C++ compiler installed), you can install the package with</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span><span class="op">(</span><span class="st">"nwfsc-timeseries/tvvarss"</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span><span class="op">(</span><span class="st">"atsa-es/tvvarss"</span><span class="op">)</span></code></pre></div>
 <p>A short vignette for the package is:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html">vignette</a></span><span class="op">(</span><span class="st">"intro_tvvarss"</span>, package <span class="op">=</span> <span class="st">"tvvarss"</span><span class="op">)</span></code></pre></div>
@@ -137,21 +137,21 @@
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="reference/tvvarss.html">tvvarss</a></span><span class="op">(</span><span class="va">y</span>, shared_q <span class="op">=</span> <span class="va">Q</span>, shared_r <span class="op">=</span> <span class="va">R</span><span class="op">)</span></code></pre></div>
 <p>For example, if we had a dataset consiting of 3 sites and 5 species, the default form of these matrices in the function would be a unique variance by species, that was shared across sites, e.g.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>m =<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">0</span>, <span class="dv">5</span>, <span class="dv">3</span>)</span>
-<span id="cb5-2"><a href="#cb5-2"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="dv">5</span>) m[i,] =<span class="st"> </span>i</span>
-<span id="cb5-3"><a href="#cb5-3"></a><span class="kw">colnames</span>(m) =<span class="st"> </span><span class="kw">paste0</span>(<span class="st">"Site "</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">3</span>)</span>
-<span id="cb5-4"><a href="#cb5-4"></a><span class="kw">rownames</span>(m) =<span class="st"> </span><span class="kw">paste0</span>(<span class="st">"Species "</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">5</span>)</span>
-<span id="cb5-5"><a href="#cb5-5"></a>knitr<span class="op">::</span><span class="kw">kable</span>(m)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>m <span class="ot">=</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="dv">5</span>, <span class="dv">3</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>) m[i,] <span class="ot">=</span> i</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(m) <span class="ot">=</span> <span class="fu">paste0</span>(<span class="st">"Site "</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(m) <span class="ot">=</span> <span class="fu">paste0</span>(<span class="st">"Species "</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(m)</span></code></pre></div>
 <p>We could change this up, and make variances be unique to each species-site</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>m =<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">15</span>, <span class="dv">5</span>, <span class="dv">3</span>)</span>
-<span id="cb6-2"><a href="#cb6-2"></a><span class="kw">colnames</span>(m) =<span class="st"> </span><span class="kw">paste0</span>(<span class="st">"Site "</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">3</span>)</span>
-<span id="cb6-3"><a href="#cb6-3"></a><span class="kw">rownames</span>(m) =<span class="st"> </span><span class="kw">paste0</span>(<span class="st">"Species "</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">5</span>)</span>
-<span id="cb6-4"><a href="#cb6-4"></a>knitr<span class="op">::</span><span class="kw">kable</span>(m)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>m <span class="ot">=</span> <span class="fu">matrix</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">15</span>, <span class="dv">5</span>, <span class="dv">3</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(m) <span class="ot">=</span> <span class="fu">paste0</span>(<span class="st">"Site "</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(m) <span class="ot">=</span> <span class="fu">paste0</span>(<span class="st">"Species "</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(m)</span></code></pre></div>
 <p>Or equal across species - sites</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>m =<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">1</span>, <span class="dv">5</span>, <span class="dv">3</span>)</span>
-<span id="cb7-2"><a href="#cb7-2"></a><span class="kw">colnames</span>(m) =<span class="st"> </span><span class="kw">paste0</span>(<span class="st">"Site "</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">3</span>)</span>
-<span id="cb7-3"><a href="#cb7-3"></a><span class="kw">rownames</span>(m) =<span class="st"> </span><span class="kw">paste0</span>(<span class="st">"Species "</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">5</span>)</span>
-<span id="cb7-4"><a href="#cb7-4"></a>knitr<span class="op">::</span><span class="kw">kable</span>(m)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>m <span class="ot">=</span> <span class="fu">matrix</span>(<span class="dv">1</span>, <span class="dv">5</span>, <span class="dv">3</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(m) <span class="ot">=</span> <span class="fu">paste0</span>(<span class="st">"Site "</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(m) <span class="ot">=</span> <span class="fu">paste0</span>(<span class="st">"Species "</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(m)</span></code></pre></div>
 </div>
 <div id="processes" class="section level3">
 <h3 class="hasAnchor">
@@ -188,9 +188,9 @@
     <div class="links">
 <h2>Links</h2>
 <ul class="list-unstyled">
-<li>Browse source code at <br><a href="https://github.com/nwfsc-timeseries/atsar/">https://​github.com/​nwfsc-timeseries/​atsar/​</a>
+<li>Browse source code at <br><a href="https://github.com/atsa-es/tvvarss/">https://​github.com/​atsa-es/​tvvarss/​</a>
 </li>
-<li>Report a bug at <br><a href="https://github.com/nwfsc-timeseries/atsar/issues">https://​github.com/​nwfsc-timeseries/​atsar/​issues</a>
+<li>Report a bug at <br><a href="https://github.com/atsa-es/tvvarss/issues">https://​github.com/​atsa-es/​tvvarss/​issues</a>
 </li>
 </ul>
 </div>
